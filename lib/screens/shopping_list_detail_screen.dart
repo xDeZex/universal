@@ -89,7 +89,10 @@ class ShoppingListDetailScreen extends StatelessWidget {
                           );
                         },
                       ),
-                      const Icon(Icons.drag_handle),
+                      ReorderableDragStartListener(
+                        index: index,
+                        child: const Icon(Icons.drag_handle),
+                      ),
                     ],
                   ),
                 ),
