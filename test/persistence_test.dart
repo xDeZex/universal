@@ -379,8 +379,11 @@ void main() {
         final appState2 = ShoppingAppState();
         await Future.delayed(const Duration(milliseconds: 10));
         
-        expect(appState2.shoppingLists[0].items[0].isCompleted, true);
-        expect(appState2.shoppingLists[0].items[1].isCompleted, false);
+        // After sorting: incomplete items come first, completed items at bottom
+        expect(appState2.shoppingLists[0].items[0].isCompleted, false);
+        expect(appState2.shoppingLists[0].items[0].name, 'Incomplete Item');
+        expect(appState2.shoppingLists[0].items[1].isCompleted, true);
+        expect(appState2.shoppingLists[0].items[1].name, 'Completed Item');
       });
     });
   });

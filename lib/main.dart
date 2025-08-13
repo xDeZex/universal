@@ -153,8 +153,14 @@ class MyApp extends StatelessWidget {
 class ShoppingAppState extends ChangeNotifier {
   List<ShoppingList> _shoppingLists = [];
   static const String _storageKey = 'shopping_lists';
+  static int _idCounter = 0;
 
   List<ShoppingList> get shoppingLists => _shoppingLists;
+
+  String _generateUniqueId() {
+    _idCounter++;
+    return '${DateTime.now().millisecondsSinceEpoch}_$_idCounter';
+  }
 
   ShoppingAppState() {
     _loadData();
@@ -200,7 +206,7 @@ class ShoppingAppState extends ChangeNotifier {
 
   void addShoppingList(String name) {
     final newList = ShoppingList(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: _generateUniqueId(),
       name: name,
       items: [],
       createdAt: DateTime.now(),
@@ -220,7 +226,7 @@ class ShoppingAppState extends ChangeNotifier {
     final listIndex = _shoppingLists.indexWhere((list) => list.id == listId);
     if (listIndex != -1) {
       final newItem = ShoppingItem(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        id: _generateUniqueId(),
         name: itemName,
       );
       final updatedItems = List<ShoppingItem>.from(_shoppingLists[listIndex].items)..add(newItem);
