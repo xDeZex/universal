@@ -284,6 +284,7 @@ void main() {
         appState.addItemToList(listId, 'Item 3');
         appState.addItemToList(listId, 'Item 4');
         
+        // All items are incomplete, so reordering should work within incomplete section
         // Move Item 1 (index 0) to position 2 (index 2)
         appState.reorderItems(listId, 0, 3);
         
@@ -316,14 +317,13 @@ void main() {
         appState.addItemToList(listId, 'Item 1');
         appState.addItemToList(listId, 'Item 2');
         
-        // Toggle completion of Item 1
+        // Toggle completion of Item 1 - this will move it to bottom due to sorting
         final item1Id = appState.shoppingLists[0].items[0].id;
         appState.toggleItemCompletion(listId, item1Id);
         
-        // Reorder items
-        appState.reorderItems(listId, 0, 2);
-        
-        // Item 1 should still be completed after reordering
+        // Item 1 should now be at the bottom and completed
+        expect(appState.shoppingLists[0].items[0].name, 'Item 2');
+        expect(appState.shoppingLists[0].items[0].isCompleted, false);
         expect(appState.shoppingLists[0].items[1].name, 'Item 1');
         expect(appState.shoppingLists[0].items[1].isCompleted, true);
       });
@@ -360,11 +360,154 @@ void main() {
         appState.addItemToList(listId, 'äpplen');
         appState.addItemToList(listId, 'kött');
         
-        appState.reorderItems(listId, 0, 3);
+        // Verify initial order
+        expect(appState.shoppingLists[0].items[0].name, 'mjölk');
+        expect(appState.shoppingLists[0].items[1].name, 'äpplen');
+        expect(appState.shoppingLists[0].items[2].name, 'kött');
+        
+        // All items are incomplete, so reordering should work within incomplete section
+        // Move mjölk from index 0 to index 2 (before kött)
+        appState.reorderItems(listId, 0, 2);
         
         expect(appState.shoppingLists[0].items[0].name, 'äpplen');
-        expect(appState.shoppingLists[0].items[1].name, 'kött');
-        expect(appState.shoppingLists[0].items[2].name, 'mjölk');
+        expect(appState.shoppingLists[0].items[1].name, 'mjölk');
+        expect(appState.shoppingLists[0].items[2].name, 'kött');
+      });
+    });
+
+    group('Item Sorting', () {
+      test('should move completed item to bottom when toggled', () {
+        appState.addShoppingList('Test List');
+        final listId = appState.shoppingLists[0].id;
+        appState.addItemToList(listId, 'Item 1');
+        appState.addItemToList(listId, 'Item 2');
+        appState.addItemToList(listId, 'Item 3');
+        
+        // Complete the first item
+        final item1Id = appState.shoppingLists[0].items[0].id;
+        appState.toggleItemCompletion(listId, item1Id);
+        
+        // Item 1 should now be at the bottom
+        expect(appState.shoppingLists[0].items[0].name, 'Item 2');
+        expect(appState.shoppingLists[0].items[1].name, 'Item 3');
+        expect(appState.shoppingLists[0].items[2].name, 'Item 1');
+        expect(appState.shoppingLists[0].items[2].isCompleted, true);
+      });
+
+      test('should move incomplete item to top when untoggled', () {
+        appState.addShoppingList('Test List');
+        final listId = appState.shoppingLists[0].id;
+        appState.addItemToList(listId, 'Item 1');
+        appState.addItemToList(listId, 'Item 2');
+        appState.addItemToList(listId, 'Item 3');
+        
+        // Complete all items first
+        for (int i = 0; i < 3; i++) {
+          final itemId = appState.shoppingLists[0].items[0].id;
+          appState.toggleItemCompletion(listId, itemId);
+        }
+        
+        // All should be completed and at bottom (order maintained within completed section)
+        expect(appState.shoppingLists[0].items.every((item) => item.isCompleted), true);
+        
+        // Uncomplete the last item (which was Item 3)
+        final lastItemId = appState.shoppingLists[0].items[2].id;
+        appState.toggleItemCompletion(listId, lastItemId);
+        
+        // Item 3 should now be at the top as the only incomplete item
+        expect(appState.shoppingLists[0].items[0].name, 'Item 3');
+        expect(appState.shoppingLists[0].items[0].isCompleted, false);
+        expect(appState.shoppingLists[0].items[1].isCompleted, true);
+        expect(appState.shoppingLists[0].items[2].isCompleted, true);
+      });
+
+      test('should maintain correct order after multiple operations', () {
+        appState.addShoppingList('Test List');
+        final listId = appState.shoppingLists[0].id;
+        appState.addItemToList(listId, 'Incomplete 1');
+        appState.addItemToList(listId, 'Complete 1');
+        appState.addItemToList(listId, 'Incomplete 2');
+        
+        // Find the "Complete 1" item explicitly by name to ensure we toggle the right one
+        final itemsBeforeToggle = appState.shoppingLists[0].items;
+        final completeItemId = itemsBeforeToggle.firstWhere((item) => item.name == 'Complete 1').id;
+        
+        // Complete the item - this will move it to bottom due to sorting
+        appState.toggleItemCompletion(listId, completeItemId);
+        
+        // Check that sorting is maintained
+        final items = appState.shoppingLists[0].items;
+        final incompleteItems = items.where((item) => !item.isCompleted).toList();
+        final completedItems = items.where((item) => item.isCompleted).toList();
+        
+        expect(incompleteItems.length, 2);
+        expect(completedItems.length, 1);
+        
+        // Find the completed item and verify it's the right one
+        final completedItem = completedItems[0];
+        expect(completedItem.name, 'Complete 1');
+        
+        // Check that incomplete items come first in the array
+        expect(items[0].isCompleted, false);
+        expect(items[1].isCompleted, false);
+        expect(items[2].isCompleted, true);
+        expect(items[2].name, 'Complete 1');
+      });
+
+      test('should restrict reordering within completion sections', () {
+        appState.addShoppingList('Test List');
+        final listId = appState.shoppingLists[0].id;
+        appState.addItemToList(listId, 'Incomplete 1');
+        appState.addItemToList(listId, 'Incomplete 2');
+        appState.addItemToList(listId, 'Complete 1');
+        
+        // Complete the third item
+        final completeItemId = appState.shoppingLists[0].items[2].id;
+        appState.toggleItemCompletion(listId, completeItemId);
+        
+        // Try to move completed item to top (should be restricted)
+        appState.reorderItems(listId, 2, 0);
+        
+        // Completed item should stay in completed section
+        expect(appState.shoppingLists[0].items[0].isCompleted, false);
+        expect(appState.shoppingLists[0].items[1].isCompleted, false);
+        expect(appState.shoppingLists[0].items[2].isCompleted, true);
+      });
+
+      test('should allow reordering within incomplete section', () {
+        appState.addShoppingList('Test List');
+        final listId = appState.shoppingLists[0].id;
+        appState.addItemToList(listId, 'Incomplete A');
+        appState.addItemToList(listId, 'Incomplete B');
+        appState.addItemToList(listId, 'Incomplete C');
+        
+        // Reorder within incomplete section
+        appState.reorderItems(listId, 0, 2);
+        
+        expect(appState.shoppingLists[0].items[0].name, 'Incomplete B');
+        expect(appState.shoppingLists[0].items[1].name, 'Incomplete A');
+        expect(appState.shoppingLists[0].items[2].name, 'Incomplete C');
+      });
+
+      test('should allow reordering within completed section', () {
+        appState.addShoppingList('Test List');
+        final listId = appState.shoppingLists[0].id;
+        appState.addItemToList(listId, 'Item A');
+        appState.addItemToList(listId, 'Item B');
+        appState.addItemToList(listId, 'Item C');
+        
+        // Complete all items
+        for (int i = 0; i < 3; i++) {
+          final itemId = appState.shoppingLists[0].items[0].id;
+          appState.toggleItemCompletion(listId, itemId);
+        }
+        
+        // Reorder within completed section
+        appState.reorderItems(listId, 0, 2);
+        
+        // All should still be completed, but order changed
+        expect(appState.shoppingLists[0].items.every((item) => item.isCompleted), true);
+        expect(appState.shoppingLists[0].items.length, 3);
       });
     });
   });

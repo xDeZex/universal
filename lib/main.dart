@@ -160,6 +160,15 @@ class ShoppingAppState extends ChangeNotifier {
     _loadData();
   }
 
+  ShoppingList _sortListItems(ShoppingList list) {
+    final sortedItems = List<ShoppingItem>.from(list.items);
+    sortedItems.sort((a, b) {
+      if (a.isCompleted == b.isCompleted) return 0;
+      return a.isCompleted ? 1 : -1;
+    });
+    return list.copyWith(items: sortedItems);
+  }
+
   Future<void> _loadData() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -168,6 +177,7 @@ class ShoppingAppState extends ChangeNotifier {
         final List<dynamic> jsonList = json.decode(jsonString);
         _shoppingLists = jsonList
             .map((jsonItem) => ShoppingList.fromJson(jsonItem as Map<String, dynamic>))
+            .map((list) => _sortListItems(list))
             .toList();
         notifyListeners();
       }
@@ -230,6 +240,13 @@ class ShoppingAppState extends ChangeNotifier {
         updatedItems[itemIndex] = updatedItems[itemIndex].copyWith(
           isCompleted: !updatedItems[itemIndex].isCompleted,
         );
+        
+        // Sort items: incomplete first, completed at bottom
+        updatedItems.sort((a, b) {
+          if (a.isCompleted == b.isCompleted) return 0;
+          return a.isCompleted ? 1 : -1;
+        });
+        
         _shoppingLists[listIndex] = _shoppingLists[listIndex].copyWith(items: updatedItems);
         _saveData();
         notifyListeners();
@@ -251,9 +268,31 @@ class ShoppingAppState extends ChangeNotifier {
     final listIndex = _shoppingLists.indexWhere((list) => list.id == listId);
     if (listIndex != -1) {
       final items = List<ShoppingItem>.from(_shoppingLists[listIndex].items);
+      
+      // Get the item being moved
+      final itemToMove = items[oldIndex];
+      
+      // Find boundaries for incomplete and completed sections
+      final incompleteCount = items.where((item) => !item.isCompleted).length;
+      
+      // Restrict reordering within the same completion state
+      if (itemToMove.isCompleted) {
+        // Completed items can only be reordered within completed section
+        if (newIndex < incompleteCount) {
+          newIndex = incompleteCount;
+        }
+      } else {
+        // Incomplete items can only be reordered within incomplete section
+        if (newIndex > incompleteCount) {
+          newIndex = incompleteCount;
+        }
+      }
+      
+      // Standard reordering logic adjustment
       if (oldIndex < newIndex) {
         newIndex -= 1;
       }
+      
       final item = items.removeAt(oldIndex);
       items.insert(newIndex, item);
       _shoppingLists[listIndex] = _shoppingLists[listIndex].copyWith(items: items);
