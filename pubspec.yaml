@@ -1,5 +1,5 @@
-name: namer_app
-description: "A new Flutter project."
+name: shopping_list_app
+description: "A Flutter app for creating and managing shopping lists."
 publish_to: 'none'
 version: 0.1.0
 
@@ -9,8 +9,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  english_words: ^4.0.0
+  flutter_localizations:
+    sdk: flutter
+  intl: any
   provider: ^6.1.5
+  shared_preferences: ^2.2.3
 
 dev_dependencies:
   flutter_test:
