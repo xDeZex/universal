@@ -11,16 +11,15 @@ class ShoppingListsScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Shopping Lists'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: Consumer<ShoppingAppState>(
         builder: (context, appState, child) {
           if (appState.shoppingLists.isEmpty) {
-            return const Center(
+            return Center(
               child: Text(
                 'No shopping lists yet.\nTap the + button to create one!',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16),
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontSize: 16),
               ),
             );
           }
@@ -30,7 +29,6 @@ class ShoppingListsScreen extends StatelessWidget {
             itemBuilder: (context, index) {
               final shoppingList = appState.shoppingLists[index];
               return Card(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: ListTile(
                   title: Text(shoppingList.name),
                   subtitle: Text(

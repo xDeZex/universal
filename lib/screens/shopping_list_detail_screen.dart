@@ -16,7 +16,6 @@ class ShoppingListDetailScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(shoppingList.name),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: Consumer<ShoppingAppState>(
         builder: (context, appState, child) {
@@ -24,11 +23,11 @@ class ShoppingListDetailScreen extends StatelessWidget {
               .firstWhere((list) => list.id == shoppingList.id);
 
           if (currentList.items.isEmpty) {
-            return const Center(
+            return Center(
               child: Text(
                 'No items in this list yet.\nTap the + button to add items!',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16),
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontSize: 16),
               ),
             );
           }
@@ -42,7 +41,6 @@ class ShoppingListDetailScreen extends StatelessWidget {
               final item = currentList.items[index];
               return Card(
                 key: ValueKey(item.id),
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 child: ListTile(
                   leading: Checkbox(
                     value: item.isCompleted,
@@ -57,8 +55,8 @@ class ShoppingListDetailScreen extends StatelessWidget {
                           ? TextDecoration.lineThrough
                           : TextDecoration.none,
                       color: item.isCompleted
-                          ? Colors.grey
-                          : null,
+                          ? Theme.of(context).colorScheme.onSurfaceVariant
+                          : Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                   trailing: Row(
