@@ -5,14 +5,16 @@ import '../models/shopping_list.dart';
 import 'shopping_list_detail_screen.dart';
 
 class ShoppingListsScreen extends StatelessWidget {
-  const ShoppingListsScreen({super.key});
+  final bool showAppBar;
+  
+  const ShoppingListsScreen({super.key, this.showAppBar = true});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
+      appBar: showAppBar ? AppBar(
         title: const Text('Shopping Lists'),
-      ),
+      ) : null,
       body: Consumer<ShoppingAppState>(
         builder: (context, appState, child) {
           if (appState.shoppingLists.isEmpty) {

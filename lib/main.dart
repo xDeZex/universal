@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'models/shopping_list.dart';
 import 'models/shopping_item.dart';
-import 'screens/shopping_lists_screen.dart';
+import 'screens/main_screen.dart';
 
 void main() {
   runApp(MyApp());
@@ -103,6 +103,13 @@ ThemeData _createDarkTheme() {
       color: Color(0xFF404040),
       thickness: 1,
     ),
+    bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+      backgroundColor: Color(0xFF1F1F1F),
+      selectedItemColor: Color(0xFF6366F1),
+      unselectedItemColor: Color(0xFFB0B0B0),
+      type: BottomNavigationBarType.fixed,
+      elevation: 8,
+    ),
     textTheme: const TextTheme(
       displayLarge: TextStyle(color: Color(0xFFE5E5E5)),
       displayMedium: TextStyle(color: Color(0xFFE5E5E5)),
@@ -144,7 +151,7 @@ class MyApp extends StatelessWidget {
           Locale('en', ''),
           Locale('sv', ''),
         ],
-        home: ShoppingListsScreen(),
+        home: const MainScreen(),
       ),
     );
   }
