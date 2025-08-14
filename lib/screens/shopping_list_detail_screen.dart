@@ -6,7 +6,6 @@ import '../models/shopping_item.dart';
 
 class ShoppingListDetailScreen extends StatelessWidget {
   static const double _sectionPadding = 16.0;
-  static const double _iconSize = 20.0;
   static const double _dividerPadding = 8.0;
   
   final ShoppingList shoppingList;
@@ -102,7 +101,7 @@ class ShoppingListDetailScreen extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: _sectionPadding, vertical: _dividerPadding),
         child: Divider(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.5),
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
           thickness: 1,
         ),
       ),
@@ -115,32 +114,6 @@ class ShoppingListDetailScreen extends StatelessWidget {
     appState.reorderItems(listId, globalOldIndex, globalNewIndex);
   }
 
-  void _showDeleteConfirmation(BuildContext context, ShoppingItem item, String listId) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) => _buildDeleteDialog(context, item, listId),
-    );
-  }
-
-  Widget _buildDeleteDialog(BuildContext context, ShoppingItem item, String listId) {
-    return AlertDialog(
-      title: const Text('Delete Item'),
-      content: Text('Are you sure you want to delete "${item.name}"?'),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
-        ),
-        TextButton(
-          onPressed: () {
-            context.read<ShoppingAppState>().deleteItemFromList(listId, item.id);
-            Navigator.of(context).pop();
-          },
-          child: const Text('Delete'),
-        ),
-      ],
-    );
-  }
 
   void _showAddItemDialog(BuildContext context) {
     final controller = TextEditingController();
@@ -195,8 +168,6 @@ class ItemGroups {
 
 // Widget classes
 class IncompleteItemsSection extends StatelessWidget {
-  static const double _sectionPadding = 16.0;
-  static const double _iconSize = 20.0;
   
   final List<ShoppingItem> items;
   final String listId;

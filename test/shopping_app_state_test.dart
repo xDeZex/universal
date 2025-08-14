@@ -1,8 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shopping_list_app/main.dart';
-import 'package:shopping_list_app/models/shopping_list.dart';
-import 'package:shopping_list_app/models/shopping_item.dart';
 
 void main() {
   group('ShoppingAppState', () {
