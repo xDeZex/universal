@@ -515,6 +515,90 @@ void main() {
         expect(appState.shoppingLists[0].items.every((item) => item.isCompleted), true);
         expect(appState.shoppingLists[0].items.length, 3);
       });
+
+      test('should preserve manual reordering without automatic sorting', () {
+        appState.addShoppingList('Test List');
+        final listId = appState.shoppingLists[0].id;
+        appState.addItemToList(listId, 'First Item');
+        appState.addItemToList(listId, 'Second Item');
+        appState.addItemToList(listId, 'Third Item');
+        
+        // Verify initial order
+        expect(appState.shoppingLists[0].items[0].name, 'First Item');
+        expect(appState.shoppingLists[0].items[1].name, 'Second Item');
+        expect(appState.shoppingLists[0].items[2].name, 'Third Item');
+        
+        // Manually reorder: move Third Item to first position
+        appState.reorderItems(listId, 2, 0);
+        
+        // Verify the manual reordering is preserved
+        expect(appState.shoppingLists[0].items[0].name, 'Third Item');
+        expect(appState.shoppingLists[0].items[1].name, 'First Item');
+        expect(appState.shoppingLists[0].items[2].name, 'Second Item');
+        
+        // All items should still be incomplete (not automatically sorted)
+        expect(appState.shoppingLists[0].items.every((item) => !item.isCompleted), true);
+        
+        // Verify the custom order is maintained - no automatic sorting occurred
+        expect(appState.shoppingLists[0].items[0].name, 'Third Item');
+        expect(appState.shoppingLists[0].items[1].name, 'First Item');
+        expect(appState.shoppingLists[0].items[2].name, 'Second Item');
+      });
+
+      test('should preserve reordering when mixing completed and incomplete items', () {
+        appState.addShoppingList('Test List');
+        final listId = appState.shoppingLists[0].id;
+        appState.addItemToList(listId, 'Incomplete A');
+        appState.addItemToList(listId, 'Incomplete B');
+        appState.addItemToList(listId, 'Will Complete');
+        
+        // Complete the third item - this will trigger automatic sorting
+        final itemToCompleteId = appState.shoppingLists[0].items[2].id;
+        appState.toggleItemCompletion(listId, itemToCompleteId);
+        
+        // After completion, completed item should be at bottom
+        expect(appState.shoppingLists[0].items[0].name, 'Incomplete A');
+        expect(appState.shoppingLists[0].items[1].name, 'Incomplete B');
+        expect(appState.shoppingLists[0].items[2].name, 'Will Complete');
+        expect(appState.shoppingLists[0].items[2].isCompleted, true);
+        
+        // Now manually reorder within the incomplete section
+        appState.reorderItems(listId, 0, 2); // Move Incomplete A to position after Incomplete B (index 2, which becomes 1 after adjustment)
+        
+        // Verify the manual reordering within incomplete section is preserved
+        expect(appState.shoppingLists[0].items[0].name, 'Incomplete B');
+        expect(appState.shoppingLists[0].items[1].name, 'Incomplete A');
+        expect(appState.shoppingLists[0].items[2].name, 'Will Complete');
+        expect(appState.shoppingLists[0].items[2].isCompleted, true);
+        
+        // Verify the completed item stays at bottom and incomplete order is preserved
+        expect(appState.shoppingLists[0].items[0].isCompleted, false);
+        expect(appState.shoppingLists[0].items[1].isCompleted, false);
+        expect(appState.shoppingLists[0].items[2].isCompleted, true);
+      });
+
+      test('should correctly reorder items without double adjustment', () {
+        appState.addShoppingList('Test List');
+        final listId = appState.shoppingLists[0].id;
+        appState.addItemToList(listId, 'First');
+        appState.addItemToList(listId, 'Second');
+        appState.addItemToList(listId, 'Third');
+        
+        // Simulate what the UI layer (_handleIncompleteItemReorder) now does:
+        // When dragging First (index 0) down to position after Second (index 1),
+        // the UI receives oldIndex=0, newIndex=2 from ReorderableList
+        final oldIndex = 0;
+        final newIndex = 2;
+        
+        // The fixed UI handler passes indices directly to business logic
+        appState.reorderItems(listId, oldIndex, newIndex);
+        
+        // The business logic handles the standard Flutter reordering adjustment
+        // Expected result: Second, First, Third (First should be at index 1)
+        expect(appState.shoppingLists[0].items[0].name, 'Second');
+        expect(appState.shoppingLists[0].items[1].name, 'First');
+        expect(appState.shoppingLists[0].items[2].name, 'Third');
+      });
     });
 
     group('Shopping List Reordering', () {
@@ -584,6 +668,31 @@ void main() {
         
         expect(appState.shoppingLists.length, 1);
         expect(appState.shoppingLists[0].name, 'Only List');
+      });
+    });
+
+    group('Workout Exercise Reordering', () {
+      test('should correctly reorder exercises without double adjustment', () {
+        appState.addWorkoutList('Test Workout');
+        final workoutId = appState.workoutLists[0].id;
+        appState.addExerciseToWorkout(workoutId, 'First Exercise');
+        appState.addExerciseToWorkout(workoutId, 'Second Exercise');
+        appState.addExerciseToWorkout(workoutId, 'Third Exercise');
+        
+        // Simulate what the UI layer (_handleIncompleteExerciseReorder) now does:
+        // When dragging First Exercise (index 0) down to position after Second Exercise (index 1),
+        // the UI receives oldIndex=0, newIndex=2 from ReorderableList
+        final oldIndex = 0;
+        final newIndex = 2;
+        
+        // The fixed UI handler passes indices directly to business logic
+        appState.reorderExercises(workoutId, oldIndex, newIndex);
+        
+        // The business logic handles the standard Flutter reordering adjustment
+        // Expected result: Second Exercise, First Exercise, Third Exercise (First Exercise should be at index 1)
+        expect(appState.workoutLists[0].exercises[0].name, 'Second Exercise');
+        expect(appState.workoutLists[0].exercises[1].name, 'First Exercise');
+        expect(appState.workoutLists[0].exercises[2].name, 'Third Exercise');
       });
     });
   });

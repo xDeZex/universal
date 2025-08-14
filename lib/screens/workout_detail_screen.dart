@@ -109,9 +109,7 @@ class WorkoutDetailScreen extends StatelessWidget {
   }
 
   void _handleIncompleteExerciseReorder(ShoppingAppState appState, String workoutId, int oldIndex, int newIndex) {
-    final globalOldIndex = oldIndex;
-    final globalNewIndex = newIndex > oldIndex ? newIndex - 1 : newIndex;
-    appState.reorderExercises(workoutId, globalOldIndex, globalNewIndex);
+    appState.reorderExercises(workoutId, oldIndex, newIndex);
   }
 
   void _showAddExerciseDialog(BuildContext context) {

@@ -5,9 +5,11 @@
       "Bash(flutter run:*)",
       "Bash(git add:*)",
       "Bash(flutter test:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(flutter analyze:*)"
     ],
     "deny": [],
-    "ask": []
+    "ask": [],
+    "defaultMode": "acceptEdits"
   }
 }

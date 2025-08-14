@@ -109,9 +109,7 @@ class ShoppingListDetailScreen extends StatelessWidget {
   }
 
   void _handleIncompleteItemReorder(ShoppingAppState appState, String listId, int oldIndex, int newIndex) {
-    final globalOldIndex = oldIndex;
-    final globalNewIndex = newIndex > oldIndex ? newIndex - 1 : newIndex;
-    appState.reorderItems(listId, globalOldIndex, globalNewIndex);
+    appState.reorderItems(listId, oldIndex, newIndex);
   }
 
 
