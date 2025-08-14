@@ -383,6 +383,28 @@ void main() {
         expect(appState2.shoppingLists[0].items[1].isCompleted, true);
         expect(appState2.shoppingLists[0].items[1].name, 'Completed Item');
       });
+
+      test('should maintain shopping list order across app state recreation', () async {
+        final appState1 = ShoppingAppState();
+        await Future.delayed(const Duration(milliseconds: 10));
+        
+        appState1.addShoppingList('First List');
+        appState1.addShoppingList('Second List');
+        appState1.addShoppingList('Third List');
+        
+        // Reorder lists
+        appState1.reorderShoppingLists(0, 3);
+        
+        await Future.delayed(const Duration(milliseconds: 10));
+        
+        final appState2 = ShoppingAppState();
+        await Future.delayed(const Duration(milliseconds: 10));
+        
+        expect(appState2.shoppingLists.length, 3);
+        expect(appState2.shoppingLists[0].name, 'Second List');
+        expect(appState2.shoppingLists[1].name, 'Third List');
+        expect(appState2.shoppingLists[2].name, 'First List');
+      });
     });
   });
 }

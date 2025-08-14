@@ -516,5 +516,75 @@ void main() {
         expect(appState.shoppingLists[0].items.length, 3);
       });
     });
+
+    group('Shopping List Reordering', () {
+      test('should reorder shopping lists correctly when moving forward', () {
+        appState.addShoppingList('List A');
+        appState.addShoppingList('List B');
+        appState.addShoppingList('List C');
+        
+        // Move List A (index 0) to position after List C (index 2)
+        appState.reorderShoppingLists(0, 3);
+        
+        expect(appState.shoppingLists[0].name, 'List B');
+        expect(appState.shoppingLists[1].name, 'List C');
+        expect(appState.shoppingLists[2].name, 'List A');
+      });
+
+      test('should reorder shopping lists correctly when moving backward', () {
+        appState.addShoppingList('List A');
+        appState.addShoppingList('List B');
+        appState.addShoppingList('List C');
+        
+        // Move List C (index 2) to position before List A (index 0)
+        appState.reorderShoppingLists(2, 0);
+        
+        expect(appState.shoppingLists[0].name, 'List C');
+        expect(appState.shoppingLists[1].name, 'List A');
+        expect(appState.shoppingLists[2].name, 'List B');
+      });
+
+      test('should preserve shopping list properties during reordering', () {
+        appState.addShoppingList('List A');
+        appState.addShoppingList('List B');
+        
+        // Add items to first list to verify properties are preserved
+        final listAId = appState.shoppingLists[0].id;
+        appState.addItemToList(listAId, 'Item 1');
+        appState.addItemToList(listAId, 'Item 2');
+        
+        // Reorder the lists
+        appState.reorderShoppingLists(0, 2);
+        
+        // List A should now be at position 1 (index 1) and maintain its items
+        expect(appState.shoppingLists[1].name, 'List A');
+        expect(appState.shoppingLists[1].items.length, 2);
+        expect(appState.shoppingLists[1].items[0].name, 'Item 1');
+        expect(appState.shoppingLists[1].items[1].name, 'Item 2');
+      });
+
+      test('should handle reordering with Swedish characters correctly', () {
+        appState.addShoppingList('Handlingslista A');
+        appState.addShoppingList('Köplista B');
+        appState.addShoppingList('Inköpslista C');
+        
+        // Move middle list to first position
+        appState.reorderShoppingLists(1, 0);
+        
+        expect(appState.shoppingLists[0].name, 'Köplista B');
+        expect(appState.shoppingLists[1].name, 'Handlingslista A');
+        expect(appState.shoppingLists[2].name, 'Inköpslista C');
+      });
+
+      test('should handle edge case reordering gracefully', () {
+        appState.addShoppingList('Only List');
+        
+        // Try to reorder when there's only one list (should not crash)
+        appState.reorderShoppingLists(0, 0);
+        
+        expect(appState.shoppingLists.length, 1);
+        expect(appState.shoppingLists[0].name, 'Only List');
+      });
+    });
   });
 }

@@ -188,7 +188,7 @@ class ShoppingAppState extends ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      print('Error loading data: $e');
+      // Ignore loading errors - app continues with empty state
     }
   }
 
@@ -200,7 +200,7 @@ class ShoppingAppState extends ChangeNotifier {
       );
       await prefs.setString(_storageKey, jsonString);
     } catch (e) {
-      print('Error saving data: $e');
+      // Ignore saving errors - data will be retried on next save
     }
   }
 
@@ -218,6 +218,16 @@ class ShoppingAppState extends ChangeNotifier {
 
   void deleteShoppingList(String id) {
     _shoppingLists.removeWhere((list) => list.id == id);
+    _saveData();
+    notifyListeners();
+  }
+
+  void reorderShoppingLists(int oldIndex, int newIndex) {
+    if (oldIndex < newIndex) {
+      newIndex -= 1;
+    }
+    final list = _shoppingLists.removeAt(oldIndex);
+    _shoppingLists.insert(newIndex, list);
     _saveData();
     notifyListeners();
   }

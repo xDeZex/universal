@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../main.dart';
+import '../models/shopping_list.dart';
 import 'shopping_list_detail_screen.dart';
 
 class ShoppingListsScreen extends StatelessWidget {
@@ -24,11 +25,15 @@ class ShoppingListsScreen extends StatelessWidget {
             );
           }
 
-          return ListView.builder(
+          return ReorderableListView.builder(
             itemCount: appState.shoppingLists.length,
+            onReorder: (oldIndex, newIndex) {
+              appState.reorderShoppingLists(oldIndex, newIndex);
+            },
             itemBuilder: (context, index) {
               final shoppingList = appState.shoppingLists[index];
               return Card(
+                key: ValueKey(shoppingList.id),
                 child: ListTile(
                   title: Text(shoppingList.name),
                   subtitle: Text(
@@ -41,30 +46,11 @@ class ShoppingListsScreen extends StatelessWidget {
                         const Icon(Icons.check_circle, color: Colors.green),
                       IconButton(
                         icon: const Icon(Icons.delete),
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return AlertDialog(
-                                title: const Text('Delete List'),
-                                content: Text('Are you sure you want to delete "${shoppingList.name}"?'),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.of(context).pop(),
-                                    child: const Text('Cancel'),
-                                  ),
-                                  TextButton(
-                                    onPressed: () {
-                                      appState.deleteShoppingList(shoppingList.id);
-                                      Navigator.of(context).pop();
-                                    },
-                                    child: const Text('Delete'),
-                                  ),
-                                ],
-                              );
-                            },
-                          );
-                        },
+                        onPressed: () => _showDeleteConfirmation(context, appState, shoppingList),
+                      ),
+                      ReorderableDragStartListener(
+                        index: index,
+                        child: const Icon(Icons.drag_handle),
                       ),
                     ],
                   ),
@@ -87,6 +73,31 @@ class ShoppingListsScreen extends StatelessWidget {
         onPressed: () => _showAddListDialog(context),
         child: const Icon(Icons.add),
       ),
+    );
+  }
+
+  void _showDeleteConfirmation(BuildContext context, ShoppingAppState appState, ShoppingList shoppingList) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Delete List'),
+          content: Text('Are you sure you want to delete "${shoppingList.name}"?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                appState.deleteShoppingList(shoppingList.id);
+                Navigator.of(context).pop();
+              },
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
     );
   }
 
