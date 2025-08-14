@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'shopping_lists_screen.dart';
-import 'placeholder_screen.dart';
+import 'workout_lists_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -14,7 +14,7 @@ class _MainScreenState extends State<MainScreen> {
 
   final List<Widget> _screens = [
     const ShoppingListsScreen(showAppBar: true),
-    const PlaceholderScreen(),
+    const WorkoutListsScreen(showAppBar: true),
   ];
 
   @override
@@ -34,8 +34,8 @@ class _MainScreenState extends State<MainScreen> {
             label: 'Shopping Lists',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.star),
-            label: 'New Feature',
+            icon: Icon(Icons.fitness_center),
+            label: 'Workouts',
           ),
         ],
       ),

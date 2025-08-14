@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'models/shopping_list.dart';
 import 'models/shopping_item.dart';
+import 'models/workout_list.dart';
+import 'models/exercise.dart';
 import 'screens/main_screen.dart';
 
 void main() {
@@ -159,10 +161,13 @@ class MyApp extends StatelessWidget {
 
 class ShoppingAppState extends ChangeNotifier {
   List<ShoppingList> _shoppingLists = [];
-  static const String _storageKey = 'shopping_lists';
+  List<WorkoutList> _workoutLists = [];
+  static const String _shoppingStorageKey = 'shopping_lists';
+  static const String _workoutStorageKey = 'workout_lists';
   static int _idCounter = 0;
 
   List<ShoppingList> get shoppingLists => _shoppingLists;
+  List<WorkoutList> get workoutLists => _workoutLists;
 
   String _generateUniqueId() {
     _idCounter++;
@@ -182,10 +187,24 @@ class ShoppingAppState extends ChangeNotifier {
     return list.copyWith(items: sortedItems);
   }
 
+  WorkoutList _sortWorkoutExercises(WorkoutList list) {
+    final sortedExercises = List<Exercise>.from(list.exercises);
+    sortedExercises.sort((a, b) {
+      if (a.isCompleted == b.isCompleted) return 0;
+      return a.isCompleted ? 1 : -1;
+    });
+    return list.copyWith(exercises: sortedExercises);
+  }
+
   Future<void> _loadData() async {
+    await _loadShoppingLists();
+    await _loadWorkoutLists();
+  }
+
+  Future<void> _loadShoppingLists() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final String? jsonString = prefs.getString(_storageKey);
+      final String? jsonString = prefs.getString(_shoppingStorageKey);
       if (jsonString != null) {
         final List<dynamic> jsonList = json.decode(jsonString);
         _shoppingLists = jsonList
@@ -199,13 +218,47 @@ class ShoppingAppState extends ChangeNotifier {
     }
   }
 
+  Future<void> _loadWorkoutLists() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? jsonString = prefs.getString(_workoutStorageKey);
+      if (jsonString != null) {
+        final List<dynamic> jsonList = json.decode(jsonString);
+        _workoutLists = jsonList
+            .map((jsonItem) => WorkoutList.fromJson(jsonItem as Map<String, dynamic>))
+            .map((list) => _sortWorkoutExercises(list))
+            .toList();
+        notifyListeners();
+      }
+    } catch (e) {
+      // Ignore loading errors - app continues with empty state
+    }
+  }
+
   Future<void> _saveData() async {
+    await _saveShoppingLists();
+    await _saveWorkoutLists();
+  }
+
+  Future<void> _saveShoppingLists() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final String jsonString = json.encode(
         _shoppingLists.map((list) => list.toJson()).toList(),
       );
-      await prefs.setString(_storageKey, jsonString);
+      await prefs.setString(_shoppingStorageKey, jsonString);
+    } catch (e) {
+      // Ignore saving errors - data will be retried on next save
+    }
+  }
+
+  Future<void> _saveWorkoutLists() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String jsonString = json.encode(
+        _workoutLists.map((list) => list.toJson()).toList(),
+      );
+      await prefs.setString(_workoutStorageKey, jsonString);
     } catch (e) {
       // Ignore saving errors - data will be retried on next save
     }
@@ -319,6 +372,142 @@ class ShoppingAppState extends ChangeNotifier {
       final item = items.removeAt(oldIndex);
       items.insert(newIndex, item);
       _shoppingLists[listIndex] = _shoppingLists[listIndex].copyWith(items: items);
+      _saveData();
+      notifyListeners();
+    }
+  }
+
+  // Workout List Methods
+  void addWorkoutList(String name) {
+    final newList = WorkoutList(
+      id: _generateUniqueId(),
+      name: name,
+      exercises: [],
+      createdAt: DateTime.now(),
+    );
+    _workoutLists.add(newList);
+    _saveData();
+    notifyListeners();
+  }
+
+  void deleteWorkoutList(String id) {
+    _workoutLists.removeWhere((list) => list.id == id);
+    _saveData();
+    notifyListeners();
+  }
+
+  void reorderWorkoutLists(int oldIndex, int newIndex) {
+    if (oldIndex < newIndex) {
+      newIndex -= 1;
+    }
+    final list = _workoutLists.removeAt(oldIndex);
+    _workoutLists.insert(newIndex, list);
+    _saveData();
+    notifyListeners();
+  }
+
+  void addExerciseToWorkout(String workoutId, String exerciseName) {
+    final workoutIndex = _workoutLists.indexWhere((list) => list.id == workoutId);
+    if (workoutIndex != -1) {
+      final newExercise = Exercise(
+        id: _generateUniqueId(),
+        name: exerciseName,
+      );
+      final updatedExercises = List<Exercise>.from(_workoutLists[workoutIndex].exercises)..add(newExercise);
+      _workoutLists[workoutIndex] = _workoutLists[workoutIndex].copyWith(exercises: updatedExercises);
+      _saveData();
+      notifyListeners();
+    }
+  }
+
+  void updateExercise(String workoutId, String exerciseId, Exercise updatedExercise) {
+    final workoutIndex = _workoutLists.indexWhere((list) => list.id == workoutId);
+    if (workoutIndex != -1) {
+      final exercises = _workoutLists[workoutIndex].exercises;
+      final exerciseIndex = exercises.indexWhere((exercise) => exercise.id == exerciseId);
+      if (exerciseIndex != -1) {
+        final updatedExercises = List<Exercise>.from(exercises);
+        updatedExercises[exerciseIndex] = updatedExercise;
+        
+        // Sort exercises: incomplete first, completed at bottom
+        updatedExercises.sort((a, b) {
+          if (a.isCompleted == b.isCompleted) return 0;
+          return a.isCompleted ? 1 : -1;
+        });
+        
+        _workoutLists[workoutIndex] = _workoutLists[workoutIndex].copyWith(exercises: updatedExercises);
+        _saveData();
+        notifyListeners();
+      }
+    }
+  }
+
+  void toggleExerciseCompletion(String workoutId, String exerciseId) {
+    final workoutIndex = _workoutLists.indexWhere((list) => list.id == workoutId);
+    if (workoutIndex != -1) {
+      final exercises = _workoutLists[workoutIndex].exercises;
+      final exerciseIndex = exercises.indexWhere((exercise) => exercise.id == exerciseId);
+      if (exerciseIndex != -1) {
+        final updatedExercises = List<Exercise>.from(exercises);
+        updatedExercises[exerciseIndex] = updatedExercises[exerciseIndex].copyWith(
+          isCompleted: !updatedExercises[exerciseIndex].isCompleted,
+        );
+        
+        // Sort exercises: incomplete first, completed at bottom
+        updatedExercises.sort((a, b) {
+          if (a.isCompleted == b.isCompleted) return 0;
+          return a.isCompleted ? 1 : -1;
+        });
+        
+        _workoutLists[workoutIndex] = _workoutLists[workoutIndex].copyWith(exercises: updatedExercises);
+        _saveData();
+        notifyListeners();
+      }
+    }
+  }
+
+  void deleteExerciseFromWorkout(String workoutId, String exerciseId) {
+    final workoutIndex = _workoutLists.indexWhere((list) => list.id == workoutId);
+    if (workoutIndex != -1) {
+      final updatedExercises = _workoutLists[workoutIndex].exercises.where((exercise) => exercise.id != exerciseId).toList();
+      _workoutLists[workoutIndex] = _workoutLists[workoutIndex].copyWith(exercises: updatedExercises);
+      _saveData();
+      notifyListeners();
+    }
+  }
+
+  void reorderExercises(String workoutId, int oldIndex, int newIndex) {
+    final workoutIndex = _workoutLists.indexWhere((list) => list.id == workoutId);
+    if (workoutIndex != -1) {
+      final exercises = List<Exercise>.from(_workoutLists[workoutIndex].exercises);
+      
+      // Get the exercise being moved
+      final exerciseToMove = exercises[oldIndex];
+      
+      // Find boundaries for incomplete and completed sections
+      final incompleteCount = exercises.where((exercise) => !exercise.isCompleted).length;
+      
+      // Restrict reordering within the same completion state
+      if (exerciseToMove.isCompleted) {
+        // Completed exercises can only be reordered within completed section
+        if (newIndex < incompleteCount) {
+          newIndex = incompleteCount;
+        }
+      } else {
+        // Incomplete exercises can only be reordered within incomplete section
+        if (newIndex > incompleteCount) {
+          newIndex = incompleteCount;
+        }
+      }
+      
+      // Standard reordering logic adjustment
+      if (oldIndex < newIndex) {
+        newIndex -= 1;
+      }
+      
+      final exercise = exercises.removeAt(oldIndex);
+      exercises.insert(newIndex, exercise);
+      _workoutLists[workoutIndex] = _workoutLists[workoutIndex].copyWith(exercises: exercises);
       _saveData();
       notifyListeners();
     }

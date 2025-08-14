@@ -21,11 +21,11 @@ void main() {
       
       // Verify that both navigation items are present (may appear multiple times due to AppBar + Bottom Nav)
       expect(find.text('Shopping Lists'), findsAtLeast(1));
-      expect(find.text('New Feature'), findsOneWidget);
+      expect(find.text('Workouts'), findsOneWidget);
       
       // Verify navigation icons are present
       expect(find.byIcon(Icons.shopping_cart), findsOneWidget);
-      expect(find.byIcon(Icons.star), findsOneWidget);
+      expect(find.byIcon(Icons.fitness_center), findsOneWidget);
     });
 
     testWidgets('should switch between screens when navigation items are tapped', (tester) async {
@@ -43,14 +43,12 @@ void main() {
       expect(find.text('No shopping lists yet.\nTap the + button to create one!'), findsOneWidget);
       
       // Tap on the second navigation item
-      await tester.tap(find.text('New Feature').last); // Use .last to tap the bottom nav item
+      await tester.tap(find.text('Workouts').last); // Use .last to tap the bottom nav item
       await tester.pumpAndSettle();
       
-      // Should now show the placeholder screen content
-      expect(find.text('New Feature'), findsAtLeast(1)); // Title + bottom nav
-      expect(find.text('Coming Soon'), findsOneWidget);
-      expect(find.text('This feature is under development.\nStay tuned for updates!'), findsOneWidget);
-      expect(find.byIcon(Icons.construction), findsOneWidget);
+      // Should now show the workout screen content
+      expect(find.text('Workouts'), findsAtLeast(1)); // Title + bottom nav
+      expect(find.text('No workouts yet.\nTap the + button to create your first workout!'), findsOneWidget);
     });
 
     testWidgets('should show correct screen titles in app bars', (tester) async {
@@ -67,11 +65,11 @@ void main() {
       expect(find.text('Shopping Lists'), findsAtLeast(1));
       
       // Switch to second screen
-      await tester.tap(find.text('New Feature').last);
+      await tester.tap(find.text('Workouts').last);
       await tester.pumpAndSettle();
       
-      // Should show New Feature title
-      expect(find.text('New Feature'), findsAtLeast(1));
+      // Should show Workouts title
+      expect(find.text('Workouts'), findsAtLeast(1));
     });
 
     testWidgets('should maintain shopping lists functionality in first tab', (tester) async {
