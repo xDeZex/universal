@@ -8,6 +8,7 @@ import 'models/shopping_item.dart';
 import 'models/workout_list.dart';
 import 'models/exercise.dart';
 import 'screens/main_screen.dart';
+import 'services/list_manager.dart';
 
 void main() {
   runApp(MyApp());
@@ -283,11 +284,7 @@ class ShoppingAppState extends ChangeNotifier {
   }
 
   void reorderShoppingLists(int oldIndex, int newIndex) {
-    if (oldIndex < newIndex) {
-      newIndex -= 1;
-    }
-    final list = _shoppingLists.removeAt(oldIndex);
-    _shoppingLists.insert(newIndex, list);
+    _shoppingLists = ListManager.reorderLists(_shoppingLists, oldIndex, newIndex);
     _saveData();
     notifyListeners();
   }
@@ -309,31 +306,17 @@ class ShoppingAppState extends ChangeNotifier {
   void toggleItemCompletion(String listId, String itemId) {
     final listIndex = _shoppingLists.indexWhere((list) => list.id == listId);
     if (listIndex != -1) {
-      final items = _shoppingLists[listIndex].items;
-      final itemIndex = items.indexWhere((item) => item.id == itemId);
-      if (itemIndex != -1) {
-        final updatedItems = List<ShoppingItem>.from(items);
-        updatedItems[itemIndex] = updatedItems[itemIndex].copyWith(
-          isCompleted: !updatedItems[itemIndex].isCompleted,
-        );
-        
-        // Sort items: incomplete first, completed at bottom
-        updatedItems.sort((a, b) {
-          if (a.isCompleted == b.isCompleted) return 0;
-          return a.isCompleted ? 1 : -1;
-        });
-        
-        _shoppingLists[listIndex] = _shoppingLists[listIndex].copyWith(items: updatedItems);
-        _saveData();
-        notifyListeners();
-      }
+      final updatedItems = ListManager.toggleItemCompletion(_shoppingLists[listIndex].items, itemId);
+      _shoppingLists[listIndex] = _shoppingLists[listIndex].copyWith(items: updatedItems);
+      _saveData();
+      notifyListeners();
     }
   }
 
   void deleteItemFromList(String listId, String itemId) {
     final listIndex = _shoppingLists.indexWhere((list) => list.id == listId);
     if (listIndex != -1) {
-      final updatedItems = _shoppingLists[listIndex].items.where((item) => item.id != itemId).toList();
+      final updatedItems = ListManager.deleteItem(_shoppingLists[listIndex].items, itemId);
       _shoppingLists[listIndex] = _shoppingLists[listIndex].copyWith(items: updatedItems);
       _saveData();
       notifyListeners();
@@ -343,35 +326,8 @@ class ShoppingAppState extends ChangeNotifier {
   void reorderItems(String listId, int oldIndex, int newIndex) {
     final listIndex = _shoppingLists.indexWhere((list) => list.id == listId);
     if (listIndex != -1) {
-      final items = List<ShoppingItem>.from(_shoppingLists[listIndex].items);
-      
-      // Get the item being moved
-      final itemToMove = items[oldIndex];
-      
-      // Find boundaries for incomplete and completed sections
-      final incompleteCount = items.where((item) => !item.isCompleted).length;
-      
-      // Restrict reordering within the same completion state
-      if (itemToMove.isCompleted) {
-        // Completed items can only be reordered within completed section
-        if (newIndex < incompleteCount) {
-          newIndex = incompleteCount;
-        }
-      } else {
-        // Incomplete items can only be reordered within incomplete section
-        if (newIndex > incompleteCount) {
-          newIndex = incompleteCount;
-        }
-      }
-      
-      // Standard reordering logic adjustment
-      if (oldIndex < newIndex) {
-        newIndex -= 1;
-      }
-      
-      final item = items.removeAt(oldIndex);
-      items.insert(newIndex, item);
-      _shoppingLists[listIndex] = _shoppingLists[listIndex].copyWith(items: items);
+      final updatedItems = ListManager.reorderItems(_shoppingLists[listIndex].items, oldIndex, newIndex);
+      _shoppingLists[listIndex] = _shoppingLists[listIndex].copyWith(items: updatedItems);
       _saveData();
       notifyListeners();
     }
@@ -397,11 +353,7 @@ class ShoppingAppState extends ChangeNotifier {
   }
 
   void reorderWorkoutLists(int oldIndex, int newIndex) {
-    if (oldIndex < newIndex) {
-      newIndex -= 1;
-    }
-    final list = _workoutLists.removeAt(oldIndex);
-    _workoutLists.insert(newIndex, list);
+    _workoutLists = ListManager.reorderLists(_workoutLists, oldIndex, newIndex);
     _saveData();
     notifyListeners();
   }
@@ -445,31 +397,17 @@ class ShoppingAppState extends ChangeNotifier {
   void toggleExerciseCompletion(String workoutId, String exerciseId) {
     final workoutIndex = _workoutLists.indexWhere((list) => list.id == workoutId);
     if (workoutIndex != -1) {
-      final exercises = _workoutLists[workoutIndex].exercises;
-      final exerciseIndex = exercises.indexWhere((exercise) => exercise.id == exerciseId);
-      if (exerciseIndex != -1) {
-        final updatedExercises = List<Exercise>.from(exercises);
-        updatedExercises[exerciseIndex] = updatedExercises[exerciseIndex].copyWith(
-          isCompleted: !updatedExercises[exerciseIndex].isCompleted,
-        );
-        
-        // Sort exercises: incomplete first, completed at bottom
-        updatedExercises.sort((a, b) {
-          if (a.isCompleted == b.isCompleted) return 0;
-          return a.isCompleted ? 1 : -1;
-        });
-        
-        _workoutLists[workoutIndex] = _workoutLists[workoutIndex].copyWith(exercises: updatedExercises);
-        _saveData();
-        notifyListeners();
-      }
+      final updatedExercises = ListManager.toggleItemCompletion(_workoutLists[workoutIndex].exercises, exerciseId);
+      _workoutLists[workoutIndex] = _workoutLists[workoutIndex].copyWith(exercises: updatedExercises);
+      _saveData();
+      notifyListeners();
     }
   }
 
   void deleteExerciseFromWorkout(String workoutId, String exerciseId) {
     final workoutIndex = _workoutLists.indexWhere((list) => list.id == workoutId);
     if (workoutIndex != -1) {
-      final updatedExercises = _workoutLists[workoutIndex].exercises.where((exercise) => exercise.id != exerciseId).toList();
+      final updatedExercises = ListManager.deleteItem(_workoutLists[workoutIndex].exercises, exerciseId);
       _workoutLists[workoutIndex] = _workoutLists[workoutIndex].copyWith(exercises: updatedExercises);
       _saveData();
       notifyListeners();
@@ -479,35 +417,8 @@ class ShoppingAppState extends ChangeNotifier {
   void reorderExercises(String workoutId, int oldIndex, int newIndex) {
     final workoutIndex = _workoutLists.indexWhere((list) => list.id == workoutId);
     if (workoutIndex != -1) {
-      final exercises = List<Exercise>.from(_workoutLists[workoutIndex].exercises);
-      
-      // Get the exercise being moved
-      final exerciseToMove = exercises[oldIndex];
-      
-      // Find boundaries for incomplete and completed sections
-      final incompleteCount = exercises.where((exercise) => !exercise.isCompleted).length;
-      
-      // Restrict reordering within the same completion state
-      if (exerciseToMove.isCompleted) {
-        // Completed exercises can only be reordered within completed section
-        if (newIndex < incompleteCount) {
-          newIndex = incompleteCount;
-        }
-      } else {
-        // Incomplete exercises can only be reordered within incomplete section
-        if (newIndex > incompleteCount) {
-          newIndex = incompleteCount;
-        }
-      }
-      
-      // Standard reordering logic adjustment
-      if (oldIndex < newIndex) {
-        newIndex -= 1;
-      }
-      
-      final exercise = exercises.removeAt(oldIndex);
-      exercises.insert(newIndex, exercise);
-      _workoutLists[workoutIndex] = _workoutLists[workoutIndex].copyWith(exercises: exercises);
+      final updatedExercises = ListManager.reorderItems(_workoutLists[workoutIndex].exercises, oldIndex, newIndex);
+      _workoutLists[workoutIndex] = _workoutLists[workoutIndex].copyWith(exercises: updatedExercises);
       _saveData();
       notifyListeners();
     }

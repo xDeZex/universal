@@ -1,9 +1,14 @@
 import 'shopping_item.dart';
+import 'base_list.dart';
 
-class ShoppingList {
+class ShoppingList with BaseListMixin<ShoppingItem> implements BaseList<ShoppingItem> {
+  @override
   final String id;
+  @override
   final String name;
+  @override
   final List<ShoppingItem> items;
+  @override
   final DateTime createdAt;
 
   ShoppingList({
@@ -27,12 +32,12 @@ class ShoppingList {
     );
   }
 
-  int get totalItems => items.length;
-  
-  int get completedItems => items.where((item) => item.isCompleted).length;
-  
-  bool get isCompleted => items.isNotEmpty && completedItems == totalItems;
+  @override
+  BaseList<ShoppingItem> copyWithItems({required List<ShoppingItem> items}) {
+    return copyWith(items: items);
+  }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       'id': id,

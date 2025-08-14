@@ -1,9 +1,13 @@
 import 'exercise.dart';
+import 'base_list.dart';
 
-class WorkoutList {
+class WorkoutList with BaseListMixin<Exercise> implements BaseList<Exercise> {
+  @override
   final String id;
+  @override
   final String name;
   final List<Exercise> exercises;
+  @override
   final DateTime createdAt;
 
   const WorkoutList({
@@ -27,12 +31,19 @@ class WorkoutList {
     );
   }
 
+  @override
+  List<Exercise> get items => exercises;
+
   int get totalExercises => exercises.length;
 
   int get completedExercises => exercises.where((exercise) => exercise.isCompleted).length;
 
-  bool get isCompleted => exercises.isNotEmpty && exercises.every((exercise) => exercise.isCompleted);
+  @override
+  BaseList<Exercise> copyWithItems({required List<Exercise> items}) {
+    return copyWith(exercises: items);
+  }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       'id': id,

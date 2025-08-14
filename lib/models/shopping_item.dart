@@ -1,6 +1,11 @@
-class ShoppingItem {
+import 'base_item.dart';
+
+class ShoppingItem implements BaseItem {
+  @override
   final String id;
+  @override
   final String name;
+  @override
   final bool isCompleted;
 
   const ShoppingItem({
@@ -21,6 +26,12 @@ class ShoppingItem {
     );
   }
 
+  @override
+  BaseItem copyWithCompletion({required bool isCompleted}) {
+    return copyWith(isCompleted: isCompleted);
+  }
+
+  @override
   Map<String, dynamic> toJson() {
     return {
       'id': id,

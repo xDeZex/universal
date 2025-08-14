@@ -1,10 +1,15 @@
-class Exercise {
+import 'base_item.dart';
+
+class Exercise implements BaseItem {
+  @override
   final String id;
+  @override
   final String name;
   final String? sets;
   final String? reps;
   final String? weight;
   final String? notes;
+  @override
   final bool isCompleted;
 
   const Exercise({
@@ -37,6 +42,12 @@ class Exercise {
     );
   }
 
+  @override
+  BaseItem copyWithCompletion({required bool isCompleted}) {
+    return copyWith(isCompleted: isCompleted);
+  }
+
+  @override
   Map<String, dynamic> toJson() {
     return {
       'id': id,
