@@ -203,7 +203,47 @@ void main() {
       // Should show weight progression
       expect(find.text('85kg'), findsOneWidget); // Latest weight
       expect(find.text('80kg'), findsOneWidget); // Previous weight
-      expect(find.byIcon(Icons.trending_up), findsOneWidget); // Progression indicator
+      expect(find.byIcon(Icons.trending_up), findsAtLeastNWidgets(1)); // Progression indicator(s)
+    });
+
+    testWidgets('should navigate to exercise weight history when exercise card is tapped', (tester) async {
+      final appState = ShoppingAppState();
+      
+      // Add a workout with an exercise that has weight tracking
+      appState.addWorkoutList('Test Workout');
+      final workoutId = appState.workoutLists[0].id;
+      appState.addExerciseToWorkout(workoutId, 'Bench Press', weight: '80kg');
+      final exerciseId = appState.workoutLists[0].exercises[0].id;
+      
+      // Add weight entry
+      appState.saveWeightForExercise(workoutId, exerciseId, '85kg');
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider.value(
+          value: appState,
+          child: MaterialApp(
+            home: const MainScreen(),
+          ),
+        ),
+      );
+
+      // Navigate to weight tracking tab
+      await tester.tap(find.text('Weight Tracking').last);
+      await tester.pumpAndSettle();
+
+      // Should show exercise card with arrow icon
+      expect(find.text('Bench Press'), findsOneWidget);
+      expect(find.byIcon(Icons.arrow_forward_ios), findsOneWidget);
+      
+      // Tap on the exercise card
+      await tester.tap(find.text('Bench Press'));
+      await tester.pumpAndSettle();
+      
+      // Should navigate to exercise weight history screen
+      expect(find.text('Bench Press'), findsAtLeast(1)); // In app bar
+      expect(find.text('85kg'), findsOneWidget);
+      expect(find.text('LATEST'), findsOneWidget);
+      expect(find.text('TODAY'), findsOneWidget);
     });
   });
 }

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../main.dart';
 import '../models/weight_entry.dart';
 import '../models/exercise.dart';
+import 'exercise_weight_history_screen.dart';
 
 class WeightTrackingScreen extends StatelessWidget {
   const WeightTrackingScreen({super.key});
@@ -92,37 +93,51 @@ class WeightTrackingScreen extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        entryData.exercise.name,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: isToday ? Theme.of(context).colorScheme.primary : null,
+      child: InkWell(
+        onTap: () => _navigateToExerciseHistory(context, entryData),
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                entryData.exercise.name,
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: isToday ? Theme.of(context).colorScheme.primary : null,
+                                ),
+                              ),
+                            ),
+                            Icon(
+                              Icons.arrow_forward_ios,
+                              size: 16,
+                              color: Colors.grey[500],
+                            ),
+                          ],
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        entryData.workoutName,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
+                        const SizedBox(height: 4),
+                        Text(
+                          entryData.workoutName,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[600],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -249,6 +264,7 @@ class WeightTrackingScreen extends StatelessWidget {
             ],
           ],
         ),
+        ),
       ),
     );
   }
@@ -362,6 +378,31 @@ class WeightTrackingScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  void _navigateToExerciseHistory(BuildContext context, WeightEntryData entryData) {
+    final appState = Provider.of<ShoppingAppState>(context, listen: false);
+    String? workoutId;
+    
+    // Find the workout that contains this exercise
+    for (final workout in appState.workoutLists) {
+      if (workout.exercises.any((ex) => ex.id == entryData.exercise.id)) {
+        workoutId = workout.id;
+        break;
+      }
+    }
+    
+    if (workoutId != null) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => ExerciseWeightHistoryScreen(
+            exercise: entryData.exercise,
+            workoutId: workoutId!,
+            workoutName: entryData.workoutName,
+          ),
+        ),
+      );
+    }
   }
 }
 

@@ -1,0 +1,385 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../main.dart';
+import '../models/exercise.dart';
+import '../models/weight_entry.dart';
+
+class ExerciseWeightHistoryScreen extends StatelessWidget {
+  final Exercise exercise;
+  final String workoutId;
+  final String workoutName;
+
+  const ExerciseWeightHistoryScreen({
+    super.key,
+    required this.exercise,
+    required this.workoutId,
+    required this.workoutName,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(exercise.name),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+      ),
+      body: Consumer<ShoppingAppState>(
+        builder: (context, appState, child) {
+          // Find the current exercise data
+          final currentExercise = _getCurrentExercise(appState);
+          
+          if (currentExercise?.weightHistory.isEmpty ?? true) {
+            return _buildEmptyState(context);
+          }
+          
+          final sortedHistory = List<WeightEntry>.from(currentExercise!.weightHistory)
+            ..sort((a, b) => b.date.compareTo(a.date)); // Newest first
+          
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: sortedHistory.length,
+            itemBuilder: (context, index) {
+              final entry = sortedHistory[index];
+              final progression = index < sortedHistory.length - 1
+                  ? _getProgression(entry, sortedHistory[index + 1])
+                  : null;
+              
+              return _buildWeightEntryCard(context, entry, progression, index == 0);
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  Exercise? _getCurrentExercise(ShoppingAppState appState) {
+    final workout = appState.workoutLists.firstWhere(
+      (w) => w.id == workoutId,
+      orElse: () => throw StateError('Workout not found'),
+    );
+    
+    return workout.exercises.firstWhere(
+      (e) => e.id == exercise.id,
+      orElse: () => throw StateError('Exercise not found'),
+    );
+  }
+
+  Widget _buildEmptyState(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.timeline,
+            size: 64,
+            color: Colors.grey[400],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'No weight history yet',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              color: Colors.grey[600],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Start tracking by saving weights for this exercise',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Colors.grey[600],
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWeightEntryCard(BuildContext context, WeightEntry entry, WeightProgression? progression, bool isLatest) {
+    final isToday = _isToday(entry.date);
+    
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: isLatest ? 4 : 2,
+      child: Container(
+        decoration: isLatest
+            ? BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                  width: 2,
+                ),
+              )
+            : null,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            entry.weight,
+                            style: TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              color: isToday 
+                                  ? Theme.of(context).colorScheme.primary 
+                                  : Theme.of(context).colorScheme.onSurface,
+                            ),
+                          ),
+                          if (isLatest) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  width: 1,
+                                ),
+                              ),
+                              child: Text(
+                                'LATEST',
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.access_time,
+                            size: 16,
+                            color: Colors.grey[600],
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            _formatDate(entry.date),
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 14,
+                            ),
+                          ),
+                          if (isToday) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: Theme.of(context).colorScheme.secondary,
+                                  width: 1,
+                                ),
+                              ),
+                              child: Text(
+                                'TODAY',
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.secondary,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 9,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      if (progression != null) ...[
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: progression.isIncrease 
+                                ? Colors.green.withValues(alpha: 0.1)
+                                : Colors.red.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: progression.isIncrease ? Colors.green : Colors.red,
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                progression.isIncrease ? Icons.trending_up : Icons.trending_down,
+                                size: 16,
+                                color: progression.isIncrease ? Colors.green : Colors.red,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                progression.text,
+                                style: TextStyle(
+                                  color: progression.isIncrease ? Colors.green : Colors.red,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                      GestureDetector(
+                        onTap: () => _showDeleteWeightDialog(context, entry),
+                        child: Icon(
+                          Icons.delete_outline,
+                          size: 20,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              if (exercise.sets != null || exercise.reps != null) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surfaceContainer,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.fitness_center,
+                        size: 16,
+                        color: Colors.grey[600],
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        _formatSetsReps(),
+                        style: TextStyle(
+                          color: Colors.grey[700],
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _formatSetsReps() {
+    final details = <String>[];
+    if (exercise.sets != null && exercise.reps != null) {
+      details.add('${exercise.sets}s × ${exercise.reps}r');
+    } else if (exercise.sets != null) {
+      details.add('${exercise.sets}s');
+    } else if (exercise.reps != null) {
+      details.add('${exercise.reps}r');
+    }
+    return details.join(' • ');
+  }
+
+  bool _isToday(DateTime date) {
+    final now = DateTime.now();
+    return date.year == now.year && 
+           date.month == now.month && 
+           date.day == now.day;
+  }
+
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final difference = now.difference(date).inDays;
+    
+    if (difference == 0) {
+      return 'Today at ${_formatTime(date)}';
+    } else if (difference == 1) {
+      return 'Yesterday at ${_formatTime(date)}';
+    } else if (difference < 7) {
+      return '$difference days ago at ${_formatTime(date)}';
+    } else {
+      return '${date.day}/${date.month}/${date.year} at ${_formatTime(date)}';
+    }
+  }
+
+  String _formatTime(DateTime date) {
+    final hour = date.hour.toString().padLeft(2, '0');
+    final minute = date.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
+  }
+
+  WeightProgression? _getProgression(WeightEntry current, WeightEntry previous) {
+    final currentWeight = _extractNumericWeight(current.weight);
+    final previousWeight = _extractNumericWeight(previous.weight);
+    
+    if (currentWeight == null || previousWeight == null) return null;
+    
+    final difference = currentWeight - previousWeight;
+    if (difference == 0) return null;
+    
+    return WeightProgression(
+      isIncrease: difference > 0,
+      text: '${difference > 0 ? '+' : ''}${difference.toStringAsFixed(1)}kg',
+    );
+  }
+
+  double? _extractNumericWeight(String weight) {
+    final regex = RegExp(r'(\d+(?:\.\d+)?)');
+    final match = regex.firstMatch(weight);
+    return match != null ? double.tryParse(match.group(1)!) : null;
+  }
+
+  void _showDeleteWeightDialog(BuildContext context, WeightEntry entry) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: const Text('Delete Weight Entry'),
+        content: Text(
+          'Are you sure you want to delete this weight entry?\n\n'
+          '${exercise.name}: ${entry.weight}\n'
+          '${_formatDate(entry.date)}',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              final appState = Provider.of<ShoppingAppState>(context, listen: false);
+              appState.deleteWeightEntry(workoutId, exercise.id, entry.date);
+              Navigator.of(context).pop();
+            },
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class WeightProgression {
+  final bool isIncrease;
+  final String text;
+
+  const WeightProgression({
+    required this.isIncrease,
+    required this.text,
+  });
+}
