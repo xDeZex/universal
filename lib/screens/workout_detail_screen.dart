@@ -190,10 +190,13 @@ class WorkoutDetailScreen extends StatelessWidget {
             TextButton(
               onPressed: () {
                 if (nameController.text.trim().isNotEmpty) {
-                  // For now, just add the exercise name - we'll enhance this later to include sets, reps, etc.
                   context.read<ShoppingAppState>().addExerciseToWorkout(
                     workoutList.id,
                     nameController.text.trim(),
+                    sets: setsController.text.trim().isNotEmpty ? setsController.text.trim() : null,
+                    reps: repsController.text.trim().isNotEmpty ? repsController.text.trim() : null,
+                    weight: weightController.text.trim().isNotEmpty ? weightController.text.trim() : null,
+                    notes: notesController.text.trim().isNotEmpty ? notesController.text.trim() : null,
                   );
                   Navigator.of(context).pop();
                 }
@@ -394,8 +397,8 @@ class ExerciseCard extends StatelessWidget {
     
     if (exercise.sets != null || exercise.reps != null) {
       final setsReps = [
-        if (exercise.sets != null) '${exercise.sets} sets',
-        if (exercise.reps != null) '${exercise.reps} reps',
+        if (exercise.sets != null) '${exercise.sets}s',
+        if (exercise.reps != null) '${exercise.reps}r',
       ].join(' × ');
       details.add(setsReps);
     }
@@ -425,6 +428,9 @@ class ExerciseCard extends StatelessWidget {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (exercise.weight != null && exercise.weight!.isNotEmpty)
+            _buildSaveWeightButton(context),
+          _buildEditButton(context),
           _buildDeleteButton(context),
           ReorderableDragStartListener(
             index: index,
@@ -433,7 +439,39 @@ class ExerciseCard extends StatelessWidget {
         ],
       );
     }
-    return _buildDeleteButton(context);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (exercise.weight != null && exercise.weight!.isNotEmpty)
+          _buildSaveWeightButton(context),
+        _buildEditButton(context),
+        _buildDeleteButton(context),
+      ],
+    );
+  }
+
+  Widget _buildSaveWeightButton(BuildContext context) {
+    final todaysWeight = exercise.todaysWeight;
+    final hasToday = todaysWeight != null;
+    
+    return IconButton(
+      icon: Icon(
+        hasToday ? Icons.check_circle : Icons.save,
+        color: hasToday ? Theme.of(context).colorScheme.primary : null,
+      ),
+      tooltip: hasToday 
+          ? 'Weight saved for today: ${todaysWeight.weight}'
+          : 'Save current weight for today',
+      onPressed: hasToday ? null : () => _saveWeightForToday(context),
+    );
+  }
+
+
+  Widget _buildEditButton(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.edit),
+      onPressed: () => _showEditExerciseDialog(context),
+    );
   }
 
   Widget _buildDeleteButton(BuildContext context) {
@@ -442,6 +480,114 @@ class ExerciseCard extends StatelessWidget {
       onPressed: () => _showDeleteConfirmation(context),
     );
   }
+
+  void _saveWeightForToday(BuildContext context) {
+    if (exercise.weight != null && exercise.weight!.isNotEmpty) {
+      context.read<ShoppingAppState>().saveWeightForExercise(
+        workoutId, 
+        exercise.id, 
+        exercise.weight!,
+      );
+    }
+  }
+
+  void _showEditExerciseDialog(BuildContext context) {
+    final nameController = TextEditingController(text: exercise.name);
+    final setsController = TextEditingController(text: exercise.sets ?? '');
+    final repsController = TextEditingController(text: exercise.reps ?? '');
+    final weightController = TextEditingController(text: exercise.weight ?? '');
+    final notesController = TextEditingController(text: exercise.notes ?? '');
+    
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Edit Exercise'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Exercise name',
+                    hintText: 'e.g. Push ups, Bench press',
+                  ),
+                  autofocus: true,
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: setsController,
+                        decoration: const InputDecoration(
+                          labelText: 'Sets',
+                          hintText: '3',
+                        ),
+                        keyboardType: TextInputType.number,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: TextField(
+                        controller: repsController,
+                        decoration: const InputDecoration(
+                          labelText: 'Reps',
+                          hintText: '10',
+                        ),
+                        keyboardType: TextInputType.number,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: weightController,
+                  decoration: const InputDecoration(
+                    labelText: 'Weight',
+                    hintText: '80kg or bodyweight',
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: notesController,
+                  decoration: const InputDecoration(
+                    labelText: 'Notes',
+                    hintText: 'Optional notes',
+                  ),
+                  maxLines: 2,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                if (nameController.text.trim().isNotEmpty) {
+                  final updatedExercise = exercise.copyWith(
+                    name: nameController.text.trim(),
+                    sets: setsController.text.trim().isNotEmpty ? setsController.text.trim() : null,
+                    reps: repsController.text.trim().isNotEmpty ? repsController.text.trim() : null,
+                    weight: weightController.text.trim().isNotEmpty ? weightController.text.trim() : null,
+                    notes: notesController.text.trim().isNotEmpty ? notesController.text.trim() : null,
+                  );
+                  context.read<ShoppingAppState>().updateExercise(workoutId, exercise.id, updatedExercise);
+                  Navigator.of(context).pop();
+                }
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
 
   void _showDeleteConfirmation(BuildContext context) {
     showDialog(

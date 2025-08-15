@@ -7,6 +7,7 @@ import 'models/shopping_list.dart';
 import 'models/shopping_item.dart';
 import 'models/workout_list.dart';
 import 'models/exercise.dart';
+import 'models/weight_entry.dart';
 import 'screens/main_screen.dart';
 import 'services/list_manager.dart';
 
@@ -358,12 +359,21 @@ class ShoppingAppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void addExerciseToWorkout(String workoutId, String exerciseName) {
+  void addExerciseToWorkout(String workoutId, String exerciseName, {
+    String? sets,
+    String? reps,
+    String? weight,
+    String? notes,
+  }) {
     final workoutIndex = _workoutLists.indexWhere((list) => list.id == workoutId);
     if (workoutIndex != -1) {
       final newExercise = Exercise(
         id: _generateUniqueId(),
         name: exerciseName,
+        sets: sets,
+        reps: reps,
+        weight: weight,
+        notes: notes,
       );
       final updatedExercises = List<Exercise>.from(_workoutLists[workoutIndex].exercises)..add(newExercise);
       _workoutLists[workoutIndex] = _workoutLists[workoutIndex].copyWith(exercises: updatedExercises);
@@ -421,6 +431,32 @@ class ShoppingAppState extends ChangeNotifier {
       _workoutLists[workoutIndex] = _workoutLists[workoutIndex].copyWith(exercises: updatedExercises);
       _saveData();
       notifyListeners();
+    }
+  }
+
+  void saveWeightForExercise(String workoutId, String exerciseId, String weight) {
+    final workoutIndex = _workoutLists.indexWhere((list) => list.id == workoutId);
+    if (workoutIndex != -1) {
+      final exercises = _workoutLists[workoutIndex].exercises;
+      final exerciseIndex = exercises.indexWhere((exercise) => exercise.id == exerciseId);
+      if (exerciseIndex != -1) {
+        final exercise = exercises[exerciseIndex];
+        final newWeightEntry = WeightEntry(
+          date: DateTime.now(),
+          weight: weight,
+        );
+        
+        final updatedWeightHistory = List<WeightEntry>.from(exercise.weightHistory)
+          ..add(newWeightEntry);
+        
+        final updatedExercise = exercise.copyWith(weightHistory: updatedWeightHistory);
+        final updatedExercises = List<Exercise>.from(exercises);
+        updatedExercises[exerciseIndex] = updatedExercise;
+        
+        _workoutLists[workoutIndex] = _workoutLists[workoutIndex].copyWith(exercises: updatedExercises);
+        _saveData();
+        notifyListeners();
+      }
     }
   }
 }

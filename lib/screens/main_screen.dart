@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'shopping_lists_screen.dart';
 import 'workout_lists_screen.dart';
+import 'weight_tracking_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -15,6 +16,7 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _screens = [
     const ShoppingListsScreen(showAppBar: true),
     const WorkoutListsScreen(showAppBar: true),
+    const WeightTrackingScreen(),
   ];
 
   @override
@@ -28,6 +30,7 @@ class _MainScreenState extends State<MainScreen> {
             _currentIndex = index;
           });
         },
+        type: BottomNavigationBarType.fixed,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.shopping_cart),
@@ -36,6 +39,10 @@ class _MainScreenState extends State<MainScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.fitness_center),
             label: 'Workouts',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.trending_up),
+            label: 'Weight Tracking',
           ),
         ],
       ),

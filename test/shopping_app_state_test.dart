@@ -695,5 +695,162 @@ void main() {
         expect(appState.workoutLists[0].exercises[2].name, 'Third Exercise');
       });
     });
+
+    group('Exercise Weight Tracking', () {
+      test('should save weight for exercise correctly', () {
+        appState.addWorkoutList('Test Workout');
+        final workoutId = appState.workoutLists[0].id;
+        appState.addExerciseToWorkout(workoutId, 'Bench Press', weight: '80kg');
+        final exerciseId = appState.workoutLists[0].exercises[0].id;
+        
+        // Save weight for today
+        appState.saveWeightForExercise(workoutId, exerciseId, '85kg');
+        
+        final exercise = appState.workoutLists[0].exercises[0];
+        expect(exercise.weightHistory.length, 1);
+        expect(exercise.weightHistory[0].weight, '85kg');
+        expect(exercise.weightHistory[0].date.year, DateTime.now().year);
+        expect(exercise.weightHistory[0].date.month, DateTime.now().month);
+        expect(exercise.weightHistory[0].date.day, DateTime.now().day);
+      });
+
+      test('should handle multiple weight saves for same exercise', () {
+        appState.addWorkoutList('Test Workout');
+        final workoutId = appState.workoutLists[0].id;
+        appState.addExerciseToWorkout(workoutId, 'Bench Press', weight: '80kg');
+        final exerciseId = appState.workoutLists[0].exercises[0].id;
+        
+        // Save multiple weights
+        appState.saveWeightForExercise(workoutId, exerciseId, '85kg');
+        appState.saveWeightForExercise(workoutId, exerciseId, '87kg');
+        appState.saveWeightForExercise(workoutId, exerciseId, '90kg');
+        
+        final exercise = appState.workoutLists[0].exercises[0];
+        expect(exercise.weightHistory.length, 3);
+        expect(exercise.weightHistory[0].weight, '85kg');
+        expect(exercise.weightHistory[1].weight, '87kg');
+        expect(exercise.weightHistory[2].weight, '90kg');
+      });
+
+      test('should save weight for exercise with complete exercise data', () {
+        appState.addWorkoutList('Test Workout');
+        final workoutId = appState.workoutLists[0].id;
+        appState.addExerciseToWorkout(
+          workoutId, 
+          'Bench Press',
+          sets: '3',
+          reps: '10',
+          weight: '80kg',
+          notes: 'Good form',
+        );
+        final exerciseId = appState.workoutLists[0].exercises[0].id;
+        
+        // Save weight for today
+        appState.saveWeightForExercise(workoutId, exerciseId, '85kg');
+        
+        final exercise = appState.workoutLists[0].exercises[0];
+        expect(exercise.name, 'Bench Press');
+        expect(exercise.sets, '3');
+        expect(exercise.reps, '10');
+        expect(exercise.weight, '80kg');
+        expect(exercise.notes, 'Good form');
+        expect(exercise.weightHistory.length, 1);
+        expect(exercise.weightHistory[0].weight, '85kg');
+      });
+
+      test('should handle saving weight for non-existent workout', () {
+        appState.addWorkoutList('Test Workout');
+        final workoutId = appState.workoutLists[0].id;
+        appState.addExerciseToWorkout(workoutId, 'Bench Press', weight: '80kg');
+        final exerciseId = appState.workoutLists[0].exercises[0].id;
+        
+        // Try to save weight for non-existent workout
+        appState.saveWeightForExercise('non-existent-workout-id', exerciseId, '85kg');
+        
+        // Exercise should be unchanged
+        final exercise = appState.workoutLists[0].exercises[0];
+        expect(exercise.weightHistory.length, 0);
+      });
+
+      test('should handle saving weight for non-existent exercise', () {
+        appState.addWorkoutList('Test Workout');
+        final workoutId = appState.workoutLists[0].id;
+        appState.addExerciseToWorkout(workoutId, 'Bench Press', weight: '80kg');
+        
+        // Try to save weight for non-existent exercise
+        appState.saveWeightForExercise(workoutId, 'non-existent-exercise-id', '85kg');
+        
+        // Exercise should be unchanged
+        final exercise = appState.workoutLists[0].exercises[0];
+        expect(exercise.weightHistory.length, 0);
+      });
+
+      test('should preserve other exercise properties when saving weight', () {
+        appState.addWorkoutList('Test Workout');
+        final workoutId = appState.workoutLists[0].id;
+        appState.addExerciseToWorkout(
+          workoutId, 
+          'Bench Press',
+          sets: '3',
+          reps: '10',
+          weight: '80kg',
+          notes: 'Good form',
+        );
+        final exerciseId = appState.workoutLists[0].exercises[0].id;
+        
+        // Toggle completion before saving weight
+        appState.toggleExerciseCompletion(workoutId, exerciseId);
+        
+        // Save weight
+        appState.saveWeightForExercise(workoutId, exerciseId, '85kg');
+        
+        final exercise = appState.workoutLists[0].exercises[0];
+        expect(exercise.name, 'Bench Press');
+        expect(exercise.sets, '3');
+        expect(exercise.reps, '10');
+        expect(exercise.weight, '80kg');
+        expect(exercise.notes, 'Good form');
+        expect(exercise.isCompleted, true);
+        expect(exercise.weightHistory.length, 1);
+        expect(exercise.weightHistory[0].weight, '85kg');
+      });
+
+      test('should save different weights for different exercises', () {
+        appState.addWorkoutList('Test Workout');
+        final workoutId = appState.workoutLists[0].id;
+        appState.addExerciseToWorkout(workoutId, 'Bench Press', weight: '80kg');
+        appState.addExerciseToWorkout(workoutId, 'Squat', weight: '100kg');
+        
+        final benchId = appState.workoutLists[0].exercises[0].id;
+        final squatId = appState.workoutLists[0].exercises[1].id;
+        
+        // Save different weights for each exercise
+        appState.saveWeightForExercise(workoutId, benchId, '85kg');
+        appState.saveWeightForExercise(workoutId, squatId, '105kg');
+        
+        final benchExercise = appState.workoutLists[0].exercises[0];
+        final squatExercise = appState.workoutLists[0].exercises[1];
+        
+        expect(benchExercise.weightHistory.length, 1);
+        expect(benchExercise.weightHistory[0].weight, '85kg');
+        
+        expect(squatExercise.weightHistory.length, 1);
+        expect(squatExercise.weightHistory[0].weight, '105kg');
+      });
+
+      test('should handle bodyweight exercises', () {
+        appState.addWorkoutList('Test Workout');
+        final workoutId = appState.workoutLists[0].id;
+        appState.addExerciseToWorkout(workoutId, 'Push ups', weight: 'bodyweight');
+        final exerciseId = appState.workoutLists[0].exercises[0].id;
+        
+        // Save bodyweight+additional weight
+        appState.saveWeightForExercise(workoutId, exerciseId, 'bodyweight + 10kg');
+        
+        final exercise = appState.workoutLists[0].exercises[0];
+        expect(exercise.weightHistory.length, 1);
+        expect(exercise.weightHistory[0].weight, 'bodyweight + 10kg');
+      });
+    });
   });
 }
