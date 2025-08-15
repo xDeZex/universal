@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shopping_list_app/main.dart';
+import 'package:shopping_list_app/models/weight_entry.dart';
 
 void main() {
   group('ShoppingAppState', () {
@@ -850,6 +851,163 @@ void main() {
         final exercise = appState.workoutLists[0].exercises[0];
         expect(exercise.weightHistory.length, 1);
         expect(exercise.weightHistory[0].weight, 'bodyweight + 10kg');
+      });
+    });
+
+    group('Delete Weight Entries', () {
+      test('should delete specific weight entry correctly', () {
+        appState.addWorkoutList('Test Workout');
+        final workoutId = appState.workoutLists[0].id;
+        appState.addExerciseToWorkout(workoutId, 'Bench Press', weight: '80kg');
+        final exerciseId = appState.workoutLists[0].exercises[0].id;
+        
+        // Add multiple weight entries
+        appState.saveWeightForExercise(workoutId, exerciseId, '80kg');
+        appState.saveWeightForExercise(workoutId, exerciseId, '85kg');
+        appState.saveWeightForExercise(workoutId, exerciseId, '90kg');
+        
+        final exercise = appState.workoutLists[0].exercises[0];
+        expect(exercise.weightHistory.length, 3);
+        
+        // Verify entries now have unique timestamps
+        final entries = exercise.weightHistory;
+        expect(entries[0].date != entries[1].date, true);
+        expect(entries[1].date != entries[2].date, true);
+        
+        // Store the initial count and the entry to delete
+        final initialCount = exercise.weightHistory.length;
+        final entryToDelete = exercise.weightHistory[1];
+        
+        // Delete the specific entry
+        appState.deleteWeightEntry(workoutId, exerciseId, entryToDelete.date);
+        
+        final updatedExercise = appState.workoutLists[0].exercises[0];
+        // Verify that exactly one entry was deleted
+        expect(updatedExercise.weightHistory.length, initialCount - 1);
+        // Verify that the correct entry was deleted (should be the 85kg entry)
+        expect(updatedExercise.weightHistory.any((entry) => entry.weight == '85kg'), false);
+        expect(updatedExercise.weightHistory.any((entry) => entry.weight == '80kg'), true);
+        expect(updatedExercise.weightHistory.any((entry) => entry.weight == '90kg'), true);
+      });
+
+      test('should delete today\'s weight entry correctly', () {
+        appState.addWorkoutList('Test Workout');
+        final workoutId = appState.workoutLists[0].id;
+        appState.addExerciseToWorkout(workoutId, 'Bench Press', weight: '80kg');
+        final exerciseId = appState.workoutLists[0].exercises[0].id;
+        
+        // Save weight for today
+        appState.saveWeightForExercise(workoutId, exerciseId, '85kg');
+        
+        var exercise = appState.workoutLists[0].exercises[0];
+        expect(exercise.weightHistory.length, 1);
+        expect(exercise.todaysWeight, isNotNull);
+        expect(exercise.todaysWeight!.weight, '85kg');
+        
+        // Delete today's weight
+        appState.deleteTodaysWeightForExercise(workoutId, exerciseId);
+        
+        exercise = appState.workoutLists[0].exercises[0];
+        expect(exercise.weightHistory.length, 0);
+        expect(exercise.todaysWeight, isNull);
+      });
+
+      test('should handle deleting weight for non-existent workout', () {
+        appState.addWorkoutList('Test Workout');
+        final workoutId = appState.workoutLists[0].id;
+        appState.addExerciseToWorkout(workoutId, 'Bench Press', weight: '80kg');
+        final exerciseId = appState.workoutLists[0].exercises[0].id;
+        
+        // Save weight entry
+        appState.saveWeightForExercise(workoutId, exerciseId, '85kg');
+        
+        // Try to delete from non-existent workout
+        appState.deleteWeightEntry('non-existent-workout-id', exerciseId, DateTime.now());
+        
+        // Weight history should remain unchanged
+        final exercise = appState.workoutLists[0].exercises[0];
+        expect(exercise.weightHistory.length, 1);
+      });
+
+      test('should handle deleting weight for non-existent exercise', () {
+        appState.addWorkoutList('Test Workout');
+        final workoutId = appState.workoutLists[0].id;
+        appState.addExerciseToWorkout(workoutId, 'Bench Press', weight: '80kg');
+        final exerciseId = appState.workoutLists[0].exercises[0].id;
+        
+        // Save weight entry
+        appState.saveWeightForExercise(workoutId, exerciseId, '85kg');
+        
+        // Try to delete from non-existent exercise
+        appState.deleteWeightEntry(workoutId, 'non-existent-exercise-id', DateTime.now());
+        
+        // Weight history should remain unchanged
+        final exercise = appState.workoutLists[0].exercises[0];
+        expect(exercise.weightHistory.length, 1);
+      });
+
+      test('should handle deleting non-existent weight entry', () {
+        appState.addWorkoutList('Test Workout');
+        final workoutId = appState.workoutLists[0].id;
+        appState.addExerciseToWorkout(workoutId, 'Bench Press', weight: '80kg');
+        final exerciseId = appState.workoutLists[0].exercises[0].id;
+        
+        // Save weight entry
+        appState.saveWeightForExercise(workoutId, exerciseId, '85kg');
+        
+        // Try to delete entry with different date
+        final differentDate = DateTime.now().subtract(const Duration(days: 1));
+        appState.deleteWeightEntry(workoutId, exerciseId, differentDate);
+        
+        // Weight history should remain unchanged
+        final exercise = appState.workoutLists[0].exercises[0];
+        expect(exercise.weightHistory.length, 1);
+      });
+
+      test('should handle deleting today\'s weight when none exists', () {
+        appState.addWorkoutList('Test Workout');
+        final workoutId = appState.workoutLists[0].id;
+        appState.addExerciseToWorkout(workoutId, 'Bench Press', weight: '80kg');
+        final exerciseId = appState.workoutLists[0].exercises[0].id;
+        
+        // Try to delete today's weight without saving any
+        appState.deleteTodaysWeightForExercise(workoutId, exerciseId);
+        
+        // Should not crash and weight history should remain empty
+        final exercise = appState.workoutLists[0].exercises[0];
+        expect(exercise.weightHistory.length, 0);
+      });
+
+      test('should delete only today\'s weight when multiple entries exist', () {
+        appState.addWorkoutList('Test Workout');
+        final workoutId = appState.workoutLists[0].id;
+        appState.addExerciseToWorkout(workoutId, 'Bench Press', weight: '80kg');
+        final exerciseId = appState.workoutLists[0].exercises[0].id;
+        
+        // Create a past entry by directly adding to history
+        final yesterday = DateTime.now().subtract(const Duration(days: 1));
+        final pastEntry = WeightEntry(date: yesterday, weight: '75kg');
+        
+        final exercise = appState.workoutLists[0].exercises[0];
+        final updatedExercise = exercise.copyWith(
+          weightHistory: [pastEntry],
+        );
+        appState.updateExercise(workoutId, exerciseId, updatedExercise);
+        
+        // Save today's weight
+        appState.saveWeightForExercise(workoutId, exerciseId, '85kg');
+        
+        var currentExercise = appState.workoutLists[0].exercises[0];
+        expect(currentExercise.weightHistory.length, 2);
+        expect(currentExercise.todaysWeight!.weight, '85kg');
+        
+        // Delete today's weight
+        appState.deleteTodaysWeightForExercise(workoutId, exerciseId);
+        
+        currentExercise = appState.workoutLists[0].exercises[0];
+        expect(currentExercise.weightHistory.length, 1);
+        expect(currentExercise.weightHistory[0].weight, '75kg');
+        expect(currentExercise.todaysWeight, isNull);
       });
     });
   });

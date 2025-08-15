@@ -460,9 +460,11 @@ class ExerciseCard extends StatelessWidget {
         color: hasToday ? Theme.of(context).colorScheme.primary : null,
       ),
       tooltip: hasToday 
-          ? 'Weight saved for today: ${todaysWeight.weight}'
+          ? 'Delete today\'s weight: ${todaysWeight.weight}'
           : 'Save current weight for today',
-      onPressed: hasToday ? null : () => _saveWeightForToday(context),
+      onPressed: hasToday 
+          ? () => _unsaveWeightForToday(context)
+          : () => _saveWeightForToday(context),
     );
   }
 
@@ -489,6 +491,32 @@ class ExerciseCard extends StatelessWidget {
         exercise.weight!,
       );
     }
+  }
+
+  void _unsaveWeightForToday(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: const Text('Remove Weight Entry'),
+        content: Text('Are you sure you want to remove today\'s weight entry for "${exercise.name}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              context.read<ShoppingAppState>().deleteTodaysWeightForExercise(
+                workoutId,
+                exercise.id,
+              );
+              Navigator.of(context).pop();
+            },
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showEditExerciseDialog(BuildContext context) {

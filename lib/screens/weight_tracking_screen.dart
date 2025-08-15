@@ -126,13 +126,27 @@ class WeightTrackingScreen extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text(
-                      entryData.entry.weight,
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: isToday ? Theme.of(context).colorScheme.primary : null,
-                      ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          entryData.entry.weight,
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: isToday ? Theme.of(context).colorScheme.primary : null,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        GestureDetector(
+                          onTap: () => _showDeleteWeightDialog(context, entryData),
+                          child: Icon(
+                            Icons.delete_outline,
+                            size: 18,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
                     ),
                     if (progression != null) ...[
                       const SizedBox(height: 4),
@@ -303,6 +317,51 @@ class WeightTrackingScreen extends StatelessWidget {
     final regex = RegExp(r'(\d+(?:\.\d+)?)');
     final match = regex.firstMatch(weight);
     return match != null ? double.tryParse(match.group(1)!) : null;
+  }
+
+  void _showDeleteWeightDialog(BuildContext context, WeightEntryData entryData) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: const Text('Delete Weight Entry'),
+        content: Text(
+          'Are you sure you want to delete this weight entry?\n\n'
+          '${entryData.exercise.name}: ${entryData.entry.weight}\n'
+          '${_formatDate(entryData.entry.date)}',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              // Find the workout that contains this exercise
+              final appState = Provider.of<ShoppingAppState>(context, listen: false);
+              String? workoutId;
+              
+              for (final workout in appState.workoutLists) {
+                if (workout.exercises.any((ex) => ex.id == entryData.exercise.id)) {
+                  workoutId = workout.id;
+                  break;
+                }
+              }
+              
+              if (workoutId != null) {
+                appState.deleteWeightEntry(
+                  workoutId,
+                  entryData.exercise.id,
+                  entryData.entry.date,
+                );
+              }
+              
+              Navigator.of(context).pop();
+            },
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
   }
 }
 

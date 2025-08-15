@@ -441,8 +441,16 @@ class ShoppingAppState extends ChangeNotifier {
       final exerciseIndex = exercises.indexWhere((exercise) => exercise.id == exerciseId);
       if (exerciseIndex != -1) {
         final exercise = exercises[exerciseIndex];
+        var entryDate = DateTime.now();
+        
+        // Ensure unique timestamp by adding microseconds if needed
+        final existingTimes = exercise.weightHistory.map((e) => e.date.millisecondsSinceEpoch).toSet();
+        while (existingTimes.contains(entryDate.millisecondsSinceEpoch)) {
+          entryDate = entryDate.add(const Duration(microseconds: 1));
+        }
+        
         final newWeightEntry = WeightEntry(
-          date: DateTime.now(),
+          date: entryDate,
           weight: weight,
         );
         
@@ -456,6 +464,54 @@ class ShoppingAppState extends ChangeNotifier {
         _workoutLists[workoutIndex] = _workoutLists[workoutIndex].copyWith(exercises: updatedExercises);
         _saveData();
         notifyListeners();
+      }
+    }
+  }
+
+  void deleteWeightEntry(String workoutId, String exerciseId, DateTime entryDate) {
+    final workoutIndex = _workoutLists.indexWhere((list) => list.id == workoutId);
+    if (workoutIndex != -1) {
+      final exercises = _workoutLists[workoutIndex].exercises;
+      final exerciseIndex = exercises.indexWhere((exercise) => exercise.id == exerciseId);
+      if (exerciseIndex != -1) {
+        final exercise = exercises[exerciseIndex];
+        
+        // Find the first matching entry and remove only that one
+        final updatedWeightHistory = List<WeightEntry>.from(exercise.weightHistory);
+        final entryIndex = updatedWeightHistory.indexWhere((entry) => 
+            _isSameDateTime(entry.date, entryDate));
+        
+        if (entryIndex != -1) {
+          updatedWeightHistory.removeAt(entryIndex);
+        }
+        
+        final updatedExercise = exercise.copyWith(weightHistory: updatedWeightHistory);
+        final updatedExercises = List<Exercise>.from(exercises);
+        updatedExercises[exerciseIndex] = updatedExercise;
+        
+        _workoutLists[workoutIndex] = _workoutLists[workoutIndex].copyWith(exercises: updatedExercises);
+        _saveData();
+        notifyListeners();
+      }
+    }
+  }
+
+  bool _isSameDateTime(DateTime date1, DateTime date2) {
+    return date1.millisecondsSinceEpoch == date2.millisecondsSinceEpoch;
+  }
+
+  void deleteTodaysWeightForExercise(String workoutId, String exerciseId) {
+    final workoutIndex = _workoutLists.indexWhere((list) => list.id == workoutId);
+    if (workoutIndex != -1) {
+      final exercises = _workoutLists[workoutIndex].exercises;
+      final exerciseIndex = exercises.indexWhere((exercise) => exercise.id == exerciseId);
+      if (exerciseIndex != -1) {
+        final exercise = exercises[exerciseIndex];
+        final todaysWeight = exercise.todaysWeight;
+        
+        if (todaysWeight != null) {
+          deleteWeightEntry(workoutId, exerciseId, todaysWeight.date);
+        }
       }
     }
   }
