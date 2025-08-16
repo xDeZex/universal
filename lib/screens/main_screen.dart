@@ -73,7 +73,7 @@ class _MainScreenState extends State<MainScreen> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.trending_up),
-            label: 'Exercise Logs',
+            label: 'Workout Logs',
           ),
         ],
       ),
