@@ -25,14 +25,14 @@ class ExerciseWeightHistoryScreen extends StatelessWidget {
       ),
       body: Consumer<ShoppingAppState>(
         builder: (context, appState, child) {
-          // Find the current exercise data
-          final currentExercise = _getCurrentExercise(appState);
+          // Get exercise history from global storage
+          final exerciseHistory = appState.getExerciseHistory(exercise.name);
           
-          if (currentExercise?.weightHistory.isEmpty ?? true) {
+          if (exerciseHistory?.weightHistory.isEmpty ?? true) {
             return _buildEmptyState(context);
           }
           
-          final sortedHistory = List<WeightEntry>.from(currentExercise!.weightHistory)
+          final sortedHistory = List<WeightEntry>.from(exerciseHistory!.weightHistory)
             ..sort((a, b) => b.date.compareTo(a.date)); // Newest first
           
           return ListView.builder(
@@ -52,17 +52,6 @@ class ExerciseWeightHistoryScreen extends StatelessWidget {
     );
   }
 
-  Exercise? _getCurrentExercise(ShoppingAppState appState) {
-    final workout = appState.workoutLists.firstWhere(
-      (w) => w.id == workoutId,
-      orElse: () => throw StateError('Workout not found'),
-    );
-    
-    return workout.exercises.firstWhere(
-      (e) => e.id == exercise.id,
-      orElse: () => throw StateError('Exercise not found'),
-    );
-  }
 
   Widget _buildEmptyState(BuildContext context) {
     return Center(
@@ -363,7 +352,8 @@ class ExerciseWeightHistoryScreen extends StatelessWidget {
           TextButton(
             onPressed: () {
               final appState = Provider.of<ShoppingAppState>(context, listen: false);
-              appState.deleteWeightEntry(workoutId, exercise.id, entry.date);
+              // Delete from global exercise history
+              appState.deleteWeightFromExerciseHistory(exercise.name, entry.date);
               Navigator.of(context).pop();
             },
             child: const Text('Delete'),

@@ -8,6 +8,7 @@ import 'models/shopping_item.dart';
 import 'models/workout_list.dart';
 import 'models/exercise.dart';
 import 'models/weight_entry.dart';
+import 'models/exercise_history.dart';
 import 'screens/main_screen.dart';
 import 'services/list_manager.dart';
 
@@ -164,12 +165,15 @@ class MyApp extends StatelessWidget {
 class ShoppingAppState extends ChangeNotifier {
   List<ShoppingList> _shoppingLists = [];
   List<WorkoutList> _workoutLists = [];
+  List<ExerciseHistory> _exerciseHistory = [];
   static const String _shoppingStorageKey = 'shopping_lists';
   static const String _workoutStorageKey = 'workout_lists';
+  static const String _exerciseHistoryStorageKey = 'exercise_history';
   static int _idCounter = 0;
 
   List<ShoppingList> get shoppingLists => _shoppingLists;
   List<WorkoutList> get workoutLists => _workoutLists;
+  List<ExerciseHistory> get exerciseHistory => _exerciseHistory;
 
   String _generateUniqueId() {
     _idCounter++;
@@ -201,6 +205,7 @@ class ShoppingAppState extends ChangeNotifier {
   Future<void> _loadData() async {
     await _loadShoppingLists();
     await _loadWorkoutLists();
+    await _loadExerciseHistory();
   }
 
   Future<void> _loadShoppingLists() async {
@@ -237,9 +242,26 @@ class ShoppingAppState extends ChangeNotifier {
     }
   }
 
+  Future<void> _loadExerciseHistory() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? jsonString = prefs.getString(_exerciseHistoryStorageKey);
+      if (jsonString != null) {
+        final List<dynamic> jsonList = json.decode(jsonString);
+        _exerciseHistory = jsonList
+            .map((jsonItem) => ExerciseHistory.fromJson(jsonItem as Map<String, dynamic>))
+            .toList();
+        notifyListeners();
+      }
+    } catch (e) {
+      // Ignore loading errors - app continues with empty state
+    }
+  }
+
   Future<void> _saveData() async {
     await _saveShoppingLists();
     await _saveWorkoutLists();
+    await _saveExerciseHistory();
   }
 
   Future<void> _saveShoppingLists() async {
@@ -261,6 +283,18 @@ class ShoppingAppState extends ChangeNotifier {
         _workoutLists.map((list) => list.toJson()).toList(),
       );
       await prefs.setString(_workoutStorageKey, jsonString);
+    } catch (e) {
+      // Ignore saving errors - data will be retried on next save
+    }
+  }
+
+  Future<void> _saveExerciseHistory() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String jsonString = json.encode(
+        _exerciseHistory.map((history) => history.toJson()).toList(),
+      );
+      await prefs.setString(_exerciseHistoryStorageKey, jsonString);
     } catch (e) {
       // Ignore saving errors - data will be retried on next save
     }
@@ -454,6 +488,7 @@ class ShoppingAppState extends ChangeNotifier {
           weight: weight,
         );
         
+        // Save to local exercise history (for backward compatibility)
         final updatedWeightHistory = List<WeightEntry>.from(exercise.weightHistory)
           ..add(newWeightEntry);
         
@@ -462,6 +497,10 @@ class ShoppingAppState extends ChangeNotifier {
         updatedExercises[exerciseIndex] = updatedExercise;
         
         _workoutLists[workoutIndex] = _workoutLists[workoutIndex].copyWith(exercises: updatedExercises);
+        
+        // Also save to global exercise history (without calling _saveData to avoid recursion)
+        _addOrUpdateExerciseHistoryInternal(exercise.name, newWeightEntry);
+        
         _saveData();
         notifyListeners();
       }
@@ -483,6 +522,9 @@ class ShoppingAppState extends ChangeNotifier {
         
         if (entryIndex != -1) {
           updatedWeightHistory.removeAt(entryIndex);
+          
+          // Also delete from global exercise history (without calling _saveData to avoid recursion)
+          _deleteWeightFromExerciseHistoryInternal(exercise.name, entryDate);
         }
         
         final updatedExercise = exercise.copyWith(weightHistory: updatedWeightHistory);
@@ -514,5 +556,88 @@ class ShoppingAppState extends ChangeNotifier {
         }
       }
     }
+  }
+
+  // Global Exercise History Management
+  ExerciseHistory? getExerciseHistory(String exerciseName) {
+    return _exerciseHistory.cast<ExerciseHistory?>().firstWhere(
+      (history) => history?.exerciseName.toLowerCase() == exerciseName.toLowerCase(),
+      orElse: () => null,
+    );
+  }
+
+  void addOrUpdateExerciseHistory(String exerciseName, WeightEntry weightEntry) {
+    _addOrUpdateExerciseHistoryInternal(exerciseName, weightEntry);
+    _saveData();
+    notifyListeners();
+  }
+
+  void _addOrUpdateExerciseHistoryInternal(String exerciseName, WeightEntry weightEntry) {
+    final existingIndex = _exerciseHistory.indexWhere(
+      (history) => history.exerciseName.toLowerCase() == exerciseName.toLowerCase(),
+    );
+
+    if (existingIndex != -1) {
+      // Update existing exercise history
+      final existing = _exerciseHistory[existingIndex];
+      var entryDate = weightEntry.date;
+      
+      // Ensure unique timestamp by adding microseconds if needed
+      final existingTimes = existing.weightHistory.map((e) => e.date.millisecondsSinceEpoch).toSet();
+      while (existingTimes.contains(entryDate.millisecondsSinceEpoch)) {
+        entryDate = entryDate.add(const Duration(microseconds: 1));
+      }
+      
+      final updatedEntry = WeightEntry(date: entryDate, weight: weightEntry.weight);
+      final updatedHistory = List<WeightEntry>.from(existing.weightHistory)..add(updatedEntry);
+      
+      _exerciseHistory[existingIndex] = existing.copyWith(
+        weightHistory: updatedHistory,
+        lastUsed: DateTime.now(),
+      );
+    } else {
+      // Create new exercise history
+      final newHistory = ExerciseHistory(
+        exerciseName: exerciseName,
+        weightHistory: [weightEntry],
+        createdAt: DateTime.now(),
+        lastUsed: DateTime.now(),
+      );
+      _exerciseHistory.add(newHistory);
+    }
+  }
+
+  void deleteWeightFromExerciseHistory(String exerciseName, DateTime entryDate) {
+    _deleteWeightFromExerciseHistoryInternal(exerciseName, entryDate);
+    _saveData();
+    notifyListeners();
+  }
+
+  void _deleteWeightFromExerciseHistoryInternal(String exerciseName, DateTime entryDate) {
+    final historyIndex = _exerciseHistory.indexWhere(
+      (history) => history.exerciseName.toLowerCase() == exerciseName.toLowerCase(),
+    );
+
+    if (historyIndex != -1) {
+      final history = _exerciseHistory[historyIndex];
+      final updatedWeightHistory = List<WeightEntry>.from(history.weightHistory);
+      final entryIndex = updatedWeightHistory.indexWhere((entry) => 
+          _isSameDateTime(entry.date, entryDate));
+      
+      if (entryIndex != -1) {
+        updatedWeightHistory.removeAt(entryIndex);
+        
+        // Keep the history even if no weight entries - just update lastUsed
+        _exerciseHistory[historyIndex] = history.copyWith(
+          weightHistory: updatedWeightHistory,
+          lastUsed: DateTime.now(),
+        );
+      }
+    }
+  }
+
+  List<ExerciseHistory> getAllExerciseHistoriesWithWeights() {
+    return _exerciseHistory.where((history) => history.weightHistory.isNotEmpty).toList()
+      ..sort((a, b) => b.lastUsed.compareTo(a.lastUsed)); // Most recently used first
   }
 }

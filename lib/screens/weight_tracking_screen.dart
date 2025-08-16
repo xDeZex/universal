@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../main.dart';
 import '../models/weight_entry.dart';
 import '../models/exercise.dart';
+import '../models/exercise_history.dart';
 import 'exercise_weight_history_screen.dart';
 
 class WeightTrackingScreen extends StatelessWidget {
@@ -17,9 +18,9 @@ class WeightTrackingScreen extends StatelessWidget {
       ),
       body: Consumer<ShoppingAppState>(
         builder: (context, appState, child) {
-          final allWeightEntries = _getAllWeightEntries(appState);
+          final exerciseSummaries = _getExerciseSummaries(appState);
           
-          if (allWeightEntries.isEmpty) {
+          if (exerciseSummaries.isEmpty) {
             return const Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -51,14 +52,10 @@ class WeightTrackingScreen extends StatelessWidget {
 
           return ListView.builder(
             padding: const EdgeInsets.all(16),
-            itemCount: allWeightEntries.length,
+            itemCount: exerciseSummaries.length,
             itemBuilder: (context, index) {
-              final entryData = allWeightEntries[index];
-              final progression = index < allWeightEntries.length - 1
-                  ? _getProgression(entryData, allWeightEntries[index + 1])
-                  : null;
-              
-              return _buildWeightCard(context, entryData, progression);
+              final summaryData = exerciseSummaries[index];
+              return _buildExerciseSummaryCard(context, summaryData);
             },
           );
         },
@@ -66,35 +63,81 @@ class WeightTrackingScreen extends StatelessWidget {
     );
   }
 
-  List<WeightEntryData> _getAllWeightEntries(ShoppingAppState appState) {
-    final List<WeightEntryData> allEntries = [];
+  List<ExerciseSummaryData> _getExerciseSummaries(ShoppingAppState appState) {
+    final List<ExerciseSummaryData> summaries = [];
     
-    for (final workout in appState.workoutLists) {
-      for (final exercise in workout.exercises) {
-        for (final weightEntry in exercise.weightHistory) {
-          allEntries.add(WeightEntryData(
-            exercise: exercise,
-            workoutName: workout.name,
-            entry: weightEntry,
-          ));
+    // Get all exercise histories with weights from global storage only
+    final exerciseHistories = appState.getAllExerciseHistoriesWithWeights();
+    
+    for (final exerciseHistory in exerciseHistories) {
+      // Find the most recent workout that contains this exercise (for display purposes)
+      String workoutName = 'Unknown Workout';
+      Exercise? currentExercise;
+      
+      // Look for this exercise in current workouts
+      for (final workout in appState.workoutLists) {
+        for (final exercise in workout.exercises) {
+          if (exercise.name.toLowerCase() == exerciseHistory.exerciseName.toLowerCase()) {
+            workoutName = workout.name;
+            currentExercise = exercise;
+            break;
+          }
         }
+        if (currentExercise != null) break;
+      }
+      
+      // If not found in any current workout, create a mock exercise for display
+      if (currentExercise == null) {
+        currentExercise = Exercise(
+          id: 'deleted_${exerciseHistory.exerciseName.toLowerCase().replaceAll(' ', '_')}',
+          name: exerciseHistory.exerciseName,
+          isCompleted: false,
+          weightHistory: [], // Don't use local history to avoid duplicates
+        );
+        workoutName = 'Deleted Exercise';
+      } else {
+        // For existing exercises, create a copy with empty local history to avoid duplicates
+        currentExercise = currentExercise.copyWith(weightHistory: []);
+      }
+      
+      // Create summary for this exercise
+      if (exerciseHistory.weightHistory.isNotEmpty) {
+        summaries.add(ExerciseSummaryData(
+          exercise: currentExercise,
+          workoutName: workoutName,
+          exerciseHistory: exerciseHistory,
+        ));
       }
     }
     
-    // Sort by date (newest first)
-    allEntries.sort((a, b) => b.entry.date.compareTo(a.entry.date));
+    // Sort by last used date (most recent first)
+    summaries.sort((a, b) => b.exerciseHistory.lastUsed.compareTo(a.exerciseHistory.lastUsed));
     
-    return allEntries;
+    return summaries;
   }
 
-  Widget _buildWeightCard(BuildContext context, WeightEntryData entryData, WeightProgression? progression) {
-    final isToday = _isToday(entryData.entry.date);
+  Widget _buildExerciseSummaryCard(BuildContext context, ExerciseSummaryData summaryData) {
+    final exerciseHistory = summaryData.exerciseHistory;
+    final latestEntry = exerciseHistory.weightHistory.isNotEmpty 
+        ? exerciseHistory.weightHistory.last 
+        : null;
+    final todaysWeight = exerciseHistory.todaysWeight;
+    final hasToday = todaysWeight != null;
+    final totalEntries = exerciseHistory.weightHistory.length;
+    
+    // Calculate progression from last two entries
+    WeightProgression? progression;
+    if (exerciseHistory.weightHistory.length >= 2) {
+      final recent = exerciseHistory.weightHistory[exerciseHistory.weightHistory.length - 1];
+      final previous = exerciseHistory.weightHistory[exerciseHistory.weightHistory.length - 2];
+      progression = _getProgressionFromEntries(recent, previous);
+    }
     
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
       child: InkWell(
-        onTap: () => _navigateToExerciseHistory(context, entryData),
+        onTap: () => _navigateToExerciseHistoryFromSummary(context, summaryData),
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -112,11 +155,11 @@ class WeightTrackingScreen extends StatelessWidget {
                           children: [
                             Expanded(
                               child: Text(
-                                entryData.exercise.name,
+                                summaryData.exercise.name,
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
-                                  color: isToday ? Theme.of(context).colorScheme.primary : null,
+                                  color: hasToday ? Theme.of(context).colorScheme.primary : null,
                                 ),
                               ),
                             ),
@@ -129,7 +172,7 @@ class WeightTrackingScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          entryData.workoutName,
+                          summaryData.workoutName,
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.grey[600],
@@ -138,155 +181,122 @@ class WeightTrackingScreen extends StatelessWidget {
                       ],
                     ),
                   ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      if (latestEntry != null) ...[
                         Text(
-                          entryData.entry.weight,
+                          latestEntry.weight,
                           style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
-                            color: isToday ? Theme.of(context).colorScheme.primary : null,
+                            color: hasToday ? Theme.of(context).colorScheme.primary : null,
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        GestureDetector(
-                          onTap: () => _showDeleteWeightDialog(context, entryData),
-                          child: Icon(
-                            Icons.delete_outline,
-                            size: 18,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      ],
-                    ),
-                    if (progression != null) ...[
-                      const SizedBox(height: 4),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: progression.isIncrease 
-                              ? Colors.green.withValues(alpha: 0.1)
-                              : Colors.red.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: progression.isIncrease ? Colors.green : Colors.red,
-                            width: 1,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              progression.isIncrease ? Icons.trending_up : Icons.trending_down,
-                              size: 14,
-                              color: progression.isIncrease ? Colors.green : Colors.red,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              progression.text,
-                              style: TextStyle(
+                        if (progression != null) ...[
+                          const SizedBox(height: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: progression.isIncrease 
+                                  ? Colors.green.withValues(alpha: 0.1)
+                                  : Colors.red.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
                                 color: progression.isIncrease ? Colors.green : Colors.red,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
+                                width: 1,
                               ),
                             ),
-                          ],
-                        ),
-                      ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  progression.isIncrease ? Icons.trending_up : Icons.trending_down,
+                                  size: 14,
+                                  color: progression.isIncrease ? Colors.green : Colors.red,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  progression.text,
+                                  style: TextStyle(
+                                    color: progression.isIncrease ? Colors.green : Colors.red,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
                     ],
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Icon(
-                  Icons.access_time,
-                  size: 16,
-                  color: Colors.grey[600],
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  _formatDate(entryData.entry.date),
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 14,
-                  ),
-                ),
-                if (isToday) ...[
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: Theme.of(context).colorScheme.primary,
-                        width: 1,
-                      ),
-                    ),
-                    child: Text(
-                      'TODAY',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 10,
-                      ),
-                    ),
                   ),
                 ],
-              ],
-            ),
-            if (entryData.exercise.sets != null || entryData.exercise.reps != null) ...[
-              const SizedBox(height: 8),
+              ),
+              const SizedBox(height: 12),
               Row(
                 children: [
                   Icon(
-                    Icons.fitness_center,
+                    Icons.history,
                     size: 16,
                     color: Colors.grey[600],
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    _formatSetsReps(entryData.exercise),
+                    '$totalEntries entr${totalEntries == 1 ? 'y' : 'ies'}',
                     style: TextStyle(
                       color: Colors.grey[600],
                       fontSize: 14,
                     ),
                   ),
+                  const Spacer(),
+                  if (latestEntry != null) ...[
+                    Icon(
+                      Icons.access_time,
+                      size: 16,
+                      color: Colors.grey[600],
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      _formatDate(latestEntry.date),
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                  if (hasToday) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: Theme.of(context).colorScheme.primary,
+                          width: 1,
+                        ),
+                      ),
+                      child: Text(
+                        'TODAY',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ],
-          ],
-        ),
+          ),
         ),
       ),
     );
   }
 
-  String _formatSetsReps(Exercise exercise) {
-    final details = <String>[];
-    if (exercise.sets != null && exercise.reps != null) {
-      details.add('${exercise.sets}s × ${exercise.reps}r');
-    } else if (exercise.sets != null) {
-      details.add('${exercise.sets}s');
-    } else if (exercise.reps != null) {
-      details.add('${exercise.reps}r');
-    }
-    return details.join(' • ');
-  }
 
-  bool _isToday(DateTime date) {
-    final now = DateTime.now();
-    return date.year == now.year && 
-           date.month == now.month && 
-           date.day == now.day;
-  }
 
   String _formatDate(DateTime date) {
     final now = DateTime.now();
@@ -309,13 +319,10 @@ class WeightTrackingScreen extends StatelessWidget {
     return '$hour:$minute';
   }
 
-  WeightProgression? _getProgression(WeightEntryData current, WeightEntryData previous) {
-    // Only compare entries from the same exercise
-    if (current.exercise.id != previous.exercise.id) return null;
-    
+  WeightProgression? _getProgressionFromEntries(WeightEntry current, WeightEntry previous) {
     // Try to extract numeric values for comparison
-    final currentWeight = _extractNumericWeight(current.entry.weight);
-    final previousWeight = _extractNumericWeight(previous.entry.weight);
+    final currentWeight = _extractNumericWeight(current.weight);
+    final previousWeight = _extractNumericWeight(previous.weight);
     
     if (currentWeight == null || previousWeight == null) return null;
     
@@ -335,86 +342,43 @@ class WeightTrackingScreen extends StatelessWidget {
     return match != null ? double.tryParse(match.group(1)!) : null;
   }
 
-  void _showDeleteWeightDialog(BuildContext context, WeightEntryData entryData) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) => AlertDialog(
-        title: const Text('Delete Weight Entry'),
-        content: Text(
-          'Are you sure you want to delete this weight entry?\n\n'
-          '${entryData.exercise.name}: ${entryData.entry.weight}\n'
-          '${_formatDate(entryData.entry.date)}',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              // Find the workout that contains this exercise
-              final appState = Provider.of<ShoppingAppState>(context, listen: false);
-              String? workoutId;
-              
-              for (final workout in appState.workoutLists) {
-                if (workout.exercises.any((ex) => ex.id == entryData.exercise.id)) {
-                  workoutId = workout.id;
-                  break;
-                }
-              }
-              
-              if (workoutId != null) {
-                appState.deleteWeightEntry(
-                  workoutId,
-                  entryData.exercise.id,
-                  entryData.entry.date,
-                );
-              }
-              
-              Navigator.of(context).pop();
-            },
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
-  }
 
-  void _navigateToExerciseHistory(BuildContext context, WeightEntryData entryData) {
+  void _navigateToExerciseHistoryFromSummary(BuildContext context, ExerciseSummaryData summaryData) {
     final appState = Provider.of<ShoppingAppState>(context, listen: false);
     String? workoutId;
     
-    // Find the workout that contains this exercise
+    // Find the workout that contains this exercise (if it still exists in a workout)
     for (final workout in appState.workoutLists) {
-      if (workout.exercises.any((ex) => ex.id == entryData.exercise.id)) {
+      if (workout.exercises.any((ex) => ex.name.toLowerCase() == summaryData.exercise.name.toLowerCase())) {
         workoutId = workout.id;
         break;
       }
     }
     
-    if (workoutId != null) {
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => ExerciseWeightHistoryScreen(
-            exercise: entryData.exercise,
-            workoutId: workoutId!,
-            workoutName: entryData.workoutName,
-          ),
+    // For deleted exercises, use a placeholder workout ID
+    workoutId ??= 'global_history';
+    
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => ExerciseWeightHistoryScreen(
+          exercise: summaryData.exercise,
+          workoutId: workoutId!,
+          workoutName: summaryData.workoutName,
         ),
-      );
-    }
+      ),
+    );
   }
 }
 
-class WeightEntryData {
+class ExerciseSummaryData {
   final Exercise exercise;
   final String workoutName;
-  final WeightEntry entry;
+  final ExerciseHistory exerciseHistory;
 
-  const WeightEntryData({
+  const ExerciseSummaryData({
     required this.exercise,
     required this.workoutName,
-    required this.entry,
+    required this.exerciseHistory,
   });
 }
 

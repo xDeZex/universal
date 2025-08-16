@@ -1010,5 +1010,156 @@ void main() {
         expect(currentExercise.todaysWeight, isNull);
       });
     });
+
+    group('Persistent Exercise History', () {
+      test('should preserve weight history when exercise is deleted from workout', () {
+        appState.addWorkoutList('Test Workout');
+        final workoutId = appState.workoutLists[0].id;
+        appState.addExerciseToWorkout(workoutId, 'Bench Press', weight: '80kg');
+        final exerciseId = appState.workoutLists[0].exercises[0].id;
+        
+        // Save weight entries
+        appState.saveWeightForExercise(workoutId, exerciseId, '80kg');
+        appState.saveWeightForExercise(workoutId, exerciseId, '85kg');
+        
+        // Verify exercise has weight history
+        var exercise = appState.workoutLists[0].exercises[0];
+        expect(exercise.weightHistory.length, 2);
+        
+        // Verify global exercise history was created
+        var globalHistory = appState.getExerciseHistory('Bench Press');
+        expect(globalHistory, isNotNull);
+        expect(globalHistory!.weightHistory.length, 2);
+        expect(globalHistory.exerciseName, 'Bench Press');
+        
+        // Delete the exercise from the workout
+        appState.deleteExerciseFromWorkout(workoutId, exerciseId);
+        
+        // Verify exercise is removed from workout
+        expect(appState.workoutLists[0].exercises.length, 0);
+        
+        // Verify global exercise history is preserved
+        globalHistory = appState.getExerciseHistory('Bench Press');
+        expect(globalHistory, isNotNull);
+        expect(globalHistory!.weightHistory.length, 2);
+        expect(globalHistory.weightHistory[0].weight, '80kg');
+        expect(globalHistory.weightHistory[1].weight, '85kg');
+      });
+
+      test('should show deleted exercises in weight tracking screen', () {
+        appState.addWorkoutList('Test Workout');
+        final workoutId = appState.workoutLists[0].id;
+        appState.addExerciseToWorkout(workoutId, 'Deadlift', weight: '100kg');
+        final exerciseId = appState.workoutLists[0].exercises[0].id;
+        
+        // Save weight entry
+        appState.saveWeightForExercise(workoutId, exerciseId, '100kg');
+        
+        // Delete the exercise
+        appState.deleteExerciseFromWorkout(workoutId, exerciseId);
+        
+        // Get all exercise histories with weights
+        final historiesWithWeights = appState.getAllExerciseHistoriesWithWeights();
+        expect(historiesWithWeights.length, 1);
+        expect(historiesWithWeights[0].exerciseName, 'Deadlift');
+        expect(historiesWithWeights[0].weightHistory.length, 1);
+      });
+
+      test('should merge weight history for exercise with same name across workouts', () {
+        // Add exercise to first workout
+        appState.addWorkoutList('Push Workout');
+        final workout1Id = appState.workoutLists[0].id;
+        appState.addExerciseToWorkout(workout1Id, 'Push Ups', weight: 'bodyweight');
+        final exercise1Id = appState.workoutLists[0].exercises[0].id;
+        
+        // Add exercise to second workout
+        appState.addWorkoutList('Calisthenics');
+        final workout2Id = appState.workoutLists[1].id;
+        appState.addExerciseToWorkout(workout2Id, 'Push Ups', weight: 'bodyweight + 10kg');
+        final exercise2Id = appState.workoutLists[1].exercises[0].id;
+        
+        // Save weights from both exercises
+        appState.saveWeightForExercise(workout1Id, exercise1Id, 'bodyweight');
+        appState.saveWeightForExercise(workout2Id, exercise2Id, 'bodyweight + 5kg');
+        appState.saveWeightForExercise(workout1Id, exercise1Id, 'bodyweight + 2kg');
+        
+        // Verify global history combines both
+        final globalHistory = appState.getExerciseHistory('Push Ups');
+        expect(globalHistory, isNotNull);
+        expect(globalHistory!.weightHistory.length, 3);
+        
+        // Verify unique exercise name (case insensitive)
+        final historiesWithWeights = appState.getAllExerciseHistoriesWithWeights();
+        final pushUpsHistories = historiesWithWeights.where((h) => 
+            h.exerciseName.toLowerCase() == 'push ups').toList();
+        expect(pushUpsHistories.length, 1);
+      });
+
+      test('should delete weight entries from global history correctly', () {
+        appState.addWorkoutList('Test Workout');
+        final workoutId = appState.workoutLists[0].id;
+        appState.addExerciseToWorkout(workoutId, 'Squats', weight: '60kg');
+        final exerciseId = appState.workoutLists[0].exercises[0].id;
+        
+        // Save multiple weight entries
+        appState.saveWeightForExercise(workoutId, exerciseId, '60kg');
+        appState.saveWeightForExercise(workoutId, exerciseId, '65kg');
+        appState.saveWeightForExercise(workoutId, exerciseId, '70kg');
+        
+        var globalHistory = appState.getExerciseHistory('Squats');
+        expect(globalHistory!.weightHistory.length, 3);
+        
+        // Delete middle entry from global history
+        final entryToDelete = globalHistory.weightHistory[1];
+        appState.deleteWeightFromExerciseHistory('Squats', entryToDelete.date);
+        
+        // Verify deletion
+        globalHistory = appState.getExerciseHistory('Squats');
+        expect(globalHistory!.weightHistory.length, 2);
+        expect(globalHistory.weightHistory.any((entry) => entry.weight == '65kg'), false);
+        expect(globalHistory.weightHistory.any((entry) => entry.weight == '60kg'), true);
+        expect(globalHistory.weightHistory.any((entry) => entry.weight == '70kg'), true);
+      });
+
+      test('should not create duplicate entries when adding exercise back after deletion', () {
+        appState.addWorkoutList('Test Workout');
+        final workoutId = appState.workoutLists[0].id;
+        appState.addExerciseToWorkout(workoutId, 'Pull Ups', weight: 'bodyweight');
+        final exerciseId = appState.workoutLists[0].exercises[0].id;
+        
+        // Save weight entry
+        appState.saveWeightForExercise(workoutId, exerciseId, 'bodyweight + 5kg');
+        
+        // Verify global history has one entry
+        var globalHistory = appState.getExerciseHistory('Pull Ups');
+        expect(globalHistory!.weightHistory.length, 1);
+        
+        // Delete the exercise
+        appState.deleteExerciseFromWorkout(workoutId, exerciseId);
+        expect(appState.workoutLists[0].exercises.length, 0);
+        
+        // Global history should still exist
+        globalHistory = appState.getExerciseHistory('Pull Ups');
+        expect(globalHistory!.weightHistory.length, 1);
+        
+        // Add the exercise back
+        appState.addExerciseToWorkout(workoutId, 'Pull Ups', weight: 'bodyweight');
+        final newExerciseId = appState.workoutLists[0].exercises[0].id;
+        
+        // Save another weight entry
+        appState.saveWeightForExercise(workoutId, newExerciseId, 'bodyweight + 10kg');
+        
+        // Global history should have both entries, no duplicates
+        globalHistory = appState.getExerciseHistory('Pull Ups');
+        expect(globalHistory!.weightHistory.length, 2);
+        
+        // Verify unique exercise in weight tracking
+        final historiesWithWeights = appState.getAllExerciseHistoriesWithWeights();
+        final pullUpsHistories = historiesWithWeights.where((h) => 
+            h.exerciseName.toLowerCase() == 'pull ups').toList();
+        expect(pullUpsHistories.length, 1);
+        expect(pullUpsHistories[0].weightHistory.length, 2);
+      });
+    });
   });
 }
