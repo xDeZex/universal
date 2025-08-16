@@ -43,6 +43,9 @@ class WorkoutDetailScreen extends StatelessWidget {
         
         return CustomScrollView(
           slivers: [
+            const SliverToBoxAdapter(
+              child: SizedBox(height: 16),
+            ),
             if (exerciseGroups.incompleteExercises.isNotEmpty)
               IncompleteExercisesSection(
                 exercises: exerciseGroups.incompleteExercises,

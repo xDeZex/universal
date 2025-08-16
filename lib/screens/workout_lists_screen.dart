@@ -48,6 +48,7 @@ class WorkoutListsScreen extends StatelessWidget {
 
   Widget _buildWorkoutList(BuildContext context, ShoppingAppState appState) {
     return ReorderableListView.builder(
+      padding: const EdgeInsets.only(top: 16),
       itemCount: appState.workoutLists.length,
       onReorder: (oldIndex, newIndex) => appState.reorderWorkoutLists(oldIndex, newIndex),
       itemBuilder: (context, index) => _buildWorkoutCard(context, appState, appState.workoutLists[index], index),

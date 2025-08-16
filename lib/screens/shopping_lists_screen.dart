@@ -48,6 +48,7 @@ class ShoppingListsScreen extends StatelessWidget {
 
   Widget _buildShoppingList(BuildContext context, ShoppingAppState appState) {
     return ReorderableListView.builder(
+      padding: const EdgeInsets.only(top: 16),
       itemCount: appState.shoppingLists.length,
       onReorder: (oldIndex, newIndex) => appState.reorderShoppingLists(oldIndex, newIndex),
       itemBuilder: (context, index) => _buildShoppingListCard(context, appState, appState.shoppingLists[index], index),
