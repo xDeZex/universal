@@ -118,18 +118,25 @@ class WeightTrackingScreen extends StatelessWidget {
 
   Widget _buildExerciseSummaryCard(BuildContext context, ExerciseSummaryData summaryData) {
     final exerciseHistory = summaryData.exerciseHistory;
-    final latestEntry = exerciseHistory.weightHistory.isNotEmpty 
-        ? exerciseHistory.weightHistory.last 
-        : null;
-    final todaysWeight = exerciseHistory.todaysWeight;
-    final hasToday = todaysWeight != null;
+    
+    // Find the most recent entry by date, not just the last in the list
+    WeightEntry? latestEntry;
+    if (exerciseHistory.weightHistory.isNotEmpty) {
+      latestEntry = exerciseHistory.weightHistory.reduce((a, b) => 
+        a.date.isAfter(b.date) ? a : b);
+    }
+    
+    // Check if the latest entry was made today
+    final hasToday = latestEntry != null && _isToday(latestEntry.date);
     final totalEntries = exerciseHistory.weightHistory.length;
     
-    // Calculate progression from last two entries
+    // Calculate progression from the two most recent entries by date
     WeightProgression? progression;
     if (exerciseHistory.weightHistory.length >= 2) {
-      final recent = exerciseHistory.weightHistory[exerciseHistory.weightHistory.length - 1];
-      final previous = exerciseHistory.weightHistory[exerciseHistory.weightHistory.length - 2];
+      final sortedEntries = List<WeightEntry>.from(exerciseHistory.weightHistory)
+        ..sort((a, b) => b.date.compareTo(a.date)); // Newest first
+      final recent = sortedEntries[0];
+      final previous = sortedEntries[1];
       progression = _getProgressionFromEntries(recent, previous);
     }
     
@@ -298,9 +305,18 @@ class WeightTrackingScreen extends StatelessWidget {
 
 
 
+  bool _isToday(DateTime date) {
+    final now = DateTime.now();
+    return date.year == now.year && 
+           date.month == now.month && 
+           date.day == now.day;
+  }
+
   String _formatDate(DateTime date) {
     final now = DateTime.now();
-    final difference = now.difference(date).inDays;
+    final today = DateTime(now.year, now.month, now.day);
+    final entryDate = DateTime(date.year, date.month, date.day);
+    final difference = today.difference(entryDate).inDays;
     
     if (difference == 0) {
       return 'Today at ${_formatTime(date)}';

@@ -294,7 +294,9 @@ class ExerciseWeightHistoryScreen extends StatelessWidget {
 
   String _formatDate(DateTime date) {
     final now = DateTime.now();
-    final difference = now.difference(date).inDays;
+    final today = DateTime(now.year, now.month, now.day);
+    final entryDate = DateTime(date.year, date.month, date.day);
+    final difference = today.difference(entryDate).inDays;
     
     if (difference == 0) {
       return 'Today at ${_formatTime(date)}';
