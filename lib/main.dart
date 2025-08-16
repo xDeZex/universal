@@ -468,14 +468,14 @@ class ShoppingAppState extends ChangeNotifier {
     }
   }
 
-  void saveWeightForExercise(String workoutId, String exerciseId, String weight, {int? sets, int? reps}) {
+  void saveWeightForExercise(String workoutId, String exerciseId, String weight, {int? sets, int? reps, DateTime? date}) {
     final workoutIndex = _workoutLists.indexWhere((list) => list.id == workoutId);
     if (workoutIndex != -1) {
       final exercises = _workoutLists[workoutIndex].exercises;
       final exerciseIndex = exercises.indexWhere((exercise) => exercise.id == exerciseId);
       if (exerciseIndex != -1) {
         final exercise = exercises[exerciseIndex];
-        var entryDate = DateTime.now();
+        var entryDate = date ?? DateTime.now();
         
         // Ensure unique timestamp by adding microseconds if needed
         final existingTimes = exercise.weightHistory.map((e) => e.date.millisecondsSinceEpoch).toSet();

@@ -424,47 +424,51 @@ class ExerciseCard extends StatelessWidget {
   }
 
   Widget _buildTrailing(BuildContext context) {
-    if (showDragHandle) {
-      return Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (exercise.weight != null && exercise.weight!.isNotEmpty)
-            _buildSaveWeightButton(context),
-          _buildEditButton(context),
-          _buildDeleteButton(context),
-          ReorderableDragStartListener(
-            index: index,
-            child: const Icon(Icons.drag_handle),
-          ),
-        ],
-      );
-    }
+    final buttons = [
+      _buildAddWeightEntryButton(context),
+      _buildEditButton(context),
+      _buildDeleteButton(context),
+      if (showDragHandle)
+        ReorderableDragStartListener(
+          index: index,
+          child: const Icon(Icons.drag_handle),
+        ),
+    ];
+
     return Row(
       mainAxisSize: MainAxisSize.min,
-      children: [
-        if (exercise.weight != null && exercise.weight!.isNotEmpty)
-          _buildSaveWeightButton(context),
-        _buildEditButton(context),
-        _buildDeleteButton(context),
-      ],
+      children: buttons,
     );
   }
 
-  Widget _buildSaveWeightButton(BuildContext context) {
+  Widget _buildAddWeightEntryButton(BuildContext context) {
     final todaysWeight = exercise.todaysWeight;
     final hasToday = todaysWeight != null;
+    final hasCurrentData = exercise.weight != null && exercise.weight!.isNotEmpty;
     
     return IconButton(
       icon: Icon(
-        hasToday ? Icons.check_circle : Icons.save,
-        color: hasToday ? Theme.of(context).colorScheme.primary : null,
+        hasToday ? Icons.check_circle : Icons.add_circle_outline,
+        color: hasToday 
+            ? Theme.of(context).colorScheme.primary 
+            : Colors.grey[600],
+        size: 20,
       ),
+      onPressed: () {
+        if (hasToday) {
+          _unsaveWeightForToday(context);
+        } else if (hasCurrentData) {
+          _saveWeightForToday(context);
+        } else {
+          _showAddWeightEntryDialog(context);
+        }
+      },
+      onLongPress: () => _showAddWeightEntryDialog(context),
       tooltip: hasToday 
-          ? 'Delete today\'s weight: ${todaysWeight.weight}'
-          : 'Save current weight for today',
-      onPressed: hasToday 
-          ? () => _unsaveWeightForToday(context)
-          : () => _saveWeightForToday(context),
+          ? 'Remove today\'s weight entry (long press for custom date)'
+          : hasCurrentData 
+              ? 'Save current data for today (long press for custom date)'
+              : 'Add weight entry (long press for custom date)',
     );
   }
 
@@ -517,6 +521,109 @@ class ExerciseCard extends StatelessWidget {
             child: const Text('Remove'),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showAddWeightEntryDialog(BuildContext context) {
+    final weightController = TextEditingController(text: exercise.weight ?? '');
+    final setsController = TextEditingController(text: exercise.sets ?? '');
+    final repsController = TextEditingController(text: exercise.reps ?? '');
+    DateTime selectedDate = DateTime.now();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Text('Weight Entry for ${exercise.name}'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Date selection
+                Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.calendar_today),
+                    title: const Text('Date'),
+                    subtitle: Text(_formatDialogDate(selectedDate)),
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: selectedDate,
+                        firstDate: DateTime(2020),
+                        lastDate: DateTime.now(),
+                      );
+                      if (picked != null) {
+                        setState(() {
+                          selectedDate = picked;
+                        });
+                      }
+                    },
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Weight input
+                TextField(
+                  controller: weightController,
+                  decoration: const InputDecoration(
+                    labelText: 'Weight',
+                    hintText: 'e.g., 80kg, bodyweight',
+                  ),
+                  textCapitalization: TextCapitalization.none,
+                ),
+                const SizedBox(height: 12),
+                // Sets input
+                TextField(
+                  controller: setsController,
+                  decoration: const InputDecoration(
+                    labelText: 'Sets (optional)',
+                    hintText: 'e.g., 3',
+                  ),
+                  keyboardType: TextInputType.number,
+                ),
+                const SizedBox(height: 12),
+                // Reps input
+                TextField(
+                  controller: repsController,
+                  decoration: const InputDecoration(
+                    labelText: 'Reps (optional)',
+                    hintText: 'e.g., 10',
+                  ),
+                  keyboardType: TextInputType.number,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                if (weightController.text.trim().isNotEmpty) {
+                  final sets = setsController.text.trim().isNotEmpty 
+                      ? int.tryParse(setsController.text.trim())
+                      : null;
+                  final reps = repsController.text.trim().isNotEmpty 
+                      ? int.tryParse(repsController.text.trim())
+                      : null;
+                  
+                  context.read<ShoppingAppState>().saveWeightForExercise(
+                    workoutId,
+                    exercise.id,
+                    weightController.text.trim(),
+                    sets: sets,
+                    reps: reps,
+                    date: selectedDate,
+                  );
+                  Navigator.of(context).pop();
+                }
+              },
+              child: Text(_isToday(selectedDate) ? 'Save' : 'Save for ${_formatDialogDate(selectedDate)}'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -640,5 +747,29 @@ class ExerciseCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  bool _isToday(DateTime date) {
+    final now = DateTime.now();
+    return date.year == now.year && 
+           date.month == now.month && 
+           date.day == now.day;
+  }
+
+  String _formatDialogDate(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final selectedDay = DateTime(date.year, date.month, date.day);
+    final difference = today.difference(selectedDay).inDays;
+    
+    if (difference == 0) {
+      return 'Today';
+    } else if (difference == 1) {
+      return 'Yesterday';
+    } else if (difference < 7) {
+      return '$difference days ago';
+    } else {
+      return '${date.day}/${date.month}/${date.year}';
+    }
   }
 }
