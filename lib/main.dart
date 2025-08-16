@@ -468,7 +468,7 @@ class ShoppingAppState extends ChangeNotifier {
     }
   }
 
-  void saveWeightForExercise(String workoutId, String exerciseId, String weight) {
+  void saveWeightForExercise(String workoutId, String exerciseId, String weight, {int? sets, int? reps}) {
     final workoutIndex = _workoutLists.indexWhere((list) => list.id == workoutId);
     if (workoutIndex != -1) {
       final exercises = _workoutLists[workoutIndex].exercises;
@@ -486,6 +486,8 @@ class ShoppingAppState extends ChangeNotifier {
         final newWeightEntry = WeightEntry(
           date: entryDate,
           weight: weight,
+          sets: sets ?? (exercise.sets != null ? int.tryParse(exercise.sets!) : null),
+          reps: reps ?? (exercise.reps != null ? int.tryParse(exercise.reps!) : null),
         );
         
         // Save to local exercise history (for backward compatibility)
@@ -588,7 +590,12 @@ class ShoppingAppState extends ChangeNotifier {
         entryDate = entryDate.add(const Duration(microseconds: 1));
       }
       
-      final updatedEntry = WeightEntry(date: entryDate, weight: weightEntry.weight);
+      final updatedEntry = WeightEntry(
+        date: entryDate, 
+        weight: weightEntry.weight,
+        sets: weightEntry.sets,
+        reps: weightEntry.reps,
+      );
       final updatedHistory = List<WeightEntry>.from(existing.weightHistory)..add(updatedEntry);
       
       _exerciseHistory[existingIndex] = existing.copyWith(

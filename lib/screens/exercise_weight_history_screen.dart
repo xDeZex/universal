@@ -65,7 +65,7 @@ class ExerciseWeightHistoryScreen extends StatelessWidget {
     return _buildWeightEntryCard(context, entry, progression, isLatest);
   }
 
-  WeightProgression? _calculateProgression(List<WeightEntry> sortedHistory, int index) {
+  ExerciseProgression? _calculateProgression(List<WeightEntry> sortedHistory, int index) {
     if (index >= sortedHistory.length - 1) return null;
     
     return _getProgression(sortedHistory[index], sortedHistory[index + 1]);
@@ -102,7 +102,7 @@ class ExerciseWeightHistoryScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildWeightEntryCard(BuildContext context, WeightEntry entry, WeightProgression? progression, bool isLatest) {
+  Widget _buildWeightEntryCard(BuildContext context, WeightEntry entry, ExerciseProgression? progression, bool isLatest) {
     final isToday = _isToday(entry.date);
     
     return Card(
@@ -122,8 +122,7 @@ class ExerciseWeightHistoryScreen extends StatelessWidget {
                   _buildActionButtons(context, entry, progression),
                 ],
               ),
-              if (exercise.sets != null || exercise.reps != null)
-                _buildExerciseDetails(context),
+              _buildExerciseMetrics(context, entry, progression),
             ],
           ),
         ),
@@ -243,11 +242,11 @@ class ExerciseWeightHistoryScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButtons(BuildContext context, WeightEntry entry, WeightProgression? progression) {
+  Widget _buildActionButtons(BuildContext context, WeightEntry entry, ExerciseProgression? progression) {
     return Row(
       children: [
-        if (progression != null) ...[
-          _buildProgressionBadge(progression),
+        if (progression?.weightProgression != null) ...[
+          _buildProgressionBadge(progression!.weightProgression!),
           const SizedBox(width: 8),
         ],
         _buildDeleteButton(context, entry),
@@ -301,53 +300,137 @@ class ExerciseWeightHistoryScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildExerciseDetails(BuildContext context) {
+  Widget _buildExerciseMetrics(BuildContext context, WeightEntry entry, ExerciseProgression? progression) {
+    if (entry.sets == null && entry.reps == null) return const SizedBox.shrink();
+    
     return Padding(
       padding: const EdgeInsets.only(top: 12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainer,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.fitness_center,
-              size: 16,
-              color: Colors.grey[600],
-            ),
-            const SizedBox(width: 6),
-            Text(
-              _formatSetsReps(),
-              style: TextStyle(
-                color: Colors.grey[700],
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
+      child: Column(
+        children: [
+          _buildSetsRepsRow(context, entry, progression),
+          if (progression?.hasAnyProgression == true && 
+              (progression!.setsProgression != null || progression.repsProgression != null))
+            _buildProgressionRow(context, progression),
+        ],
       ),
     );
   }
 
-  // ============================================================================
-  // Helper Methods - Exercise Details
-  // ============================================================================
-  
-  String _formatSetsReps() {
-    final details = <String>[];
-    if (exercise.sets != null && exercise.reps != null) {
-      details.add('${exercise.sets}s × ${exercise.reps}r');
-    } else if (exercise.sets != null) {
-      details.add('${exercise.sets}s');
-    } else if (exercise.reps != null) {
-      details.add('${exercise.reps}r');
-    }
-    return details.join(' • ');
+  Widget _buildSetsRepsRow(BuildContext context, WeightEntry entry, ExerciseProgression? progression) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainer,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.fitness_center,
+            size: 16,
+            color: Colors.grey[600],
+          ),
+          const SizedBox(width: 8),
+          if (entry.sets != null) ...[
+            Text(
+              '${entry.sets}',
+              style: TextStyle(
+                color: Colors.grey[700],
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            Text(
+              ' sets',
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 14,
+              ),
+            ),
+          ],
+          if (entry.sets != null && entry.reps != null) ...[
+            Text(
+              ' × ',
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 14,
+              ),
+            ),
+          ],
+          if (entry.reps != null) ...[
+            Text(
+              '${entry.reps}',
+              style: TextStyle(
+                color: Colors.grey[700],
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            Text(
+              ' reps',
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
   }
+
+  Widget _buildProgressionRow(BuildContext context, ExerciseProgression progression) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Row(
+        children: [
+          if (progression.setsProgression != null) ...[
+            _buildSmallProgressionBadge(progression.setsProgression!),
+            const SizedBox(width: 8),
+          ],
+          if (progression.repsProgression != null) ...[
+            _buildSmallProgressionBadge(progression.repsProgression!),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSmallProgressionBadge(WeightProgression progression) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: progression.isIncrease 
+            ? Colors.green.withValues(alpha: 0.1)
+            : Colors.red.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: progression.isIncrease ? Colors.green : Colors.red,
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            progression.isIncrease ? Icons.trending_up : Icons.trending_down,
+            size: 12,
+            color: progression.isIncrease ? Colors.green : Colors.red,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            progression.text,
+            style: TextStyle(
+              color: progression.isIncrease ? Colors.green : Colors.red,
+              fontWeight: FontWeight.bold,
+              fontSize: 11,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
 
   // ============================================================================
   // Helper Methods - Date & Time Formatting
@@ -387,7 +470,23 @@ class ExerciseWeightHistoryScreen extends StatelessWidget {
   // Helper Methods - Weight Progression Calculation
   // ============================================================================
   
-  WeightProgression? _getProgression(WeightEntry current, WeightEntry previous) {
+  ExerciseProgression? _getProgression(WeightEntry current, WeightEntry previous) {
+    final weightProgression = _getWeightProgression(current, previous);
+    final setsProgression = _getSetsProgression(current, previous);
+    final repsProgression = _getRepsProgression(current, previous);
+    
+    if (weightProgression == null && setsProgression == null && repsProgression == null) {
+      return null;
+    }
+    
+    return ExerciseProgression(
+      weightProgression: weightProgression,
+      setsProgression: setsProgression,
+      repsProgression: repsProgression,
+    );
+  }
+
+  WeightProgression? _getWeightProgression(WeightEntry current, WeightEntry previous) {
     final currentWeight = _extractNumericWeight(current.weight);
     final previousWeight = _extractNumericWeight(previous.weight);
     
@@ -399,6 +498,30 @@ class ExerciseWeightHistoryScreen extends StatelessWidget {
     return WeightProgression(
       isIncrease: difference > 0,
       text: '${difference > 0 ? '+' : ''}${difference.toStringAsFixed(1)}kg',
+    );
+  }
+
+  WeightProgression? _getSetsProgression(WeightEntry current, WeightEntry previous) {
+    if (current.sets == null || previous.sets == null) return null;
+    
+    final difference = current.sets! - previous.sets!;
+    if (difference == 0) return null;
+    
+    return WeightProgression(
+      isIncrease: difference > 0,
+      text: '${difference > 0 ? '+' : ''}${difference}s',
+    );
+  }
+
+  WeightProgression? _getRepsProgression(WeightEntry current, WeightEntry previous) {
+    if (current.reps == null || previous.reps == null) return null;
+    
+    final difference = current.reps! - previous.reps!;
+    if (difference == 0) return null;
+    
+    return WeightProgression(
+      isIncrease: difference > 0,
+      text: '${difference > 0 ? '+' : ''}${difference}r',
     );
   }
 
@@ -446,4 +569,21 @@ class WeightProgression {
     required this.isIncrease,
     required this.text,
   });
+}
+
+class ExerciseProgression {
+  final WeightProgression? weightProgression;
+  final WeightProgression? setsProgression;
+  final WeightProgression? repsProgression;
+
+  const ExerciseProgression({
+    this.weightProgression,
+    this.setsProgression,
+    this.repsProgression,
+  });
+
+  bool get hasAnyProgression => 
+      weightProgression != null || 
+      setsProgression != null || 
+      repsProgression != null;
 }

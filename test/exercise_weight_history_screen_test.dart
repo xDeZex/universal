@@ -80,7 +80,10 @@ void main() {
       await tester.pumpWidget(createTestWidget(testExercise));
       
       // Should show sets and reps
-      expect(find.text('3s × 10r'), findsOneWidget);
+      expect(find.textContaining('3'), findsAtLeastNWidgets(1));
+      expect(find.textContaining('sets'), findsOneWidget);
+      expect(find.textContaining('10'), findsAtLeastNWidgets(1));
+      expect(find.textContaining('reps'), findsOneWidget);
       expect(find.byIcon(Icons.fitness_center), findsOneWidget);
     });
 

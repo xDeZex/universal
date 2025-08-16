@@ -489,6 +489,8 @@ class ExerciseCard extends StatelessWidget {
         workoutId, 
         exercise.id, 
         exercise.weight!,
+        sets: exercise.sets != null ? int.tryParse(exercise.sets!) : null,
+        reps: exercise.reps != null ? int.tryParse(exercise.reps!) : null,
       );
     }
   }
