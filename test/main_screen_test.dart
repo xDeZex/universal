@@ -230,9 +230,8 @@ void main() {
       await tester.tap(find.text('Weight Tracking').last);
       await tester.pumpAndSettle();
 
-      // Should show exercise card with arrow icon
+      // Should show exercise card
       expect(find.text('Bench Press'), findsOneWidget);
-      expect(find.byIcon(Icons.arrow_forward_ios), findsOneWidget);
       
       // Tap on the exercise card
       await tester.tap(find.text('Bench Press'));

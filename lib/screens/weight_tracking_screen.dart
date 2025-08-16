@@ -199,24 +199,13 @@ class WeightTrackingScreen extends StatelessWidget {
   }
 
   Widget _buildExerciseNameRow(BuildContext context, String exerciseName, bool hasToday) {
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            exerciseName,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: hasToday ? Theme.of(context).colorScheme.primary : null,
-            ),
-          ),
-        ),
-        Icon(
-          Icons.arrow_forward_ios,
-          size: 16,
-          color: Colors.grey[500],
-        ),
-      ],
+    return Text(
+      exerciseName,
+      style: TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+        color: hasToday ? Theme.of(context).colorScheme.primary : null,
+      ),
     );
   }
 

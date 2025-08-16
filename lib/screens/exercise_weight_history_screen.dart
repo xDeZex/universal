@@ -23,6 +23,7 @@ class ExerciseWeightHistoryScreen extends StatelessWidget {
       body: Consumer<ShoppingAppState>(
         builder: (context, appState, child) => _buildBody(context, appState),
       ),
+      floatingActionButton: _buildFAB(context),
     );
   }
 
@@ -529,6 +530,153 @@ class ExerciseWeightHistoryScreen extends StatelessWidget {
     final regex = RegExp(r'(\d+(?:\.\d+)?)');
     final match = regex.firstMatch(weight);
     return match != null ? double.tryParse(match.group(1)!) : null;
+  }
+
+  Widget _buildFAB(BuildContext context) {
+    return FloatingActionButton(
+      onPressed: () => _showAddWeightEntryDialog(context),
+      child: const Icon(Icons.add),
+    );
+  }
+
+  void _showAddWeightEntryDialog(BuildContext context) {
+    final weightController = TextEditingController(text: exercise.weight ?? '');
+    final setsController = TextEditingController(text: exercise.sets ?? '');
+    final repsController = TextEditingController(text: exercise.reps ?? '');
+    DateTime selectedDate = DateTime.now();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Text('Add Weight Entry for ${exercise.name}'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Date selection
+                Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.calendar_today),
+                    title: const Text('Date'),
+                    subtitle: Text(_formatDialogDate(selectedDate)),
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: selectedDate,
+                        firstDate: DateTime(2020),
+                        lastDate: DateTime.now(),
+                      );
+                      if (picked != null) {
+                        setState(() {
+                          selectedDate = picked;
+                        });
+                      }
+                    },
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Weight input
+                TextField(
+                  controller: weightController,
+                  decoration: const InputDecoration(
+                    labelText: 'Weight',
+                    hintText: 'e.g., 80kg, bodyweight',
+                  ),
+                  textCapitalization: TextCapitalization.none,
+                ),
+                const SizedBox(height: 12),
+                // Sets input
+                TextField(
+                  controller: setsController,
+                  decoration: const InputDecoration(
+                    labelText: 'Sets (optional)',
+                    hintText: 'e.g., 3',
+                  ),
+                  keyboardType: TextInputType.number,
+                ),
+                const SizedBox(height: 12),
+                // Reps input
+                TextField(
+                  controller: repsController,
+                  decoration: const InputDecoration(
+                    labelText: 'Reps (optional)',
+                    hintText: 'e.g., 10',
+                  ),
+                  keyboardType: TextInputType.number,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                if (weightController.text.trim().isNotEmpty) {
+                  final sets = setsController.text.trim().isNotEmpty 
+                      ? int.tryParse(setsController.text.trim())
+                      : null;
+                  final reps = repsController.text.trim().isNotEmpty 
+                      ? int.tryParse(repsController.text.trim())
+                      : null;
+                  
+                  _saveWeightEntry(context, weightController.text.trim(), sets, reps, selectedDate);
+                  Navigator.of(context).pop();
+                }
+              },
+              child: Text(_isToday(selectedDate) ? 'Save' : 'Save for ${_formatDialogDate(selectedDate)}'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _saveWeightEntry(BuildContext context, String weight, int? sets, int? reps, DateTime date) {
+    final appState = Provider.of<ShoppingAppState>(context, listen: false);
+    
+    if (workoutId != 'global_history') {
+      // Save to workout if we have a valid workout ID
+      appState.saveWeightForExercise(
+        workoutId,
+        exercise.id,
+        weight,
+        sets: sets,
+        reps: reps,
+        date: date,
+      );
+    } else {
+      // Save only to global history for deleted exercises
+      appState.addOrUpdateExerciseHistory(
+        exercise.name,
+        WeightEntry(
+          date: date,
+          weight: weight,
+          sets: sets,
+          reps: reps,
+        ),
+      );
+    }
+  }
+
+  String _formatDialogDate(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final selectedDay = DateTime(date.year, date.month, date.day);
+    final difference = today.difference(selectedDay).inDays;
+    
+    if (difference == 0) {
+      return 'Today';
+    } else if (difference == 1) {
+      return 'Yesterday';
+    } else if (difference < 7) {
+      return '$difference days ago';
+    } else {
+      return '${date.day}/${date.month}/${date.year}';
+    }
   }
 
   void _showDeleteWeightDialog(BuildContext context, WeightEntry entry) {
