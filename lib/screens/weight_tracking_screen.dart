@@ -12,54 +12,65 @@ class WeightTrackingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Weight Tracking'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-      ),
+      appBar: _buildAppBar(context),
       body: Consumer<ShoppingAppState>(
-        builder: (context, appState, child) {
-          final exerciseSummaries = _getExerciseSummaries(appState);
-          
-          if (exerciseSummaries.isEmpty) {
-            return const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.fitness_center,
-                    size: 64,
-                    color: Colors.grey,
-                  ),
-                  SizedBox(height: 16),
-                  Text(
-                    'No weight tracking data yet',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.grey,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Start tracking by saving weights for your exercises',
-                    style: TextStyle(
-                      color: Colors.grey,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: exerciseSummaries.length,
-            itemBuilder: (context, index) {
-              final summaryData = exerciseSummaries[index];
-              return _buildExerciseSummaryCard(context, summaryData);
-            },
-          );
-        },
+        builder: (context, appState, child) => _buildBody(context, appState),
       ),
+    );
+  }
+
+  PreferredSizeWidget _buildAppBar(BuildContext context) {
+    return AppBar(
+      title: const Text('Weight Tracking'),
+      backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+    );
+  }
+
+  Widget _buildBody(BuildContext context, ShoppingAppState appState) {
+    final exerciseSummaries = _getExerciseSummaries(appState);
+    
+    if (exerciseSummaries.isEmpty) {
+      return _buildEmptyState();
+    }
+
+    return _buildExerciseList(context, exerciseSummaries);
+  }
+
+  Widget _buildEmptyState() {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.fitness_center,
+            size: 64,
+            color: Colors.grey,
+          ),
+          SizedBox(height: 16),
+          Text(
+            'No weight tracking data yet',
+            style: TextStyle(
+              fontSize: 18,
+              color: Colors.grey,
+            ),
+          ),
+          SizedBox(height: 8),
+          Text(
+            'Start tracking by saving weights for your exercises',
+            style: TextStyle(
+              color: Colors.grey,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExerciseList(BuildContext context, List<ExerciseSummaryData> exerciseSummaries) {
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: exerciseSummaries.length,
+      itemBuilder: (context, index) => _buildExerciseSummaryCard(context, exerciseSummaries[index]),
     );
   }
 
@@ -117,28 +128,7 @@ class WeightTrackingScreen extends StatelessWidget {
   }
 
   Widget _buildExerciseSummaryCard(BuildContext context, ExerciseSummaryData summaryData) {
-    final exerciseHistory = summaryData.exerciseHistory;
-    
-    // Find the most recent entry by date, not just the last in the list
-    WeightEntry? latestEntry;
-    if (exerciseHistory.weightHistory.isNotEmpty) {
-      latestEntry = exerciseHistory.weightHistory.reduce((a, b) => 
-        a.date.isAfter(b.date) ? a : b);
-    }
-    
-    // Check if the latest entry was made today
-    final hasToday = latestEntry != null && _isToday(latestEntry.date);
-    final totalEntries = exerciseHistory.weightHistory.length;
-    
-    // Calculate progression from the two most recent entries by date
-    WeightProgression? progression;
-    if (exerciseHistory.weightHistory.length >= 2) {
-      final sortedEntries = List<WeightEntry>.from(exerciseHistory.weightHistory)
-        ..sort((a, b) => b.date.compareTo(a.date)); // Newest first
-      final recent = sortedEntries[0];
-      final previous = sortedEntries[1];
-      progression = _getProgressionFromEntries(recent, previous);
-    }
+    final cardData = _prepareCardData(summaryData);
     
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -151,151 +141,9 @@ class WeightTrackingScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                summaryData.exercise.name,
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: hasToday ? Theme.of(context).colorScheme.primary : null,
-                                ),
-                              ),
-                            ),
-                            Icon(
-                              Icons.arrow_forward_ios,
-                              size: 16,
-                              color: Colors.grey[500],
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          summaryData.workoutName,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      if (latestEntry != null) ...[
-                        Text(
-                          latestEntry.weight,
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: hasToday ? Theme.of(context).colorScheme.primary : null,
-                          ),
-                        ),
-                        if (progression != null) ...[
-                          const SizedBox(height: 4),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: progression.isIncrease 
-                                  ? Colors.green.withValues(alpha: 0.1)
-                                  : Colors.red.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: progression.isIncrease ? Colors.green : Colors.red,
-                                width: 1,
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  progression.isIncrease ? Icons.trending_up : Icons.trending_down,
-                                  size: 14,
-                                  color: progression.isIncrease ? Colors.green : Colors.red,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  progression.text,
-                                  style: TextStyle(
-                                    color: progression.isIncrease ? Colors.green : Colors.red,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ],
-                    ],
-                  ),
-                ],
-              ),
+              _buildMainRow(context, summaryData, cardData),
               const SizedBox(height: 12),
-              Row(
-                children: [
-                  Icon(
-                    Icons.history,
-                    size: 16,
-                    color: Colors.grey[600],
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '$totalEntries entr${totalEntries == 1 ? 'y' : 'ies'}',
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 14,
-                    ),
-                  ),
-                  const Spacer(),
-                  if (latestEntry != null) ...[
-                    Icon(
-                      Icons.access_time,
-                      size: 16,
-                      color: Colors.grey[600],
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      _formatDate(latestEntry.date),
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                  if (hasToday) ...[
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: Theme.of(context).colorScheme.primary,
-                          width: 1,
-                        ),
-                      ),
-                      child: Text(
-                        'TODAY',
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 10,
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
+              _buildMetricsRow(context, cardData),
             ],
           ),
         ),
@@ -303,7 +151,227 @@ class WeightTrackingScreen extends StatelessWidget {
     );
   }
 
+  ExerciseCardData _prepareCardData(ExerciseSummaryData summaryData) {
+    final exerciseHistory = summaryData.exerciseHistory;
+    
+    // Find the most recent entry by date
+    WeightEntry? latestEntry;
+    if (exerciseHistory.weightHistory.isNotEmpty) {
+      latestEntry = exerciseHistory.weightHistory.reduce((a, b) => 
+        a.date.isAfter(b.date) ? a : b);
+    }
+    
+    // Calculate progression from the two most recent entries
+    WeightProgression? progression;
+    if (exerciseHistory.weightHistory.length >= 2) {
+      final sortedEntries = List<WeightEntry>.from(exerciseHistory.weightHistory)
+        ..sort((a, b) => b.date.compareTo(a.date));
+      progression = _getProgressionFromEntries(sortedEntries[0], sortedEntries[1]);
+    }
+    
+    return ExerciseCardData(
+      latestEntry: latestEntry,
+      hasToday: latestEntry != null && _isToday(latestEntry.date),
+      totalEntries: exerciseHistory.weightHistory.length,
+      progression: progression,
+    );
+  }
 
+  Widget _buildMainRow(BuildContext context, ExerciseSummaryData summaryData, ExerciseCardData cardData) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(child: _buildExerciseInfo(context, summaryData, cardData.hasToday)),
+        _buildWeightInfo(context, cardData),
+      ],
+    );
+  }
+
+  Widget _buildExerciseInfo(BuildContext context, ExerciseSummaryData summaryData, bool hasToday) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildExerciseNameRow(context, summaryData.exercise.name, hasToday),
+        const SizedBox(height: 4),
+        _buildWorkoutName(summaryData.workoutName),
+      ],
+    );
+  }
+
+  Widget _buildExerciseNameRow(BuildContext context, String exerciseName, bool hasToday) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            exerciseName,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: hasToday ? Theme.of(context).colorScheme.primary : null,
+            ),
+          ),
+        ),
+        Icon(
+          Icons.arrow_forward_ios,
+          size: 16,
+          color: Colors.grey[500],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildWorkoutName(String workoutName) {
+    return Text(
+      workoutName,
+      style: TextStyle(
+        fontSize: 14,
+        color: Colors.grey[600],
+      ),
+    );
+  }
+
+  Widget _buildWeightInfo(BuildContext context, ExerciseCardData cardData) {
+    if (cardData.latestEntry == null) return const SizedBox.shrink();
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        _buildLatestWeight(context, cardData),
+        if (cardData.progression != null) ...[
+          const SizedBox(height: 4),
+          _buildProgressionBadge(cardData.progression!),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildLatestWeight(BuildContext context, ExerciseCardData cardData) {
+    return Text(
+      cardData.latestEntry!.weight,
+      style: TextStyle(
+        fontSize: 24,
+        fontWeight: FontWeight.bold,
+        color: cardData.hasToday ? Theme.of(context).colorScheme.primary : null,
+      ),
+    );
+  }
+
+  Widget _buildProgressionBadge(WeightProgression progression) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: progression.isIncrease 
+            ? Colors.green.withValues(alpha: 0.1)
+            : Colors.red.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: progression.isIncrease ? Colors.green : Colors.red,
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            progression.isIncrease ? Icons.trending_up : Icons.trending_down,
+            size: 14,
+            color: progression.isIncrease ? Colors.green : Colors.red,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            progression.text,
+            style: TextStyle(
+              color: progression.isIncrease ? Colors.green : Colors.red,
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMetricsRow(BuildContext context, ExerciseCardData cardData) {
+    return Row(
+      children: [
+        _buildEntryCount(cardData.totalEntries),
+        const Spacer(),
+        if (cardData.latestEntry != null) ...[
+          _buildLastUpdated(cardData.latestEntry!),
+          if (cardData.hasToday) ...[
+            const SizedBox(width: 8),
+            _buildTodayBadge(context),
+          ],
+        ],
+      ],
+    );
+  }
+
+  Widget _buildEntryCount(int totalEntries) {
+    return Row(
+      children: [
+        Icon(
+          Icons.history,
+          size: 16,
+          color: Colors.grey[600],
+        ),
+        const SizedBox(width: 4),
+        Text(
+          '$totalEntries entr${totalEntries == 1 ? 'y' : 'ies'}',
+          style: TextStyle(
+            color: Colors.grey[600],
+            fontSize: 14,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLastUpdated(WeightEntry latestEntry) {
+    return Row(
+      children: [
+        Icon(
+          Icons.access_time,
+          size: 16,
+          color: Colors.grey[600],
+        ),
+        const SizedBox(width: 4),
+        Text(
+          _formatDate(latestEntry.date),
+          style: TextStyle(
+            color: Colors.grey[600],
+            fontSize: 14,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTodayBadge(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.primary,
+          width: 1,
+        ),
+      ),
+      child: Text(
+        'TODAY',
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.primary,
+          fontWeight: FontWeight.bold,
+          fontSize: 10,
+        ),
+      ),
+    );
+  }
+
+  // ============================================================================
+  // Helper Methods - Date & Time Formatting
+  // ============================================================================
 
   bool _isToday(DateTime date) {
     final now = DateTime.now();
@@ -335,8 +403,11 @@ class WeightTrackingScreen extends StatelessWidget {
     return '$hour:$minute';
   }
 
+  // ============================================================================
+  // Helper Methods - Weight Progression Calculation
+  // ============================================================================
+
   WeightProgression? _getProgressionFromEntries(WeightEntry current, WeightEntry previous) {
-    // Try to extract numeric values for comparison
     final currentWeight = _extractNumericWeight(current.weight);
     final previousWeight = _extractNumericWeight(previous.weight);
     
@@ -352,12 +423,14 @@ class WeightTrackingScreen extends StatelessWidget {
   }
 
   double? _extractNumericWeight(String weight) {
-    // Extract numeric value from weight string (e.g., "80kg" -> 80.0)
     final regex = RegExp(r'(\d+(?:\.\d+)?)');
     final match = regex.firstMatch(weight);
     return match != null ? double.tryParse(match.group(1)!) : null;
   }
 
+  // ============================================================================
+  // Helper Methods - Navigation
+  // ============================================================================
 
   void _navigateToExerciseHistoryFromSummary(BuildContext context, ExerciseSummaryData summaryData) {
     final appState = Provider.of<ShoppingAppState>(context, listen: false);
@@ -395,6 +468,20 @@ class ExerciseSummaryData {
     required this.exercise,
     required this.workoutName,
     required this.exerciseHistory,
+  });
+}
+
+class ExerciseCardData {
+  final WeightEntry? latestEntry;
+  final bool hasToday;
+  final int totalEntries;
+  final WeightProgression? progression;
+
+  const ExerciseCardData({
+    required this.latestEntry,
+    required this.hasToday,
+    required this.totalEntries,
+    required this.progression,
   });
 }
 
