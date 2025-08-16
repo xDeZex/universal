@@ -22,7 +22,7 @@ void main() {
       // Verify that all three navigation items are present (may appear multiple times due to AppBar + Bottom Nav)
       expect(find.text('Shopping Lists'), findsAtLeast(1));
       expect(find.text('Workouts'), findsOneWidget);
-      expect(find.text('Weight Tracking'), findsOneWidget);
+      expect(find.text('Exercise Logs'), findsOneWidget);
       
       // Verify navigation icons are present
       expect(find.byIcon(Icons.shopping_cart), findsOneWidget);
@@ -52,13 +52,13 @@ void main() {
       expect(find.text('Workouts'), findsAtLeast(1)); // Title + bottom nav
       expect(find.text('No workouts yet.\nTap the + button to create your first workout!'), findsOneWidget);
 
-      // Tap on the third navigation item (Weight Tracking)
-      await tester.tap(find.text('Weight Tracking').last);
+      // Tap on the third navigation item (Exercise Logs)
+      await tester.tap(find.text('Exercise Logs').last);
       await tester.pumpAndSettle();
       
       // Should now show the weight tracking screen content
-      expect(find.text('Weight Tracking'), findsAtLeast(1)); // Title + bottom nav
-      expect(find.text('No weight tracking data yet'), findsOneWidget);
+      expect(find.text('Exercise Logs'), findsAtLeast(1)); // Title + bottom nav
+      expect(find.text('No exercise logs yet'), findsOneWidget);
       
       // Go back to first tab
       await tester.tap(find.text('Shopping Lists').last);
@@ -88,12 +88,12 @@ void main() {
       // Should show Workouts title
       expect(find.text('Workouts'), findsAtLeast(1));
       
-      // Switch to third screen (Weight Tracking)
-      await tester.tap(find.text('Weight Tracking').last);
+      // Switch to third screen (Exercise Logs)
+      await tester.tap(find.text('Exercise Logs').last);
       await tester.pumpAndSettle();
       
-      // Should show Weight Tracking title
-      expect(find.text('Weight Tracking'), findsAtLeast(1));
+      // Should show Exercise Logs title
+      expect(find.text('Exercise Logs'), findsAtLeast(1));
     });
 
     testWidgets('should maintain shopping lists functionality in first tab', (tester) async {
@@ -130,13 +130,13 @@ void main() {
       );
 
       // Navigate to weight tracking tab
-      await tester.tap(find.text('Weight Tracking').last);
+      await tester.tap(find.text('Exercise Logs').last);
       await tester.pumpAndSettle();
 
-      // Should show weight tracking screen content
-      expect(find.text('Weight Tracking'), findsAtLeast(1));
-      expect(find.text('No weight tracking data yet'), findsOneWidget);
-      expect(find.text('Start tracking by saving weights for your exercises'), findsOneWidget);
+      // Should show exercise logs screen content
+      expect(find.text('Exercise Logs'), findsAtLeast(1));
+      expect(find.text('No exercise logs yet'), findsOneWidget);
+      expect(find.text('Start logging by saving weights for your exercises'), findsOneWidget);
       expect(find.byIcon(Icons.fitness_center), findsAtLeast(1)); // Icon in empty state
     });
 
@@ -160,11 +160,11 @@ void main() {
       );
 
       // Navigate to weight tracking tab
-      await tester.tap(find.text('Weight Tracking').last);
+      await tester.tap(find.text('Exercise Logs').last);
       await tester.pumpAndSettle();
 
       // Should show the exercise weight data
-      expect(find.text('Weight Tracking'), findsAtLeast(1));
+      expect(find.text('Exercise Logs'), findsAtLeast(1));
       expect(find.text('Bench Press'), findsOneWidget);
       expect(find.text('Test Workout'), findsOneWidget);
       expect(find.text('85kg'), findsOneWidget);
@@ -197,7 +197,7 @@ void main() {
       );
 
       // Navigate to weight tracking tab
-      await tester.tap(find.text('Weight Tracking').last);
+      await tester.tap(find.text('Exercise Logs').last);
       await tester.pumpAndSettle();
 
       // Should show weight progression
@@ -227,7 +227,7 @@ void main() {
       );
 
       // Navigate to weight tracking tab
-      await tester.tap(find.text('Weight Tracking').last);
+      await tester.tap(find.text('Exercise Logs').last);
       await tester.pumpAndSettle();
 
       // Should show exercise card

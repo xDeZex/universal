@@ -21,7 +21,7 @@ class WeightTrackingScreen extends StatelessWidget {
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {
     return AppBar(
-      title: const Text('Weight Tracking'),
+      title: const Text('Exercise Logs'),
       backgroundColor: Theme.of(context).colorScheme.inversePrimary,
     );
   }
@@ -48,7 +48,7 @@ class WeightTrackingScreen extends StatelessWidget {
           ),
           SizedBox(height: 16),
           Text(
-            'No weight tracking data yet',
+            'No exercise logs yet',
             style: TextStyle(
               fontSize: 18,
               color: Colors.grey,
@@ -56,7 +56,7 @@ class WeightTrackingScreen extends StatelessWidget {
           ),
           SizedBox(height: 8),
           Text(
-            'Start tracking by saving weights for your exercises',
+            'Start logging by saving weights for your exercises',
             style: TextStyle(
               color: Colors.grey,
             ),
