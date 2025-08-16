@@ -393,33 +393,46 @@ class ExerciseCard extends StatelessWidget {
   }
 
   Widget? _buildSubtitle(BuildContext context) {
-    final details = <String>[];
+    final rows = <Widget>[];
     
+    // First row: Sets and Reps
     if (exercise.sets != null || exercise.reps != null) {
       final setsReps = [
-        if (exercise.sets != null) '${exercise.sets}s',
-        if (exercise.reps != null) '${exercise.reps}r',
+        if (exercise.sets != null) '${exercise.sets} sets',
+        if (exercise.reps != null) '${exercise.reps} reps',
       ].join(' × ');
-      details.add(setsReps);
+      
+      rows.add(
+        Text(
+          setsReps,
+          style: TextStyle(
+            color: exercise.isCompleted
+                ? Theme.of(context).colorScheme.onSurfaceVariant
+                : Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+      );
     }
     
+    // Second row: Weight
     if (exercise.weight != null) {
-      details.add(exercise.weight!);
+      rows.add(
+        Text(
+          exercise.weight!,
+          style: TextStyle(
+            color: exercise.isCompleted
+                ? Theme.of(context).colorScheme.onSurfaceVariant
+                : Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+      );
     }
     
-    if (exercise.notes != null) {
-      details.add(exercise.notes!);
-    }
+    if (rows.isEmpty) return null;
     
-    if (details.isEmpty) return null;
-    
-    return Text(
-      details.join(' • '),
-      style: TextStyle(
-        color: exercise.isCompleted
-            ? Theme.of(context).colorScheme.onSurfaceVariant
-            : Theme.of(context).colorScheme.onSurfaceVariant,
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: rows,
     );
   }
 
@@ -427,7 +440,6 @@ class ExerciseCard extends StatelessWidget {
     final buttons = [
       _buildAddWeightEntryButton(context),
       _buildEditButton(context),
-      _buildDeleteButton(context),
       if (showDragHandle)
         ReorderableDragStartListener(
           index: index,
@@ -480,12 +492,6 @@ class ExerciseCard extends StatelessWidget {
     );
   }
 
-  Widget _buildDeleteButton(BuildContext context) {
-    return IconButton(
-      icon: const Icon(Icons.delete),
-      onPressed: () => _showDeleteConfirmation(context),
-    );
-  }
 
   void _saveWeightForToday(BuildContext context) {
     if (exercise.weight != null && exercise.weight!.isNotEmpty) {
@@ -699,6 +705,13 @@ class ExerciseCard extends StatelessWidget {
             ),
           ),
           actions: [
+            TextButton(
+              onPressed: () => _showDeleteConfirmation(context),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.red,
+              ),
+              child: const Text('Delete'),
+            ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: const Text('Cancel'),
