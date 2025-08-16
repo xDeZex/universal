@@ -854,6 +854,125 @@ void main() {
       });
     });
 
+    group('Enhanced Weight Tracking Features', () {
+      test('should save weight entry with sets and reps', () {
+        appState.addWorkoutList('Test Workout');
+        final workoutId = appState.workoutLists[0].id;
+        appState.addExerciseToWorkout(workoutId, 'Bench Press');
+        final exerciseId = appState.workoutLists[0].exercises[0].id;
+        
+        // Save weight with sets and reps
+        appState.saveWeightForExercise(workoutId, exerciseId, '85kg', sets: 3, reps: 10);
+        
+        final exercise = appState.workoutLists[0].exercises[0];
+        expect(exercise.weightHistory.length, 1);
+        final entry = exercise.weightHistory[0];
+        expect(entry.weight, '85kg');
+        expect(entry.sets, 3);
+        expect(entry.reps, 10);
+      });
+
+      test('should save weight entry with custom date', () {
+        appState.addWorkoutList('Test Workout');
+        final workoutId = appState.workoutLists[0].id;
+        appState.addExerciseToWorkout(workoutId, 'Bench Press');
+        final exerciseId = appState.workoutLists[0].exercises[0].id;
+        
+        final customDate = DateTime(2024, 1, 15, 10, 30);
+        appState.saveWeightForExercise(workoutId, exerciseId, '85kg', date: customDate);
+        
+        final exercise = appState.workoutLists[0].exercises[0];
+        expect(exercise.weightHistory.length, 1);
+        final entry = exercise.weightHistory[0];
+        expect(entry.weight, '85kg');
+        expect(entry.date, customDate);
+      });
+
+      test('should save weight entry with all parameters', () {
+        appState.addWorkoutList('Test Workout');
+        final workoutId = appState.workoutLists[0].id;
+        appState.addExerciseToWorkout(workoutId, 'Bench Press');
+        final exerciseId = appState.workoutLists[0].exercises[0].id;
+        
+        final customDate = DateTime(2024, 1, 15, 14, 20);
+        appState.saveWeightForExercise(
+          workoutId, 
+          exerciseId, 
+          '85kg', 
+          sets: 4, 
+          reps: 8, 
+          date: customDate
+        );
+        
+        final exercise = appState.workoutLists[0].exercises[0];
+        expect(exercise.weightHistory.length, 1);
+        final entry = exercise.weightHistory[0];
+        expect(entry.weight, '85kg');
+        expect(entry.sets, 4);
+        expect(entry.reps, 8);
+        expect(entry.date, customDate);
+      });
+
+      test('should allow multiple entries for the same date', () {
+        appState.addWorkoutList('Test Workout');
+        final workoutId = appState.workoutLists[0].id;
+        appState.addExerciseToWorkout(workoutId, 'Bench Press');
+        final exerciseId = appState.workoutLists[0].exercises[0].id;
+        
+        final sameDate = DateTime(2024, 1, 15);
+        // Save multiple entries for the same date (e.g., morning and evening workouts)
+        appState.saveWeightForExercise(workoutId, exerciseId, '80kg', sets: 3, reps: 10, date: sameDate.add(Duration(hours: 9)));
+        appState.saveWeightForExercise(workoutId, exerciseId, '85kg', sets: 4, reps: 8, date: sameDate.add(Duration(hours: 18)));
+        
+        final exercise = appState.workoutLists[0].exercises[0];
+        expect(exercise.weightHistory.length, 2);
+        
+        final entry1 = exercise.weightHistory[0];
+        expect(entry1.weight, '80kg');
+        expect(entry1.sets, 3);
+        expect(entry1.reps, 10);
+        
+        final entry2 = exercise.weightHistory[1];
+        expect(entry2.weight, '85kg');
+        expect(entry2.sets, 4);
+        expect(entry2.reps, 8);
+      });
+
+      test('should inherit sets and reps from exercise when not provided', () {
+        appState.addWorkoutList('Test Workout');
+        final workoutId = appState.workoutLists[0].id;
+        appState.addExerciseToWorkout(workoutId, 'Bench Press', sets: '3', reps: '12');
+        final exerciseId = appState.workoutLists[0].exercises[0].id;
+        
+        // Save weight without specifying sets/reps - should inherit from exercise
+        appState.saveWeightForExercise(workoutId, exerciseId, '85kg');
+        
+        final exercise = appState.workoutLists[0].exercises[0];
+        expect(exercise.weightHistory.length, 1);
+        final entry = exercise.weightHistory[0];
+        expect(entry.weight, '85kg');
+        expect(entry.sets, 3); // Inherited from exercise
+        expect(entry.reps, 12); // Inherited from exercise
+      });
+
+      test('should save to global exercise history with sets and reps', () {
+        appState.addWorkoutList('Test Workout');
+        final workoutId = appState.workoutLists[0].id;
+        appState.addExerciseToWorkout(workoutId, 'Bench Press');
+        final exerciseId = appState.workoutLists[0].exercises[0].id;
+        
+        appState.saveWeightForExercise(workoutId, exerciseId, '85kg', sets: 3, reps: 10);
+        
+        final globalHistory = appState.getExerciseHistory('Bench Press');
+        expect(globalHistory, isNotNull);
+        expect(globalHistory!.weightHistory.length, 1);
+        final entry = globalHistory.weightHistory[0];
+        expect(entry.weight, '85kg');
+        expect(entry.sets, 3);
+        expect(entry.reps, 10);
+      });
+    });
+
     group('Delete Weight Entries', () {
       test('should delete specific weight entry correctly', () {
         appState.addWorkoutList('Test Workout');
