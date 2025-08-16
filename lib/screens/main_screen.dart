@@ -12,17 +12,48 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
-
-  final List<Widget> _screens = [
-    const ShoppingListsScreen(showAppBar: true),
-    const WorkoutListsScreen(showAppBar: true),
-    const WeightTrackingScreen(),
+  
+  final List<GlobalKey<NavigatorState>> _navigatorKeys = [
+    GlobalKey<NavigatorState>(),
+    GlobalKey<NavigatorState>(),
+    GlobalKey<NavigatorState>(),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _screens[_currentIndex],
+      body: IndexedStack(
+        index: _currentIndex,
+        children: [
+          Navigator(
+            key: _navigatorKeys[0],
+            onGenerateRoute: (settings) {
+              return MaterialPageRoute(
+                builder: (context) => const ShoppingListsScreen(showAppBar: true),
+                settings: settings,
+              );
+            },
+          ),
+          Navigator(
+            key: _navigatorKeys[1],
+            onGenerateRoute: (settings) {
+              return MaterialPageRoute(
+                builder: (context) => const WorkoutListsScreen(showAppBar: true),
+                settings: settings,
+              );
+            },
+          ),
+          Navigator(
+            key: _navigatorKeys[2],
+            onGenerateRoute: (settings) {
+              return MaterialPageRoute(
+                builder: (context) => const WeightTrackingScreen(),
+                settings: settings,
+              );
+            },
+          ),
+        ],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) {
