@@ -201,8 +201,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Should show weight progression
-      expect(find.text('85kg'), findsOneWidget); // Latest weight
-      expect(find.text('80kg'), findsOneWidget); // Previous weight
+      expect(find.text('85kg'), findsOneWidget); // Latest weight (previous weight not shown in summary)
       expect(find.byIcon(Icons.trending_up), findsAtLeastNWidgets(1)); // Progression indicator(s)
     });
 

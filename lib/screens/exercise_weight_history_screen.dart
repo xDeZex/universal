@@ -19,37 +19,56 @@ class ExerciseWeightHistoryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(exercise.name),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-      ),
+      appBar: _buildAppBar(context),
       body: Consumer<ShoppingAppState>(
-        builder: (context, appState, child) {
-          // Get exercise history from global storage
-          final exerciseHistory = appState.getExerciseHistory(exercise.name);
-          
-          if (exerciseHistory?.weightHistory.isEmpty ?? true) {
-            return _buildEmptyState(context);
-          }
-          
-          final sortedHistory = List<WeightEntry>.from(exerciseHistory!.weightHistory)
-            ..sort((a, b) => b.date.compareTo(a.date)); // Newest first
-          
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: sortedHistory.length,
-            itemBuilder: (context, index) {
-              final entry = sortedHistory[index];
-              final progression = index < sortedHistory.length - 1
-                  ? _getProgression(entry, sortedHistory[index + 1])
-                  : null;
-              
-              return _buildWeightEntryCard(context, entry, progression, index == 0);
-            },
-          );
-        },
+        builder: (context, appState, child) => _buildBody(context, appState),
       ),
     );
+  }
+
+  PreferredSizeWidget _buildAppBar(BuildContext context) {
+    return AppBar(
+      title: Text(exercise.name),
+      backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+    );
+  }
+
+  Widget _buildBody(BuildContext context, ShoppingAppState appState) {
+    final exerciseHistory = appState.getExerciseHistory(exercise.name);
+    
+    if (exerciseHistory?.weightHistory.isEmpty ?? true) {
+      return _buildEmptyState(context);
+    }
+    
+    final sortedHistory = _getSortedWeightHistory(exerciseHistory!);
+    return _buildWeightHistoryList(context, sortedHistory);
+  }
+
+  List<WeightEntry> _getSortedWeightHistory(dynamic exerciseHistory) {
+    return List<WeightEntry>.from(exerciseHistory.weightHistory)
+      ..sort((a, b) => b.date.compareTo(a.date)); // Newest first
+  }
+
+  Widget _buildWeightHistoryList(BuildContext context, List<WeightEntry> sortedHistory) {
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: sortedHistory.length,
+      itemBuilder: (context, index) => _buildListItem(context, sortedHistory, index),
+    );
+  }
+
+  Widget _buildListItem(BuildContext context, List<WeightEntry> sortedHistory, int index) {
+    final entry = sortedHistory[index];
+    final progression = _calculateProgression(sortedHistory, index);
+    final isLatest = index == 0;
+    
+    return _buildWeightEntryCard(context, entry, progression, isLatest);
+  }
+
+  WeightProgression? _calculateProgression(List<WeightEntry> sortedHistory, int index) {
+    if (index >= sortedHistory.length - 1) return null;
+    
+    return _getProgression(sortedHistory[index], sortedHistory[index + 1]);
   }
 
 
@@ -90,15 +109,7 @@ class ExerciseWeightHistoryScreen extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       elevation: isLatest ? 4 : 2,
       child: Container(
-        decoration: isLatest
-            ? BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
-                  width: 2,
-                ),
-              )
-            : null,
+        decoration: _buildCardDecoration(context, isLatest),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -107,165 +118,12 @@ class ExerciseWeightHistoryScreen extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            entry.weight,
-                            style: TextStyle(
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                              color: isToday 
-                                  ? Theme.of(context).colorScheme.primary 
-                                  : Theme.of(context).colorScheme.onSurface,
-                            ),
-                          ),
-                          if (isLatest) ...[
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: Theme.of(context).colorScheme.primary,
-                                  width: 1,
-                                ),
-                              ),
-                              child: Text(
-                                'LATEST',
-                                style: TextStyle(
-                                  color: Theme.of(context).colorScheme.primary,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 10,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.access_time,
-                            size: 16,
-                            color: Colors.grey[600],
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            _formatDate(entry.date),
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 14,
-                            ),
-                          ),
-                          if (isToday) ...[
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: Theme.of(context).colorScheme.secondary,
-                                  width: 1,
-                                ),
-                              ),
-                              child: Text(
-                                'TODAY',
-                                style: TextStyle(
-                                  color: Theme.of(context).colorScheme.secondary,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 9,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      if (progression != null) ...[
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: progression.isIncrease 
-                                ? Colors.green.withValues(alpha: 0.1)
-                                : Colors.red.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: progression.isIncrease ? Colors.green : Colors.red,
-                              width: 1,
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                progression.isIncrease ? Icons.trending_up : Icons.trending_down,
-                                size: 16,
-                                color: progression.isIncrease ? Colors.green : Colors.red,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                progression.text,
-                                style: TextStyle(
-                                  color: progression.isIncrease ? Colors.green : Colors.red,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                      ],
-                      GestureDetector(
-                        onTap: () => _showDeleteWeightDialog(context, entry),
-                        child: Icon(
-                          Icons.delete_outline,
-                          size: 20,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ),
+                  _buildWeightInfo(context, entry, isToday, isLatest),
+                  _buildActionButtons(context, entry, progression),
                 ],
               ),
-              if (exercise.sets != null || exercise.reps != null) ...[
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceContainer,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.fitness_center,
-                        size: 16,
-                        color: Colors.grey[600],
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        _formatSetsReps(),
-                        style: TextStyle(
-                          color: Colors.grey[700],
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+              if (exercise.sets != null || exercise.reps != null)
+                _buildExerciseDetails(context),
             ],
           ),
         ),
@@ -273,6 +131,212 @@ class ExerciseWeightHistoryScreen extends StatelessWidget {
     );
   }
 
+  BoxDecoration? _buildCardDecoration(BuildContext context, bool isLatest) {
+    if (!isLatest) return null;
+    
+    return BoxDecoration(
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(
+        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+        width: 2,
+      ),
+    );
+  }
+
+  Widget _buildWeightInfo(BuildContext context, WeightEntry entry, bool isToday, bool isLatest) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildWeightRow(context, entry, isToday, isLatest),
+        const SizedBox(height: 4),
+        _buildDateRow(context, entry, isToday),
+      ],
+    );
+  }
+
+  Widget _buildWeightRow(BuildContext context, WeightEntry entry, bool isToday, bool isLatest) {
+    return Row(
+      children: [
+        Text(
+          entry.weight,
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            color: isToday 
+                ? Theme.of(context).colorScheme.primary 
+                : Theme.of(context).colorScheme.onSurface,
+          ),
+        ),
+        if (isLatest) ...[
+          const SizedBox(width: 8),
+          _buildLatestBadge(context),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildLatestBadge(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.primary,
+          width: 1,
+        ),
+      ),
+      child: Text(
+        'LATEST',
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.primary,
+          fontWeight: FontWeight.bold,
+          fontSize: 10,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDateRow(BuildContext context, WeightEntry entry, bool isToday) {
+    return Row(
+      children: [
+        Icon(
+          Icons.access_time,
+          size: 16,
+          color: Colors.grey[600],
+        ),
+        const SizedBox(width: 4),
+        Text(
+          _formatDate(entry.date),
+          style: TextStyle(
+            color: Colors.grey[600],
+            fontSize: 14,
+          ),
+        ),
+        if (isToday) ...[
+          const SizedBox(width: 8),
+          _buildTodayBadge(context),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildTodayBadge(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.secondary,
+          width: 1,
+        ),
+      ),
+      child: Text(
+        'TODAY',
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.secondary,
+          fontWeight: FontWeight.bold,
+          fontSize: 9,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionButtons(BuildContext context, WeightEntry entry, WeightProgression? progression) {
+    return Row(
+      children: [
+        if (progression != null) ...[
+          _buildProgressionBadge(progression),
+          const SizedBox(width: 8),
+        ],
+        _buildDeleteButton(context, entry),
+      ],
+    );
+  }
+
+  Widget _buildProgressionBadge(WeightProgression progression) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: progression.isIncrease 
+            ? Colors.green.withValues(alpha: 0.1)
+            : Colors.red.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: progression.isIncrease ? Colors.green : Colors.red,
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            progression.isIncrease ? Icons.trending_up : Icons.trending_down,
+            size: 16,
+            color: progression.isIncrease ? Colors.green : Colors.red,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            progression.text,
+            style: TextStyle(
+              color: progression.isIncrease ? Colors.green : Colors.red,
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDeleteButton(BuildContext context, WeightEntry entry) {
+    return GestureDetector(
+      onTap: () => _showDeleteWeightDialog(context, entry),
+      child: Icon(
+        Icons.delete_outline,
+        size: 20,
+        color: Colors.grey[600],
+      ),
+    );
+  }
+
+  Widget _buildExerciseDetails(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surfaceContainer,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.fitness_center,
+              size: 16,
+              color: Colors.grey[600],
+            ),
+            const SizedBox(width: 6),
+            Text(
+              _formatSetsReps(),
+              style: TextStyle(
+                color: Colors.grey[700],
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ============================================================================
+  // Helper Methods - Exercise Details
+  // ============================================================================
+  
   String _formatSetsReps() {
     final details = <String>[];
     if (exercise.sets != null && exercise.reps != null) {
@@ -285,6 +349,10 @@ class ExerciseWeightHistoryScreen extends StatelessWidget {
     return details.join(' • ');
   }
 
+  // ============================================================================
+  // Helper Methods - Date & Time Formatting
+  // ============================================================================
+  
   bool _isToday(DateTime date) {
     final now = DateTime.now();
     return date.year == now.year && 
@@ -315,6 +383,10 @@ class ExerciseWeightHistoryScreen extends StatelessWidget {
     return '$hour:$minute';
   }
 
+  // ============================================================================
+  // Helper Methods - Weight Progression Calculation
+  // ============================================================================
+  
   WeightProgression? _getProgression(WeightEntry current, WeightEntry previous) {
     final currentWeight = _extractNumericWeight(current.weight);
     final previousWeight = _extractNumericWeight(previous.weight);
