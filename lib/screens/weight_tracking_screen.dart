@@ -5,6 +5,7 @@ import '../models/weight_entry.dart';
 import '../models/exercise.dart';
 import '../models/exercise_history.dart';
 import 'exercise_weight_history_screen.dart';
+import 'exercise_graphs_screen.dart';
 
 class WeightTrackingScreen extends StatelessWidget {
   const WeightTrackingScreen({super.key});
@@ -15,6 +16,9 @@ class WeightTrackingScreen extends StatelessWidget {
       appBar: _buildAppBar(context),
       body: Consumer<ShoppingAppState>(
         builder: (context, appState, child) => _buildBody(context, appState),
+      ),
+      floatingActionButton: Consumer<ShoppingAppState>(
+        builder: (context, appState, child) => _buildFloatingActionButton(context, appState),
       ),
     );
   }
@@ -34,6 +38,21 @@ class WeightTrackingScreen extends StatelessWidget {
     }
 
     return _buildExerciseList(context, exerciseSummaries);
+  }
+
+  Widget _buildFloatingActionButton(BuildContext context, ShoppingAppState appState) {
+    final exerciseHistories = appState.getAllExerciseHistoriesWithWeights();
+    
+    // Only show FAB if there are exercises with weight data
+    if (exerciseHistories.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return FloatingActionButton(
+      onPressed: () => _navigateToExerciseGraphs(context, appState),
+      tooltip: 'View Exercise Graphs',
+      child: const Icon(Icons.bar_chart),
+    );
   }
 
   Widget _buildEmptyState() {
@@ -420,6 +439,14 @@ class WeightTrackingScreen extends StatelessWidget {
   // ============================================================================
   // Helper Methods - Navigation
   // ============================================================================
+
+  void _navigateToExerciseGraphs(BuildContext context, ShoppingAppState appState) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const ExerciseGraphsScreen(),
+      ),
+    );
+  }
 
   void _navigateToExerciseHistoryFromSummary(BuildContext context, ExerciseSummaryData summaryData) {
     final appState = Provider.of<ShoppingAppState>(context, listen: false);
