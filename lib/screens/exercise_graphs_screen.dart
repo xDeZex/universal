@@ -6,8 +6,28 @@ import '../providers/shopping_app_state.dart';
 import '../models/weight_entry.dart';
 import '../models/exercise_history.dart';
 
-class ExerciseGraphsScreen extends StatelessWidget {
+enum TimeInterval {
+  week(7, 'Week'),
+  month(30, 'Month'),
+  threeMonths(90, '3 Months'),
+  sixMonths(180, '6 Months'),
+  year(365, 'Year'),
+  all(0, 'All Time');
+
+  const TimeInterval(this.days, this.label);
+  final int days;
+  final String label;
+}
+
+class ExerciseGraphsScreen extends StatefulWidget {
   const ExerciseGraphsScreen({super.key});
+
+  @override
+  State<ExerciseGraphsScreen> createState() => _ExerciseGraphsScreenState();
+}
+
+class _ExerciseGraphsScreenState extends State<ExerciseGraphsScreen> {
+  TimeInterval _selectedInterval = TimeInterval.threeMonths;
 
   @override
   Widget build(BuildContext context) {
@@ -23,6 +43,47 @@ class ExerciseGraphsScreen extends StatelessWidget {
     return AppBar(
       title: const Text('Exercise Progress'),
       backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+      actions: [
+        PopupMenuButton<TimeInterval>(
+          icon: const Icon(Icons.calendar_today),
+          tooltip: 'Time Period',
+          onSelected: (TimeInterval interval) {
+            setState(() {
+              _selectedInterval = interval;
+            });
+          },
+          itemBuilder: (BuildContext context) {
+            return TimeInterval.values.map((TimeInterval interval) {
+              return PopupMenuItem<TimeInterval>(
+                value: interval,
+                child: Row(
+                  children: [
+                    Icon(
+                      interval == _selectedInterval ? Icons.check : Icons.access_time,
+                      size: 20,
+                      color: interval == _selectedInterval 
+                        ? Theme.of(context).colorScheme.primary 
+                        : Colors.grey,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      interval.label,
+                      style: TextStyle(
+                        color: interval == _selectedInterval 
+                          ? Theme.of(context).colorScheme.primary 
+                          : null,
+                        fontWeight: interval == _selectedInterval 
+                          ? FontWeight.bold 
+                          : FontWeight.normal,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList();
+          },
+        ),
+      ],
     );
   }
 
@@ -40,7 +101,7 @@ class ExerciseGraphsScreen extends StatelessWidget {
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: sortedExercises.length,
-      itemBuilder: (context, index) => _buildExerciseGraphCard(context, sortedExercises[index]),
+      itemBuilder: (context, index) => _buildExerciseGraphCard(context, sortedExercises[index], _selectedInterval),
     );
   }
 
@@ -74,8 +135,8 @@ class ExerciseGraphsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildExerciseGraphCard(BuildContext context, ExerciseHistory exerciseHistory) {
-    final chartData = _prepareChartData(exerciseHistory);
+  Widget _buildExerciseGraphCard(BuildContext context, ExerciseHistory exerciseHistory, TimeInterval timeInterval) {
+    final chartData = _prepareChartData(exerciseHistory, timeInterval);
     
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
@@ -85,7 +146,7 @@ class ExerciseGraphsScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildCardHeader(context, exerciseHistory),
+            _buildCardHeader(context, exerciseHistory, chartData),
             const SizedBox(height: 16),
             _buildProgressChart(context, chartData),
             const SizedBox(height: 12),
@@ -96,9 +157,11 @@ class ExerciseGraphsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCardHeader(BuildContext context, ExerciseHistory exerciseHistory) {
-    final latestEntry = exerciseHistory.weightHistory.reduce((a, b) => 
-      a.date.isAfter(b.date) ? a : b);
+  Widget _buildCardHeader(BuildContext context, ExerciseHistory exerciseHistory, ChartData chartData) {
+    // Use latest entry from filtered data, fall back to all data if no filtered entries
+    final latestEntry = chartData.entries.isNotEmpty 
+      ? chartData.entries.reduce((a, b) => a.date.isAfter(b.date) ? a : b)
+      : exerciseHistory.weightHistory.reduce((a, b) => a.date.isAfter(b.date) ? a : b);
     
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -116,7 +179,7 @@ class ExerciseGraphsScreen extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                '${exerciseHistory.weightHistory.length} entr${exerciseHistory.weightHistory.length == 1 ? 'y' : 'ies'}',
+                '${chartData.entries.length} entr${chartData.entries.length == 1 ? 'y' : 'ies'}',
                 style: TextStyle(
                   color: Colors.grey[600],
                   fontSize: 14,
@@ -213,7 +276,7 @@ class ExerciseGraphsScreen extends StatelessWidget {
           lineBarsData: [
             LineChartBarData(
               spots: chartData.spots,
-              isCurved: true,
+              isCurved: false, // Use straight lines for accurate representation
               color: Theme.of(context).colorScheme.primary,
               barWidth: 3,
               isStrokeCapRound: true,
@@ -221,7 +284,7 @@ class ExerciseGraphsScreen extends StatelessWidget {
                 show: true,
                 getDotPainter: (spot, percent, barData, index) {
                   return FlDotCirclePainter(
-                    radius: 4,
+                    radius: 5, // Slightly larger dots to emphasize actual data points
                     color: Theme.of(context).colorScheme.primary,
                     strokeWidth: 2,
                     strokeColor: Colors.white,
@@ -366,8 +429,18 @@ class ExerciseGraphsScreen extends StatelessWidget {
     );
   }
 
-  ChartData _prepareChartData(ExerciseHistory exerciseHistory) {
-    final entries = List<WeightEntry>.from(exerciseHistory.weightHistory)
+  ChartData _prepareChartData(ExerciseHistory exerciseHistory, TimeInterval timeInterval) {
+    // Filter entries based on time interval
+    final now = DateTime.now();
+    final cutoffDate = timeInterval == TimeInterval.all 
+      ? DateTime(1970) // Very old date to include all entries
+      : now.subtract(Duration(days: timeInterval.days));
+    
+    final filteredEntries = exerciseHistory.weightHistory
+      .where((entry) => entry.date.isAfter(cutoffDate))
+      .toList();
+    
+    final entries = List<WeightEntry>.from(filteredEntries)
       ..sort((a, b) => a.date.compareTo(b.date));
 
     if (entries.isEmpty) {
