@@ -206,16 +206,11 @@ class ChartService {
   }
 
   static double _calculateVolumeInterval(double range, double minY, double maxY) {
-    if (range <= ChartConstants.volumeRangeSmall) {
-      return ChartConstants.volumeIntervalSmall;
-    } else if (range <= ChartConstants.volumeRangeMediumSmall) {
-      return ChartConstants.volumeIntervalMediumSmall;
-    } else if (range <= ChartConstants.volumeRangeMedium) {
-      return ChartConstants.volumeIntervalMedium;
-    } else {
-      final interval = _calculateOptimalInterval(range, minY, maxY);
-      return interval.clamp(ChartConstants.volumeIntervalMinimum, double.infinity);
-    }
+    // Use the same optimal interval calculation as weight for consistency
+    final interval = _calculateOptimalInterval(range, minY, maxY);
+    
+    // Ensure volume interval is at least 1 for readability
+    return interval.clamp(1.0, double.infinity);
   }
 
   static double _calculateBottomInterval(int entriesLength) {

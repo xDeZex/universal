@@ -48,13 +48,14 @@ class ExerciseChart extends StatelessWidget {
   }
 
   FlGridData _buildGridData() {
+    final gridAlpha = (showWeight || showVolume) ? ChartConstants.gridAlpha : ChartConstants.gridAlpha * 0.5;
     return FlGridData(
       show: true,
       drawVerticalLine: false,
       horizontalInterval: chartData.weightInterval,
       getDrawingHorizontalLine: (value) {
         return FlLine(
-          color: Colors.grey.withValues(alpha: ChartConstants.gridAlpha),
+          color: Colors.grey.withValues(alpha: gridAlpha),
           strokeWidth: ChartConstants.gridLineStrokeWidth,
         );
       },
@@ -66,10 +67,10 @@ class ExerciseChart extends StatelessWidget {
       show: true,
       rightTitles: AxisTitles(
         sideTitles: SideTitles(
-          showTitles: showVolume && chartData.volumeSpots.isNotEmpty,
+          showTitles: chartData.volumeSpots.isNotEmpty,
           reservedSize: ChartConstants.reservedSizeStandard,
           interval: chartData.volumeInterval,
-          getTitlesWidget: (value, meta) => _RightTitle(value: value, chartData: chartData),
+          getTitlesWidget: (value, meta) => _RightTitle(value: value, chartData: chartData, showVolume: showVolume),
         ),
       ),
       topTitles: const AxisTitles(
@@ -85,10 +86,10 @@ class ExerciseChart extends StatelessWidget {
       ),
       leftTitles: AxisTitles(
         sideTitles: SideTitles(
-          showTitles: showWeight && chartData.weightSpots.isNotEmpty,
+          showTitles: chartData.weightSpots.isNotEmpty,
           interval: chartData.weightInterval,
           reservedSize: ChartConstants.reservedSizeStandard,
-          getTitlesWidget: (value, meta) => _LeftTitle(value: value, chartData: chartData),
+          getTitlesWidget: (value, meta) => _LeftTitle(value: value, chartData: chartData, showWeight: showWeight),
         ),
       ),
     );
@@ -252,10 +253,12 @@ class _BottomTitle extends StatelessWidget {
 class _LeftTitle extends StatelessWidget {
   final double value;
   final ChartData chartData;
+  final bool showWeight;
 
   const _LeftTitle({
     required this.value,
     required this.chartData,
+    required this.showWeight,
   });
 
   @override
@@ -274,7 +277,9 @@ class _LeftTitle extends StatelessWidget {
     return Text(
       '${roundedValue.round()}kg',
       style: TextStyle(
-        color: Theme.of(context).colorScheme.primary,
+        color: showWeight 
+          ? Theme.of(context).colorScheme.primary 
+          : Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
         fontSize: ChartConstants.axisTitleFontSize,
       ),
     );
@@ -284,44 +289,43 @@ class _LeftTitle extends StatelessWidget {
 class _RightTitle extends StatelessWidget {
   final double value;
   final ChartData chartData;
+  final bool showVolume;
 
   const _RightTitle({
     required this.value,
     required this.chartData,
+    required this.showVolume,
   });
 
   @override
   Widget build(BuildContext context) {
+    // Convert from weight axis scale back to volume scale
     final weightRatio = (value - chartData.minWeightY) / (chartData.maxWeightY - chartData.minWeightY);
     final volumeValue = chartData.minVolumeY + weightRatio * (chartData.maxVolumeY - chartData.minVolumeY);
     
+    // Use same simple logic as weight axis for consistency
     final interval = chartData.volumeInterval;
     final roundedValue = (volumeValue / interval).round() * interval;
     
-    if ((volumeValue - roundedValue).abs() > interval * ChartConstants.volumeIntervalToleranceRatio) {
+    // Simple tolerance check like weight axis
+    if ((volumeValue - roundedValue).abs() > interval * ChartConstants.intervalToleranceRatio) {
       return const SizedBox.shrink();
     }
     
-    final volumeRange = chartData.maxVolumeY - chartData.minVolumeY;
-    if (volumeRange < ChartConstants.volumeRangeSmall) {
-      final minVal = chartData.minVolumeY.round();
-      final maxVal = chartData.maxVolumeY.round();
-      if (roundedValue.round() != minVal && roundedValue.round() != maxVal) {
-        return const SizedBox.shrink();
-      }
-    } else {
-      if (roundedValue <= chartData.minVolumeY + volumeRange * ChartConstants.edgeFilterRatio || 
-          roundedValue >= chartData.maxVolumeY - volumeRange * ChartConstants.edgeFilterRatio) {
-        return const SizedBox.shrink();
-      }
+    // Simple edge filtering like weight axis
+    if (roundedValue <= chartData.minVolumeY + interval * ChartConstants.edgeFilterRatio || 
+        roundedValue >= chartData.maxVolumeY - interval * ChartConstants.edgeFilterRatio) {
+      return const SizedBox.shrink();
     }
     
     return Padding(
       padding: const EdgeInsets.only(left: ChartConstants.rightTitleLeftPadding),
       child: Text(
         '${roundedValue.round()}',
-        style: const TextStyle(
-          color: Colors.orange,
+        style: TextStyle(
+          color: showVolume 
+            ? Colors.orange 
+            : Colors.orange.withValues(alpha: 0.3),
           fontSize: ChartConstants.axisTitleFontSize,
         ),
       ),

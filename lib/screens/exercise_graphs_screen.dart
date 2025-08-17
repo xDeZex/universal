@@ -18,8 +18,6 @@ class ExerciseGraphsScreen extends StatefulWidget {
 
 class _ExerciseGraphsScreenState extends State<ExerciseGraphsScreen> {
   TimeInterval _selectedInterval = TimeInterval.threeMonths;
-  bool _showWeight = true;
-  bool _showVolume = true;
 
   @override
   Widget build(BuildContext context) {
@@ -95,10 +93,6 @@ class _ExerciseGraphsScreenState extends State<ExerciseGraphsScreen> {
       itemBuilder: (context, index) => _ExerciseGraphCard(
         exerciseHistory: sortedExercises[index],
         timeInterval: _selectedInterval,
-        showWeight: _showWeight,
-        showVolume: _showVolume,
-        onWeightToggle: () => setState(() => _showWeight = !_showWeight),
-        onVolumeToggle: () => setState(() => _showVolume = !_showVolume),
       ),
     );
   }
@@ -134,26 +128,26 @@ class _ExerciseGraphsScreenState extends State<ExerciseGraphsScreen> {
   }
 }
 
-class _ExerciseGraphCard extends StatelessWidget {
+class _ExerciseGraphCard extends StatefulWidget {
   final ExerciseHistory exerciseHistory;
   final TimeInterval timeInterval;
-  final bool showWeight;
-  final bool showVolume;
-  final VoidCallback onWeightToggle;
-  final VoidCallback onVolumeToggle;
 
   const _ExerciseGraphCard({
     required this.exerciseHistory,
     required this.timeInterval,
-    required this.showWeight,
-    required this.showVolume,
-    required this.onWeightToggle,
-    required this.onVolumeToggle,
   });
 
   @override
+  State<_ExerciseGraphCard> createState() => _ExerciseGraphCardState();
+}
+
+class _ExerciseGraphCardState extends State<_ExerciseGraphCard> {
+  bool _showWeight = true;
+  bool _showVolume = true;
+
+  @override
   Widget build(BuildContext context) {
-    final chartData = ChartService.prepareChartData(exerciseHistory, timeInterval);
+    final chartData = ChartService.prepareChartData(widget.exerciseHistory, widget.timeInterval);
     
     return Card(
       margin: const EdgeInsets.only(bottom: ChartConstants.cardBottomMargin),
@@ -164,21 +158,21 @@ class _ExerciseGraphCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _ExerciseCardHeader(
-              exerciseHistory: exerciseHistory,
+              exerciseHistory: widget.exerciseHistory,
               chartData: chartData,
             ),
             const SizedBox(height: ChartConstants.sectionSpacing),
             ChartLegend(
-              showWeight: showWeight,
-              showVolume: showVolume,
-              onWeightToggle: onWeightToggle,
-              onVolumeToggle: onVolumeToggle,
+              showWeight: _showWeight,
+              showVolume: _showVolume,
+              onWeightToggle: () => setState(() => _showWeight = !_showWeight),
+              onVolumeToggle: () => setState(() => _showVolume = !_showVolume),
             ),
             const SizedBox(height: ChartConstants.smallSpacing),
             ExerciseChart(
               chartData: chartData,
-              showWeight: showWeight,
-              showVolume: showVolume,
+              showWeight: _showWeight,
+              showVolume: _showVolume,
             ),
             const SizedBox(height: ChartConstants.mediumSpacing),
             ChartStats(chartData: chartData),
