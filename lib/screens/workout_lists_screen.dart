@@ -73,9 +73,9 @@ class WorkoutListsScreen extends StatelessWidget {
   }
 
   Widget _buildWorkoutSubtitle(WorkoutList workoutList) {
-    return Text(
-      '${workoutList.completedExercises}/${workoutList.totalExercises} exercises completed',
-    );
+    final exerciseCount = workoutList.totalExercises;
+    final exerciseText = exerciseCount == 1 ? 'exercise' : 'exercises';
+    return Text('$exerciseCount $exerciseText');
   }
 
   Widget _buildWorkoutActions(BuildContext context, ShoppingAppState appState, WorkoutList workoutList, int index) {
