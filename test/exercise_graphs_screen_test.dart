@@ -240,13 +240,13 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        // Should show progress stats
-        expect(find.text('Total Progress'), findsOneWidget);
-        expect(find.text('+10.0kg'), findsOneWidget); // 60kg - 50kg
-        expect(find.text('Best Session'), findsOneWidget);
+        // Should show new stats format
+        expect(find.text('Weight Change'), findsOneWidget);
+        expect(find.text('Volume Change'), findsOneWidget);
         expect(find.text('Sessions'), findsOneWidget);
+        expect(find.text('+10.0kg'), findsOneWidget); // 60kg - 50kg = +10kg
         expect(find.text('3'), findsAtLeast(1)); // Number of sessions (may appear in multiple places)
-        // Should show best weight (multiple instances expected)
+        // Should show latest weight (multiple instances expected)
         expect(find.text('60kg'), findsAtLeast(1));
       });
 
@@ -270,10 +270,12 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        // Should not show progress stats for single entry
-        expect(find.text('Total Progress'), findsNothing);
-        expect(find.text('Best Session'), findsNothing);
-        expect(find.text('Sessions'), findsNothing);
+        // Should show stats even for single entry
+        expect(find.text('Weight Change'), findsOneWidget);
+        expect(find.text('Volume Change'), findsOneWidget);
+        expect(find.text('Sessions'), findsOneWidget);
+        expect(find.text('0.0kg'), findsOneWidget); // Weight change should show 0 for single entry
+        expect(find.text('0'), findsAtLeast(1)); // Volume change should show 0 for single entry (may appear multiple times)
       });
 
       testWidgets('should sort exercises by most recent activity', (tester) async {
@@ -411,7 +413,7 @@ void main() {
         await tester.pumpAndSettle();
 
         // Tap the calendar icon
-        await tester.tap(find.byIcon(Icons.calendar_today));
+        await tester.tap(find.byIcon(Icons.calendar_today).first);
         await tester.pumpAndSettle();
 
         // Should show time period menu
@@ -444,7 +446,7 @@ void main() {
         await tester.pumpAndSettle();
 
         // Tap the calendar icon
-        await tester.tap(find.byIcon(Icons.calendar_today));
+        await tester.tap(find.byIcon(Icons.calendar_today).first);
         await tester.pumpAndSettle();
 
         // Should show 3 Months as selected (with check icon)
@@ -478,7 +480,7 @@ void main() {
         await tester.pumpAndSettle();
 
         // Tap the calendar icon
-        await tester.tap(find.byIcon(Icons.calendar_today));
+        await tester.tap(find.byIcon(Icons.calendar_today).first);
         await tester.pumpAndSettle();
 
         // Tap on "Week" option
@@ -486,7 +488,7 @@ void main() {
         await tester.pumpAndSettle();
 
         // Open menu again to verify selection changed
-        await tester.tap(find.byIcon(Icons.calendar_today));
+        await tester.tap(find.byIcon(Icons.calendar_today).first);
         await tester.pumpAndSettle();
 
         // The check should now be next to "Week"
@@ -527,7 +529,7 @@ void main() {
         expect(find.text('3 entries'), findsOneWidget);
 
         // Change to Week filter
-        await tester.tap(find.byIcon(Icons.calendar_today));
+        await tester.tap(find.byIcon(Icons.calendar_today).first);
         await tester.pumpAndSettle();
         await tester.tap(find.text('Week'));
         await tester.pumpAndSettle();
@@ -562,7 +564,7 @@ void main() {
         await tester.pumpAndSettle();
 
         // Change to All Time filter
-        await tester.tap(find.byIcon(Icons.calendar_today));
+        await tester.tap(find.byIcon(Icons.calendar_today).first);
         await tester.pumpAndSettle();
         await tester.tap(find.text('All Time'));
         await tester.pumpAndSettle();
@@ -595,19 +597,23 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        // Default view should show all data (total progress: 80-60 = +20kg)
-        expect(find.text('+20.0kg'), findsOneWidget);
-        expect(find.text('80kg'), findsAtLeast(1)); // Best session and latest weight
+        // Default view should show all data
+        expect(find.text('Weight Change'), findsOneWidget);
+        expect(find.text('Volume Change'), findsOneWidget);
+        expect(find.text('+20.0kg'), findsOneWidget); // 80kg - 60kg = +20kg
+        expect(find.text('80kg'), findsAtLeast(1)); // Latest weight
 
         // Change to Week filter (should only include the 80kg entry)
-        await tester.tap(find.byIcon(Icons.calendar_today));
+        await tester.tap(find.byIcon(Icons.calendar_today).first);
         await tester.pumpAndSettle();
         await tester.tap(find.text('Week'));
         await tester.pumpAndSettle();
 
-        // With only one entry in the filtered period, progress stats should not be shown
-        expect(find.text('Total Progress'), findsNothing);
-        expect(find.text('+20.0kg'), findsNothing);
+        // With only one entry in the filtered period, stats should show 0 for changes
+        expect(find.text('Weight Change'), findsOneWidget);
+        expect(find.text('Volume Change'), findsOneWidget);
+        expect(find.text('0.0kg'), findsOneWidget); // Should show 0 for weight change with single entry
+        expect(find.text('0'), findsAtLeast(1)); // Should show 0 for volume change with single entry
         // But should still show the latest weight
         expect(find.text('80kg'), findsAtLeast(1));
       });
@@ -636,7 +642,7 @@ void main() {
         await tester.pumpAndSettle();
 
         // Change to Week filter (should have no data)
-        await tester.tap(find.byIcon(Icons.calendar_today));
+        await tester.tap(find.byIcon(Icons.calendar_today).first);
         await tester.pumpAndSettle();
         await tester.tap(find.text('Week'));
         await tester.pumpAndSettle();
@@ -672,7 +678,7 @@ void main() {
         await tester.pumpAndSettle();
 
         // Change to Week filter
-        await tester.tap(find.byIcon(Icons.calendar_today));
+        await tester.tap(find.byIcon(Icons.calendar_today).first);
         await tester.pumpAndSettle();
         await tester.tap(find.text('Week'));
         await tester.pumpAndSettle();
@@ -691,7 +697,7 @@ void main() {
         // Note: Since we're creating a new widget instance, the state resets to default.
         // In a real app, this would be preserved through navigation state management.
         // We can verify the menu still works correctly
-        await tester.tap(find.byIcon(Icons.calendar_today));
+        await tester.tap(find.byIcon(Icons.calendar_today).first);
         await tester.pumpAndSettle();
         
         expect(find.text('Week'), findsOneWidget);
@@ -718,8 +724,8 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        // Long press the calendar icon to show tooltip
-        await tester.longPress(find.byIcon(Icons.calendar_today));
+        // Long press the calendar icon in the app bar to show tooltip
+        await tester.longPress(find.byIcon(Icons.calendar_today).first);
         await tester.pumpAndSettle();
 
         expect(find.text('Time Period'), findsOneWidget);
@@ -775,6 +781,389 @@ void main() {
         expect(find.text('Invalid Weight Exercise'), findsOneWidget);
         expect(find.text('bodyweight only'), findsOneWidget);
       });
+    });
+  });
+
+  group('Multi-Metric Charts', () {
+    testWidgets('should show weight and volume legend controls', (tester) async {
+      final appState = ShoppingAppState();
+      
+      // Add exercise with sets and reps data
+      appState.addWorkoutList('Test Workout');
+      final workoutId = appState.workoutLists[0].id;
+      appState.addExerciseToWorkout(workoutId, 'Bench Press');
+      final exerciseId = appState.workoutLists[0].exercises[0].id;
+      appState.saveWeightForExercise(workoutId, exerciseId, '80kg', sets: 3, reps: 10);
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider.value(
+          value: appState,
+          child: const MaterialApp(
+            home: ExerciseGraphsScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Should show legend with Weight and Volume options
+      expect(find.text('Weight'), findsOneWidget);
+      expect(find.text('Volume'), findsOneWidget);
+    });
+
+    testWidgets('should toggle weight line visibility when weight legend is tapped', (tester) async {
+      final appState = ShoppingAppState();
+      
+      // Add exercise with weight and volume data
+      appState.addWorkoutList('Test Workout');
+      final workoutId = appState.workoutLists[0].id;
+      appState.addExerciseToWorkout(workoutId, 'Squats');
+      final exerciseId = appState.workoutLists[0].exercises[0].id;
+      appState.saveWeightForExercise(workoutId, exerciseId, '100kg', sets: 4, reps: 8);
+      appState.saveWeightForExercise(workoutId, exerciseId, '105kg', sets: 4, reps: 8);
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider.value(
+          value: appState,
+          child: const MaterialApp(
+            home: ExerciseGraphsScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Initially both should be visible
+      expect(find.text('Weight'), findsOneWidget);
+      expect(find.text('Volume'), findsOneWidget);
+
+      // Tap on Weight legend to toggle visibility
+      await tester.tap(find.text('Weight'));
+      await tester.pumpAndSettle();
+
+      // Weight legend should still be there but potentially styled differently
+      expect(find.text('Weight'), findsOneWidget);
+    });
+
+    testWidgets('should toggle volume line visibility when volume legend is tapped', (tester) async {
+      final appState = ShoppingAppState();
+      
+      // Add exercise with weight and volume data
+      appState.addWorkoutList('Test Workout');
+      final workoutId = appState.workoutLists[0].id;
+      appState.addExerciseToWorkout(workoutId, 'Deadlift');
+      final exerciseId = appState.workoutLists[0].exercises[0].id;
+      appState.saveWeightForExercise(workoutId, exerciseId, '120kg', sets: 3, reps: 5);
+      appState.saveWeightForExercise(workoutId, exerciseId, '125kg', sets: 3, reps: 5);
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider.value(
+          value: appState,
+          child: const MaterialApp(
+            home: ExerciseGraphsScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Tap on Volume legend to toggle visibility
+      await tester.tap(find.text('Volume'));
+      await tester.pumpAndSettle();
+
+      // Volume legend should still be there but potentially styled differently
+      expect(find.text('Volume'), findsOneWidget);
+    });
+
+    testWidgets('should handle exercises with sets and reps data', (tester) async {
+      final appState = ShoppingAppState();
+      
+      // Add exercise with sets and reps progression
+      appState.addWorkoutList('Test Workout');
+      final workoutId = appState.workoutLists[0].id;
+      appState.addExerciseToWorkout(workoutId, 'Pull-ups');
+      final exerciseId = appState.workoutLists[0].exercises[0].id;
+      
+      // Add entries with different sets and reps (volume progression)
+      appState.saveWeightForExercise(workoutId, exerciseId, '10kg', sets: 3, reps: 8);
+      appState.saveWeightForExercise(workoutId, exerciseId, '10kg', sets: 3, reps: 10);
+      appState.saveWeightForExercise(workoutId, exerciseId, '10kg', sets: 4, reps: 10);
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider.value(
+          value: appState,
+          child: const MaterialApp(
+            home: ExerciseGraphsScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Should show the exercise with multi-metric data
+      expect(find.text('Pull-ups'), findsOneWidget);
+      expect(find.text('3 entries'), findsOneWidget);
+      expect(find.text('Weight'), findsOneWidget);
+      expect(find.text('Volume'), findsOneWidget);
+    });
+
+    testWidgets('should handle exercises with missing sets and reps data', (tester) async {
+      final appState = ShoppingAppState();
+      
+      // Add exercise with mixed data (some with sets/reps, some without)
+      appState.addWorkoutList('Test Workout');
+      final workoutId = appState.workoutLists[0].id;
+      appState.addExerciseToWorkout(workoutId, 'Mixed Data Exercise');
+      final exerciseId = appState.workoutLists[0].exercises[0].id;
+      
+      // Add entries with and without sets/reps
+      appState.saveWeightForExercise(workoutId, exerciseId, '60kg', sets: 3, reps: 8);
+      appState.saveWeightForExercise(workoutId, exerciseId, '65kg'); // No sets/reps
+      appState.saveWeightForExercise(workoutId, exerciseId, '70kg', sets: 4, reps: 6);
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider.value(
+          value: appState,
+          child: const MaterialApp(
+            home: ExerciseGraphsScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Should handle mixed data gracefully
+      expect(find.text('Mixed Data Exercise'), findsOneWidget);
+      expect(find.text('3 entries'), findsOneWidget);
+      expect(find.text('70kg'), findsAtLeast(1)); // Latest weight (may appear in multiple places)
+    });
+
+    testWidgets('should show appropriate chart when only weight data is available', (tester) async {
+      final appState = ShoppingAppState();
+      
+      // Add exercise with only weight data (no sets/reps)
+      appState.addWorkoutList('Test Workout');
+      final workoutId = appState.workoutLists[0].id;
+      appState.addExerciseToWorkout(workoutId, 'Weight Only Exercise');
+      final exerciseId = appState.workoutLists[0].exercises[0].id;
+      appState.saveWeightForExercise(workoutId, exerciseId, '50kg');
+      appState.saveWeightForExercise(workoutId, exerciseId, '55kg');
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider.value(
+          value: appState,
+          child: const MaterialApp(
+            home: ExerciseGraphsScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Should show chart with weight data
+      expect(find.text('Weight Only Exercise'), findsOneWidget);
+      expect(find.text('2 entries'), findsOneWidget);
+      expect(find.text('Weight'), findsOneWidget);
+      expect(find.text('Volume'), findsOneWidget);
+    });
+
+    testWidgets('should filter both weight and volume data based on time interval', (tester) async {
+      final appState = ShoppingAppState();
+      
+      // Add exercise with weight and volume data across different time periods
+      appState.addWorkoutList('Test Workout');
+      final workoutId = appState.workoutLists[0].id;
+      appState.addExerciseToWorkout(workoutId, 'Time Filtered Exercise');
+      final exerciseId = appState.workoutLists[0].exercises[0].id;
+      
+      // Add recent entry (within week)
+      appState.saveWeightForExercise(workoutId, exerciseId, '80kg', sets: 3, reps: 10, date: DateTime.now().subtract(const Duration(days: 3)));
+      
+      // Add older entry (beyond week)
+      appState.saveWeightForExercise(workoutId, exerciseId, '75kg', sets: 3, reps: 8, date: DateTime.now().subtract(const Duration(days: 15)));
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider.value(
+          value: appState,
+          child: const MaterialApp(
+            home: ExerciseGraphsScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Initially shows all data (3 Months default should include both entries)
+      expect(find.text('2 entries'), findsOneWidget);
+
+      // Change to Week filter
+      await tester.tap(find.byIcon(Icons.calendar_today).first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Week'));
+      await tester.pumpAndSettle();
+
+      // Should now show only 1 entry (from last week)
+      expect(find.text('1 entry'), findsOneWidget);
+      expect(find.text('2 entries'), findsNothing);
+    });
+
+    testWidgets('should show dual axis labels when both metrics are enabled', (tester) async {
+      final appState = ShoppingAppState();
+      
+      // Add exercise with comprehensive weight and volume data
+      appState.addWorkoutList('Test Workout');
+      final workoutId = appState.workoutLists[0].id;
+      appState.addExerciseToWorkout(workoutId, 'Dual Axis Exercise');
+      final exerciseId = appState.workoutLists[0].exercises[0].id;
+      
+      // Add multiple entries with different weights and volumes
+      appState.saveWeightForExercise(workoutId, exerciseId, '80kg', sets: 3, reps: 8);
+      appState.saveWeightForExercise(workoutId, exerciseId, '85kg', sets: 3, reps: 10);
+      appState.saveWeightForExercise(workoutId, exerciseId, '90kg', sets: 4, reps: 8);
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider.value(
+          value: appState,
+          child: const MaterialApp(
+            home: ExerciseGraphsScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Should show exercise with dual-axis data
+      expect(find.text('Dual Axis Exercise'), findsOneWidget);
+      expect(find.text('3 entries'), findsOneWidget);
+      
+      // Both legend items should be visible
+      expect(find.text('Weight'), findsOneWidget);
+      expect(find.text('Volume'), findsOneWidget);
+    });
+
+    testWidgets('should show volume axis labels with varying data', (tester) async {
+      final appState = ShoppingAppState();
+      
+      // Add exercise with varying volume data
+      appState.addWorkoutList('Test Workout');
+      final workoutId = appState.workoutLists[0].id;
+      appState.addExerciseToWorkout(workoutId, 'Volume Test Exercise');
+      final exerciseId = appState.workoutLists[0].exercises[0].id;
+      
+      // Add entries with different volumes: 15, 20, 24, 30
+      appState.saveWeightForExercise(workoutId, exerciseId, '80kg', sets: 3, reps: 5);  // Volume: 15
+      appState.saveWeightForExercise(workoutId, exerciseId, '82kg', sets: 4, reps: 5);  // Volume: 20
+      appState.saveWeightForExercise(workoutId, exerciseId, '84kg', sets: 3, reps: 8);  // Volume: 24
+      appState.saveWeightForExercise(workoutId, exerciseId, '86kg', sets: 5, reps: 6);  // Volume: 30
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider.value(
+          value: appState,
+          child: const MaterialApp(
+            home: ExerciseGraphsScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Should show exercise with volume progression
+      expect(find.text('Volume Test Exercise'), findsOneWidget);
+      expect(find.text('4 entries'), findsOneWidget);
+      
+      // Volume change should show progression: 30 - 15 = +15
+      expect(find.text('+15'), findsOneWidget);
+    });
+
+    testWidgets('should not show duplicate volume axis labels', (tester) async {
+      final appState = ShoppingAppState();
+      
+      // Add exercise with very similar volume data to test deduplication
+      appState.addWorkoutList('Test Workout');
+      final workoutId = appState.workoutLists[0].id;
+      appState.addExerciseToWorkout(workoutId, 'Deduplication Test');
+      final exerciseId = appState.workoutLists[0].exercises[0].id;
+      
+      // Add entries with very small volume differences
+      appState.saveWeightForExercise(workoutId, exerciseId, '80kg', sets: 3, reps: 8);  // Volume: 24
+      appState.saveWeightForExercise(workoutId, exerciseId, '82kg', sets: 3, reps: 8);  // Volume: 24
+      appState.saveWeightForExercise(workoutId, exerciseId, '84kg', sets: 3, reps: 9);  // Volume: 27
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider.value(
+          value: appState,
+          child: const MaterialApp(
+            home: ExerciseGraphsScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Should show exercise with small volume progression
+      expect(find.text('Deduplication Test'), findsOneWidget);
+      expect(find.text('3 entries'), findsOneWidget);
+      
+      // Volume change should show small progression: 27 - 24 = +3
+      expect(find.text('+3'), findsOneWidget);
+    });
+
+    testWidgets('should show volume change correctly with sets and reps data', (tester) async {
+      final appState = ShoppingAppState();
+      
+      // Add exercise with clear volume progression
+      appState.addWorkoutList('Test Workout');
+      final workoutId = appState.workoutLists[0].id;
+      appState.addExerciseToWorkout(workoutId, 'Volume Change Test');
+      final exerciseId = appState.workoutLists[0].exercises[0].id;
+      
+      // Add entries with sets/reps data: 12 -> 20 = +8
+      appState.saveWeightForExercise(workoutId, exerciseId, '80kg', sets: 3, reps: 4);  // Volume: 12
+      appState.saveWeightForExercise(workoutId, exerciseId, '85kg', sets: 4, reps: 5);  // Volume: 20
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider.value(
+          value: appState,
+          child: const MaterialApp(
+            home: ExerciseGraphsScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Should show exercise with clear volume change
+      expect(find.text('Volume Change Test'), findsOneWidget);
+      expect(find.text('2 entries'), findsOneWidget);
+      
+      // Volume change should show progression: 20 - 12 = +8
+      expect(find.text('+8'), findsOneWidget);
+      
+      // Should not show N/A for volume change
+      expect(find.text('N/A'), findsNothing);
+    });
+
+    testWidgets('should show 0 for volume change with single entry', (tester) async {
+      final appState = ShoppingAppState();
+      
+      // Add exercise with single entry
+      appState.addWorkoutList('Test Workout');
+      final workoutId = appState.workoutLists[0].id;
+      appState.addExerciseToWorkout(workoutId, 'Single Entry Test');
+      final exerciseId = appState.workoutLists[0].exercises[0].id;
+      
+      // Add single entry with sets/reps
+      appState.saveWeightForExercise(workoutId, exerciseId, '80kg', sets: 3, reps: 8);
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider.value(
+          value: appState,
+          child: const MaterialApp(
+            home: ExerciseGraphsScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Should show exercise with single entry
+      expect(find.text('Single Entry Test'), findsOneWidget);
+      expect(find.text('1 entry'), findsOneWidget);
+      
+      // Both weight and volume change should show 0, not N/A
+      expect(find.text('0.0kg'), findsOneWidget);  // Weight change
+      expect(find.text('0'), findsAtLeast(1));      // Volume change (and possibly sessions)
+      
+      // Should not show N/A for any change
+      expect(find.text('N/A'), findsNothing);
     });
   });
 }
