@@ -115,98 +115,10 @@ class WorkoutDetailScreen extends StatelessWidget {
   }
 
   void _showAddExerciseDialog(BuildContext context) {
-    final nameController = TextEditingController();
-    final setsController = TextEditingController();
-    final repsController = TextEditingController();
-    final weightController = TextEditingController();
-    final notesController = TextEditingController();
-    
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Add Exercise'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Exercise name',
-                    hintText: 'e.g. Push ups, Bench press',
-                  ),
-                  autofocus: true,
-                ),
-                const SizedBox(height: AppSpacing.screenPadding),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: setsController,
-                        decoration: const InputDecoration(
-                          labelText: 'Sets',
-                          hintText: '3',
-                        ),
-                        keyboardType: TextInputType.number,
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.screenPadding),
-                    Expanded(
-                      child: TextField(
-                        controller: repsController,
-                        decoration: const InputDecoration(
-                          labelText: 'Reps',
-                          hintText: '10',
-                        ),
-                        keyboardType: TextInputType.number,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.screenPadding),
-                TextField(
-                  controller: weightController,
-                  decoration: const InputDecoration(
-                    labelText: 'Weight',
-                    hintText: '80kg or bodyweight',
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.screenPadding),
-                TextField(
-                  controller: notesController,
-                  decoration: const InputDecoration(
-                    labelText: 'Notes',
-                    hintText: 'Optional notes',
-                  ),
-                  maxLines: 2,
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                if (nameController.text.trim().isNotEmpty) {
-                  context.read<ShoppingAppState>().addExerciseToWorkout(
-                    workoutList.id,
-                    nameController.text.trim(),
-                    sets: setsController.text.trim().isNotEmpty ? setsController.text.trim() : null,
-                    reps: repsController.text.trim().isNotEmpty ? repsController.text.trim() : null,
-                    weight: weightController.text.trim().isNotEmpty ? weightController.text.trim() : null,
-                    notes: notesController.text.trim().isNotEmpty ? notesController.text.trim() : null,
-                  );
-                  Navigator.of(context).pop();
-                }
-              },
-              child: const Text('Add'),
-            ),
-          ],
-        );
+        return AddExerciseDialog(workoutId: workoutList.id);
       },
     );
   }
@@ -786,5 +698,160 @@ class ExerciseCard extends StatelessWidget {
     } else {
       return '${date.day}/${date.month}/${date.year}';
     }
+  }
+}
+
+class AddExerciseDialog extends StatefulWidget {
+  final String workoutId;
+
+  const AddExerciseDialog({
+    super.key,
+    required this.workoutId,
+  });
+
+  @override
+  State<AddExerciseDialog> createState() => _AddExerciseDialogState();
+}
+
+class _AddExerciseDialogState extends State<AddExerciseDialog> {
+  final nameController = TextEditingController();
+  final setsController = TextEditingController();
+  final repsController = TextEditingController();
+  final weightController = TextEditingController();
+  final notesController = TextEditingController();
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    setsController.dispose();
+    repsController.dispose();
+    weightController.dispose();
+    notesController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<ShoppingAppState>(
+      builder: (context, appState, child) {
+        final recommendations = appState.getExerciseNamesWithLogsNotInWorkout(widget.workoutId);
+        
+        return AlertDialog(
+          title: const Text('Add Exercise'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (recommendations.isNotEmpty) ...[
+                  Text(
+                    'Suggestions (with previous logs):',
+                    style: Theme.of(context).textTheme.labelMedium,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  Wrap(
+                    spacing: AppSpacing.md,
+                    runSpacing: AppSpacing.sm,
+                    children: recommendations.take(6).map((exerciseName) {
+                      return ActionChip(
+                        label: Text(exerciseName),
+                        onPressed: () {
+                          nameController.text = exerciseName;
+                          final history = appState.getExerciseHistory(exerciseName);
+                          if (history != null && history.weightHistory.isNotEmpty) {
+                            final lastEntry = history.weightHistory.last;
+                            if (lastEntry.sets != null) {
+                              setsController.text = lastEntry.sets.toString();
+                            }
+                            if (lastEntry.reps != null) {
+                              repsController.text = lastEntry.reps.toString();
+                            }
+                            weightController.text = lastEntry.weight;
+                          }
+                        },
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: AppSpacing.screenPadding),
+                ],
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Exercise name',
+                    hintText: 'e.g. Push ups, Bench press',
+                  ),
+                  autofocus: true,
+                ),
+                const SizedBox(height: AppSpacing.screenPadding),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: setsController,
+                        decoration: const InputDecoration(
+                          labelText: 'Sets',
+                          hintText: '3',
+                        ),
+                        keyboardType: TextInputType.number,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.screenPadding),
+                    Expanded(
+                      child: TextField(
+                        controller: repsController,
+                        decoration: const InputDecoration(
+                          labelText: 'Reps',
+                          hintText: '10',
+                        ),
+                        keyboardType: TextInputType.number,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.screenPadding),
+                TextField(
+                  controller: weightController,
+                  decoration: const InputDecoration(
+                    labelText: 'Weight',
+                    hintText: '80kg or bodyweight',
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.screenPadding),
+                TextField(
+                  controller: notesController,
+                  decoration: const InputDecoration(
+                    labelText: 'Notes',
+                    hintText: 'Optional notes',
+                  ),
+                  maxLines: 2,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                if (nameController.text.trim().isNotEmpty) {
+                  appState.addExerciseToWorkout(
+                    widget.workoutId,
+                    nameController.text.trim(),
+                    sets: setsController.text.trim().isNotEmpty ? setsController.text.trim() : null,
+                    reps: repsController.text.trim().isNotEmpty ? repsController.text.trim() : null,
+                    weight: weightController.text.trim().isNotEmpty ? weightController.text.trim() : null,
+                    notes: notesController.text.trim().isNotEmpty ? notesController.text.trim() : null,
+                  );
+                  Navigator.of(context).pop();
+                }
+              },
+              child: const Text('Add'),
+            ),
+          ],
+        );
+      },
+    );
   }
 }

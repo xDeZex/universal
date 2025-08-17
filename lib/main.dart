@@ -647,4 +647,26 @@ class ShoppingAppState extends ChangeNotifier {
     return _exerciseHistory.where((history) => history.weightHistory.isNotEmpty).toList()
       ..sort((a, b) => b.lastUsed.compareTo(a.lastUsed)); // Most recently used first
   }
+
+  List<String> getExerciseNamesWithLogsNotInWorkout(String workoutId) {
+    final currentWorkout = _workoutLists.firstWhere(
+      (workout) => workout.id == workoutId,
+      orElse: () => WorkoutList(id: '', name: '', exercises: [], createdAt: DateTime.now()),
+    );
+    
+    final currentExerciseNames = currentWorkout.exercises
+        .map((exercise) => exercise.name.toLowerCase())
+        .toSet();
+    
+    return _exerciseHistory
+        .where((history) => history.weightHistory.isNotEmpty)
+        .map((history) => history.exerciseName)
+        .where((name) => !currentExerciseNames.contains(name.toLowerCase()))
+        .toList()
+        ..sort((a, b) {
+          final historyA = getExerciseHistory(a);
+          final historyB = getExerciseHistory(b);
+          return historyB?.lastUsed.compareTo(historyA?.lastUsed ?? DateTime(0)) ?? 0;
+        });
+  }
 }

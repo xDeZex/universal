@@ -1280,5 +1280,186 @@ void main() {
         expect(pullUpsHistories[0].weightHistory.length, 2);
       });
     });
+
+    group('Exercise Recommendations', () {
+      test('should return empty list when no exercise history exists', () {
+        // Create a workout but no exercise history
+        appState.addWorkoutList('Test Workout');
+        final workoutId = appState.workoutLists[0].id;
+        
+        final recommendations = appState.getExerciseNamesWithLogsNotInWorkout(workoutId);
+        
+        expect(recommendations, isEmpty);
+      });
+
+      test('should return empty list when no exercises have weight logs', () {
+        // Create workout and exercise history without weight logs
+        appState.addWorkoutList('Test Workout');
+        final workoutId = appState.workoutLists[0].id;
+        
+        // Add exercise history with empty weight history
+        appState.addOrUpdateExerciseHistory('Push Ups', WeightEntry(
+          date: DateTime.now(),
+          weight: '80kg',
+        ));
+        final history = appState.getExerciseHistory('Push Ups')!;
+        final updatedHistory = history.copyWith(weightHistory: []); // Clear weight history
+        appState.deleteWeightFromExerciseHistory('Push Ups', DateTime.now());
+        
+        final recommendations = appState.getExerciseNamesWithLogsNotInWorkout(workoutId);
+        
+        expect(recommendations, isEmpty);
+      });
+
+      test('should return exercise names with logs not in current workout', () {
+        // Create workout with one exercise
+        appState.addWorkoutList('Test Workout');
+        final workoutId = appState.workoutLists[0].id;
+        appState.addExerciseToWorkout(workoutId, 'Push Ups');
+        
+        // Add exercise histories with weight logs
+        appState.addOrUpdateExerciseHistory('Push Ups', WeightEntry(
+          date: DateTime.now(),
+          weight: '80kg',
+        ));
+        appState.addOrUpdateExerciseHistory('Pull Ups', WeightEntry(
+          date: DateTime.now(),
+          weight: '75kg',
+        ));
+        appState.addOrUpdateExerciseHistory('Squats', WeightEntry(
+          date: DateTime.now(),
+          weight: '100kg',
+        ));
+        
+        final recommendations = appState.getExerciseNamesWithLogsNotInWorkout(workoutId);
+        
+        // Should return Pull Ups and Squats, but not Push Ups (already in workout)
+        expect(recommendations.length, 2);
+        expect(recommendations, contains('Pull Ups'));
+        expect(recommendations, contains('Squats'));
+        expect(recommendations, isNot(contains('Push Ups')));
+      });
+
+      test('should return all exercises with logs when workout is empty', () {
+        // Create empty workout
+        appState.addWorkoutList('Empty Workout');
+        final workoutId = appState.workoutLists[0].id;
+        
+        // Add exercise histories with weight logs
+        appState.addOrUpdateExerciseHistory('Push Ups', WeightEntry(
+          date: DateTime.now(),
+          weight: '80kg',
+        ));
+        appState.addOrUpdateExerciseHistory('Pull Ups', WeightEntry(
+          date: DateTime.now(),
+          weight: '75kg',
+        ));
+        
+        final recommendations = appState.getExerciseNamesWithLogsNotInWorkout(workoutId);
+        
+        expect(recommendations.length, 2);
+        expect(recommendations, contains('Push Ups'));
+        expect(recommendations, contains('Pull Ups'));
+      });
+
+      test('should be case insensitive when filtering existing exercises', () {
+        // Create workout with exercise in different case
+        appState.addWorkoutList('Test Workout');
+        final workoutId = appState.workoutLists[0].id;
+        appState.addExerciseToWorkout(workoutId, 'push ups'); // lowercase
+        
+        // Add exercise history with different case
+        appState.addOrUpdateExerciseHistory('Push Ups', WeightEntry( // title case
+          date: DateTime.now(),
+          weight: '80kg',
+        ));
+        appState.addOrUpdateExerciseHistory('PULL UPS', WeightEntry( // uppercase
+          date: DateTime.now(),
+          weight: '75kg',
+        ));
+        
+        final recommendations = appState.getExerciseNamesWithLogsNotInWorkout(workoutId);
+        
+        // Should only return PULL UPS, not Push Ups (filtered due to case insensitive match)
+        expect(recommendations.length, 1);
+        expect(recommendations, contains('PULL UPS'));
+        expect(recommendations, isNot(contains('Push Ups')));
+      });
+
+      test('should sort recommendations by most recently used first', () async {
+        // Create empty workout
+        appState.addWorkoutList('Test Workout');
+        final workoutId = appState.workoutLists[0].id;
+        
+        final oldDate = DateTime.now().subtract(const Duration(days: 5));
+        final recentDate = DateTime.now().subtract(const Duration(hours: 1));
+        
+        // Add old exercise first, then add a delay to ensure different timestamps
+        appState.addOrUpdateExerciseHistory('Old Exercise', WeightEntry(
+          date: oldDate,
+          weight: '80kg',
+        ));
+        
+        // Wait to ensure different lastUsed timestamp
+        await Future.delayed(const Duration(milliseconds: 10));
+        
+        appState.addOrUpdateExerciseHistory('Recent Exercise', WeightEntry(
+          date: recentDate,
+          weight: '75kg',
+        ));
+        
+        final recommendations = appState.getExerciseNamesWithLogsNotInWorkout(workoutId);
+        
+        expect(recommendations.length, 2);
+        // Recent Exercise should come first due to more recent lastUsed timestamp
+        expect(recommendations[0], 'Recent Exercise');
+        expect(recommendations[1], 'Old Exercise');
+      });
+
+      test('should handle non-existent workout gracefully', () {
+        // Add some exercise history
+        appState.addOrUpdateExerciseHistory('Push Ups', WeightEntry(
+          date: DateTime.now(),
+          weight: '80kg',
+        ));
+        
+        final recommendations = appState.getExerciseNamesWithLogsNotInWorkout('non-existent-id');
+        
+        // Should return all exercises since workout doesn't exist (empty exercise list)
+        expect(recommendations.length, 1);
+        expect(recommendations, contains('Push Ups'));
+      });
+
+      test('should exclude exercises with only empty weight history', () {
+        // Create workout
+        appState.addWorkoutList('Test Workout');
+        final workoutId = appState.workoutLists[0].id;
+        
+        // Add exercise with weight log
+        appState.addOrUpdateExerciseHistory('Valid Exercise', WeightEntry(
+          date: DateTime.now(),
+          weight: '80kg',
+        ));
+        
+        // Add exercise without weight logs by manually creating empty history
+        final emptyHistory = appState.getExerciseHistory('Empty Exercise');
+        if (emptyHistory == null) {
+          // Create exercise history with empty weight history
+          appState.addOrUpdateExerciseHistory('Empty Exercise', WeightEntry(
+            date: DateTime.now(),
+            weight: '80kg',
+          ));
+          // Then remove the weight entry
+          appState.deleteWeightFromExerciseHistory('Empty Exercise', DateTime.now());
+        }
+        
+        final recommendations = appState.getExerciseNamesWithLogsNotInWorkout(workoutId);
+        
+        // Should only return Valid Exercise
+        expect(recommendations.length, 1);
+        expect(recommendations, contains('Valid Exercise'));
+        expect(recommendations, isNot(contains('Empty Exercise')));
+      });
+    });
   });
 }
