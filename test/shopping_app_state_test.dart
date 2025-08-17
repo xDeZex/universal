@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:shopping_list_app/providers/shopping_app_state.dart';
-import 'package:shopping_list_app/models/weight_entry.dart';
+import 'package:universal/providers/shopping_app_state.dart';
+import 'package:universal/models/weight_entry.dart';
 
 void main() {
   group('ShoppingAppState', () {

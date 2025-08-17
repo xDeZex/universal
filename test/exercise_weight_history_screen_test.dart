@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:shopping_list_app/providers/shopping_app_state.dart';
-import 'package:shopping_list_app/models/exercise.dart';
-import 'package:shopping_list_app/screens/exercise_weight_history_screen.dart';
+import 'package:universal/providers/shopping_app_state.dart';
+import 'package:universal/models/exercise.dart';
+import 'package:universal/screens/exercise_weight_history_screen.dart';
 
 void main() {
   group('ExerciseWeightHistoryScreen', () {

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
-import 'package:shopping_list_app/providers/shopping_app_state.dart';
-import 'package:shopping_list_app/screens/main_screen.dart';
+import 'package:universal/providers/shopping_app_state.dart';
+import 'package:universal/screens/main_screen.dart';
 
 void main() {
   group('Main Screen with Bottom Navigation', () {

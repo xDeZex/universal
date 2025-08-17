@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:shopping_list_app/providers/shopping_app_state.dart';
-import 'package:shopping_list_app/models/weight_entry.dart';
-import 'package:shopping_list_app/screens/workout_detail_screen.dart';
+import 'package:universal/providers/shopping_app_state.dart';
+import 'package:universal/models/weight_entry.dart';
+import 'package:universal/screens/workout_detail_screen.dart';
 
 void main() {
   group('AddExerciseDialog', () {

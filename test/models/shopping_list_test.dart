@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shopping_list_app/models/shopping_list.dart';
-import 'package:shopping_list_app/models/shopping_item.dart';
+import 'package:universal/models/shopping_list.dart';
+import 'package:universal/models/shopping_item.dart';
 
 void main() {
   group('ShoppingList', () {

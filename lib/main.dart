@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (context) => ShoppingAppState(),
       child: MaterialApp(
-        title: 'Shopping Lists',
+        title: 'Universal',
         theme: AppTheme.createDarkTheme(),
         darkTheme: AppTheme.createDarkTheme(),
         themeMode: ThemeMode.dark,

@@ -9,7 +9,8 @@
       "Bash(flutter analyze:*)",
       "Bash(git push:*)",
       "Bash(grep:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": [],
