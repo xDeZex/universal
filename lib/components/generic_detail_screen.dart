@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../main.dart';
+import '../providers/shopping_app_state.dart';
 import '../models/base_item.dart';
 import '../models/base_list.dart';
 import 'shared_components.dart';

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shopping_list_app/main.dart';
+import 'package:shopping_list_app/providers/shopping_app_state.dart';
 
 void main() {
   group('Shopping List App Widget Tests', () {

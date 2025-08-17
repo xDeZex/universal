@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
-import 'package:shopping_list_app/main.dart';
+import 'package:shopping_list_app/providers/shopping_app_state.dart';
 import 'package:shopping_list_app/screens/main_screen.dart';
 
 void main() {

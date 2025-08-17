@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../main.dart';
+import '../providers/shopping_app_state.dart';
 import '../models/workout_list.dart';
 import '../models/exercise.dart';
 import '../constants/spacing.dart';
