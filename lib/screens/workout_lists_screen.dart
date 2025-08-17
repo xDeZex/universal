@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../main.dart';
 import '../models/workout_list.dart';
+import '../constants/spacing.dart';
 import 'workout_detail_screen.dart';
 
 class WorkoutListsScreen extends StatelessWidget {
@@ -48,7 +49,7 @@ class WorkoutListsScreen extends StatelessWidget {
 
   Widget _buildWorkoutList(BuildContext context, ShoppingAppState appState) {
     return ReorderableListView.builder(
-      padding: const EdgeInsets.only(top: 16),
+      padding: const EdgeInsets.only(top: AppSpacing.screenPadding),
       itemCount: appState.workoutLists.length,
       onReorder: (oldIndex, newIndex) => appState.reorderWorkoutLists(oldIndex, newIndex),
       itemBuilder: (context, index) => _buildWorkoutCard(context, appState, appState.workoutLists[index], index),

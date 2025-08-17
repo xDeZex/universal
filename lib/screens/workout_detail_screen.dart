@@ -3,10 +3,9 @@ import 'package:provider/provider.dart';
 import '../main.dart';
 import '../models/workout_list.dart';
 import '../models/exercise.dart';
+import '../constants/spacing.dart';
 
 class WorkoutDetailScreen extends StatelessWidget {
-  static const double _sectionPadding = 16.0;
-  static const double _dividerPadding = 8.0;
   
   final WorkoutList workoutList;
 
@@ -44,7 +43,7 @@ class WorkoutDetailScreen extends StatelessWidget {
         return CustomScrollView(
           slivers: [
             const SliverToBoxAdapter(
-              child: SizedBox(height: 16),
+              child: SizedBox(height: AppSpacing.screenPadding),
             ),
             if (exerciseGroups.incompleteExercises.isNotEmpty)
               IncompleteExercisesSection(
@@ -102,7 +101,7 @@ class WorkoutDetailScreen extends StatelessWidget {
   Widget _buildSectionDivider(BuildContext context) {
     return SliverToBoxAdapter(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: _sectionPadding, vertical: _dividerPadding),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding, vertical: AppSpacing.dividerPadding),
         child: Divider(
           color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
           thickness: 1,
@@ -139,7 +138,7 @@ class WorkoutDetailScreen extends StatelessWidget {
                   ),
                   autofocus: true,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.screenPadding),
                 Row(
                   children: [
                     Expanded(
@@ -152,7 +151,7 @@ class WorkoutDetailScreen extends StatelessWidget {
                         keyboardType: TextInputType.number,
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: AppSpacing.screenPadding),
                     Expanded(
                       child: TextField(
                         controller: repsController,
@@ -165,7 +164,7 @@ class WorkoutDetailScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.screenPadding),
                 TextField(
                   controller: weightController,
                   decoration: const InputDecoration(
@@ -173,7 +172,7 @@ class WorkoutDetailScreen extends StatelessWidget {
                     hintText: '80kg or bodyweight',
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.screenPadding),
                 TextField(
                   controller: notesController,
                   decoration: const InputDecoration(
@@ -326,7 +325,7 @@ class SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(_sectionPadding),
+      padding: const EdgeInsets.all(AppSpacing.screenPadding),
       child: Row(
         children: [
           Icon(
@@ -334,7 +333,7 @@ class SectionHeader extends StatelessWidget {
             color: color,
             size: _iconSize,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppSpacing.md),
           Text(
             title,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -570,7 +569,7 @@ class ExerciseCard extends StatelessWidget {
                     },
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.screenPadding),
                 // Weight input
                 TextField(
                   controller: weightController,
@@ -580,7 +579,7 @@ class ExerciseCard extends StatelessWidget {
                   ),
                   textCapitalization: TextCapitalization.none,
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.formFieldGap),
                 // Sets input
                 TextField(
                   controller: setsController,
@@ -590,7 +589,7 @@ class ExerciseCard extends StatelessWidget {
                   ),
                   keyboardType: TextInputType.number,
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.formFieldGap),
                 // Reps input
                 TextField(
                   controller: repsController,
@@ -661,7 +660,7 @@ class ExerciseCard extends StatelessWidget {
                   ),
                   autofocus: true,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.screenPadding),
                 Row(
                   children: [
                     Expanded(
@@ -674,7 +673,7 @@ class ExerciseCard extends StatelessWidget {
                         keyboardType: TextInputType.number,
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: AppSpacing.screenPadding),
                     Expanded(
                       child: TextField(
                         controller: repsController,
@@ -687,7 +686,7 @@ class ExerciseCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.screenPadding),
                 TextField(
                   controller: weightController,
                   decoration: const InputDecoration(
@@ -695,7 +694,7 @@ class ExerciseCard extends StatelessWidget {
                     hintText: '80kg or bodyweight',
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.screenPadding),
                 TextField(
                   controller: notesController,
                   decoration: const InputDecoration(

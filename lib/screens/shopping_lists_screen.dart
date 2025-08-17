@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../main.dart';
 import '../models/shopping_list.dart';
+import '../constants/spacing.dart';
 import 'shopping_list_detail_screen.dart';
 
 class ShoppingListsScreen extends StatelessWidget {
@@ -48,7 +49,7 @@ class ShoppingListsScreen extends StatelessWidget {
 
   Widget _buildShoppingList(BuildContext context, ShoppingAppState appState) {
     return ReorderableListView.builder(
-      padding: const EdgeInsets.only(top: 16),
+      padding: const EdgeInsets.only(top: AppSpacing.screenPadding),
       itemCount: appState.shoppingLists.length,
       onReorder: (oldIndex, newIndex) => appState.reorderShoppingLists(oldIndex, newIndex),
       itemBuilder: (context, index) => _buildShoppingListCard(context, appState, appState.shoppingLists[index], index),
