@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import '../widgets/calendar_date_card.dart';
+import '../widgets/date_info_card.dart';
+import '../widgets/quick_actions_card.dart';
+import '../utils/date_formatter.dart';
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key, this.showAppBar = false});
@@ -14,121 +18,24 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    
     return Scaffold(
-      appBar: widget.showAppBar
-          ? AppBar(
-              title: const Text('Calendar'),
-              backgroundColor: theme.colorScheme.surface,
-            )
-          : null,
+      appBar: _buildAppBar(context),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (!widget.showAppBar)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 24.0),
-                child: Text(
-                  'Calendar',
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: CalendarDatePicker(
-                  initialDate: _selectedDate,
-                  firstDate: DateTime(2020),
-                  lastDate: DateTime(2030),
-                  onDateChanged: (DateTime date) {
-                    setState(() {
-                      _selectedDate = date;
-                    });
-                  },
-                ),
-              ),
+            _buildScreenTitle(context),
+            CalendarDateCard(
+              selectedDate: _selectedDate,
+              onDateChanged: _updateSelectedDate,
             ),
             const SizedBox(height: 24),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Selected Date',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      _formatDate(_selectedDate),
-                      style: theme.textTheme.bodyLarge,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Day of Week',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      _formatWeekday(_selectedDate),
-                      style: theme.textTheme.bodyLarge,
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            DateInfoCard(selectedDate: _selectedDate),
             const SizedBox(height: 24),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Quick Actions',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () {
-                              setState(() {
-                                _selectedDate = DateTime.now();
-                              });
-                            },
-                            child: const Text('Today'),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () {
-                              setState(() {
-                                _selectedDate = DateTime.now().add(const Duration(days: 1));
-                              });
-                            },
-                            child: const Text('Tomorrow'),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
+            QuickActionsCard(
+              onTodayPressed: _selectToday,
+              onTomorrowPressed: _selectTomorrow,
             ),
           ],
         ),
@@ -136,20 +43,48 @@ class _CalendarScreenState extends State<CalendarScreen> {
     );
   }
 
-  String _formatDate(DateTime date) {
-    const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
-    ];
+  AppBar? _buildAppBar(BuildContext context) {
+    if (!widget.showAppBar) return null;
     
-    return '${months[date.month - 1]} ${date.day}, ${date.year}';
+    final theme = Theme.of(context);
+    return AppBar(
+      title: const Text('Calendar'),
+      backgroundColor: theme.colorScheme.surface,
+    );
   }
 
-  String _formatWeekday(DateTime date) {
-    const weekdays = [
-      'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
-    ];
+  Widget _buildScreenTitle(BuildContext context) {
+    if (widget.showAppBar) return const SizedBox.shrink();
     
-    return weekdays[date.weekday - 1];
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24.0),
+      child: Text(
+        'Calendar',
+        style: theme.textTheme.headlineMedium?.copyWith(
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  void _updateSelectedDate(DateTime date) {
+    if (DateFormatter.isValidDate(date)) {
+      setState(() {
+        _selectedDate = date;
+      });
+    }
+  }
+
+  void _selectToday() {
+    setState(() {
+      _selectedDate = DateTime.now();
+    });
+  }
+
+  void _selectTomorrow() {
+    setState(() {
+      _selectedDate = DateTime.now().add(const Duration(days: 1));
+    });
   }
 }
