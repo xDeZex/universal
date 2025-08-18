@@ -6,7 +6,7 @@ import 'package:universal/screens/main_screen.dart';
 
 void main() {
   group('Main Screen with Bottom Navigation', () {
-    testWidgets('should show bottom navigation with three tabs', (tester) async {
+    testWidgets('should show bottom navigation with four tabs', (tester) async {
       await tester.pumpWidget(
         ChangeNotifierProvider(
           create: (context) => ShoppingAppState(),
@@ -19,15 +19,17 @@ void main() {
       // Verify that bottom navigation bar is present
       expect(find.byType(BottomNavigationBar), findsOneWidget);
       
-      // Verify that all three navigation items are present (may appear multiple times due to AppBar + Bottom Nav)
+      // Verify that all four navigation items are present (may appear multiple times due to AppBar + Bottom Nav)
       expect(find.text('Shopping Lists'), findsAtLeast(1));
       expect(find.text('Workouts'), findsOneWidget);
       expect(find.text('Workout Logs'), findsOneWidget);
+      expect(find.text('Calendar'), findsOneWidget);
       
       // Verify navigation icons are present
       expect(find.byIcon(Icons.shopping_cart), findsOneWidget);
       expect(find.byIcon(Icons.fitness_center), findsOneWidget);
       expect(find.byIcon(Icons.trending_up), findsOneWidget);
+      expect(find.byIcon(Icons.calendar_today), findsOneWidget);
     });
 
     testWidgets('should switch between screens when navigation items are tapped', (tester) async {
@@ -59,6 +61,14 @@ void main() {
       // Should now show the weight tracking screen content
       expect(find.text('Workout Logs'), findsAtLeast(1)); // Title + bottom nav
       expect(find.text('No workout logs yet'), findsOneWidget);
+      
+      // Tap on the fourth navigation item (Calendar)
+      await tester.tap(find.text('Calendar').last);
+      await tester.pumpAndSettle();
+      
+      // Should now show the calendar screen content
+      expect(find.text('Calendar'), findsAtLeast(1)); // Title + bottom nav
+      expect(find.text('Selected Date'), findsOneWidget);
       
       // Go back to first tab
       await tester.tap(find.text('Shopping Lists').last);
@@ -94,6 +104,13 @@ void main() {
       
       // Should show Workout Logs title
       expect(find.text('Workout Logs'), findsAtLeast(1));
+      
+      // Switch to fourth screen (Calendar)
+      await tester.tap(find.text('Calendar').last);
+      await tester.pumpAndSettle();
+      
+      // Should show Calendar title
+      expect(find.text('Calendar'), findsAtLeast(1));
     });
 
     testWidgets('should maintain shopping lists functionality in first tab', (tester) async {

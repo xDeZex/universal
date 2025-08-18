@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'shopping_lists_screen.dart';
 import 'workout_lists_screen.dart';
 import 'weight_tracking_screen.dart';
+import 'calendar_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -17,13 +18,14 @@ class _MainScreenState extends State<MainScreen> {
     GlobalKey<NavigatorState>(),
     GlobalKey<NavigatorState>(),
     GlobalKey<NavigatorState>(),
+    GlobalKey<NavigatorState>(),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: IndexedStack(
-        index: _currentIndex,
+        index: _currentIndex.clamp(0, 3),
         children: [
           Navigator(
             key: _navigatorKeys[0],
@@ -52,16 +54,33 @@ class _MainScreenState extends State<MainScreen> {
               );
             },
           ),
+          Navigator(
+            key: _navigatorKeys[3],
+            onGenerateRoute: (settings) {
+              return MaterialPageRoute(
+                builder: (context) => const CalendarScreen(showAppBar: true),
+                settings: settings,
+              );
+            },
+          ),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        type: BottomNavigationBarType.fixed,
+      bottomNavigationBar: Theme(
+        data: Theme.of(context).copyWith(
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
+        ),
+        child: BottomNavigationBar(
+          currentIndex: _currentIndex,
+          onTap: (index) {
+            if (index >= 0 && index < 4) {
+              setState(() {
+                _currentIndex = index;
+              });
+            }
+          },
+          type: BottomNavigationBarType.fixed,
+          enableFeedback: false,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.shopping_cart),
@@ -75,7 +94,12 @@ class _MainScreenState extends State<MainScreen> {
             icon: Icon(Icons.trending_up),
             label: 'Workout Logs',
           ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.calendar_today),
+            label: 'Calendar',
+          ),
         ],
+        ),
       ),
     );
   }
