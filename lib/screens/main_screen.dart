@@ -23,8 +23,22 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: IndexedStack(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop, Object? result) async {
+        if (didPop) return;
+        
+        final currentNavigator = _navigatorKeys[_currentIndex].currentState;
+        if (currentNavigator != null && currentNavigator.canPop()) {
+          // If current tab has pages to pop, pop them
+          currentNavigator.pop();
+        } else {
+          // If we're at the root of current tab, don't close the app
+          // Could switch to first tab or show exit dialog here if desired
+        }
+      },
+      child: Scaffold(
+        body: IndexedStack(
         index: _currentIndex.clamp(0, 3),
         children: [
           Navigator(
@@ -64,48 +78,49 @@ class _MainScreenState extends State<MainScreen> {
             },
           ),
         ],
-      ),
-      bottomNavigationBar: Theme(
-        data: Theme.of(context).copyWith(
-          splashColor: Colors.transparent,
-          highlightColor: Colors.transparent,
         ),
-        child: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: (index) {
-            if (index >= 0 && index < 4) {
-              // If tapping the same tab, pop to root
-              if (index == _currentIndex) {
-                _navigatorKeys[index].currentState?.popUntil((route) => route.isFirst);
-              } else {
-                // When switching to a different tab, always go to its root page
-                _navigatorKeys[index].currentState?.popUntil((route) => route.isFirst);
-                setState(() {
-                  _currentIndex = index;
-                });
+        bottomNavigationBar: Theme(
+          data: Theme.of(context).copyWith(
+            splashColor: Colors.transparent,
+            highlightColor: Colors.transparent,
+          ),
+          child: BottomNavigationBar(
+            currentIndex: _currentIndex,
+            onTap: (index) {
+              if (index >= 0 && index < 4) {
+                // If tapping the same tab, pop to root
+                if (index == _currentIndex) {
+                  _navigatorKeys[index].currentState?.popUntil((route) => route.isFirst);
+                } else {
+                  // When switching to a different tab, always go to its root page
+                  _navigatorKeys[index].currentState?.popUntil((route) => route.isFirst);
+                  setState(() {
+                    _currentIndex = index;
+                  });
+                }
               }
-            }
-          },
-          type: BottomNavigationBarType.fixed,
-          enableFeedback: false,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.shopping_cart),
-            label: 'Shopping Lists',
+            },
+            type: BottomNavigationBarType.fixed,
+            enableFeedback: false,
+            items: const [
+              BottomNavigationBarItem(
+                icon: Icon(Icons.shopping_cart),
+                label: 'Shopping Lists',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.fitness_center),
+                label: 'Workouts',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.trending_up),
+                label: 'Workout Logs',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.calendar_today),
+                label: 'Calendar',
+              ),
+            ],
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.fitness_center),
-            label: 'Workouts',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.trending_up),
-            label: 'Workout Logs',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today),
-            label: 'Calendar',
-          ),
-        ],
         ),
       ),
     );

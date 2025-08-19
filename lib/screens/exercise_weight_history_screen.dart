@@ -32,6 +32,7 @@ class ExerciseWeightHistoryScreen extends StatelessWidget {
     return AppBar(
       title: Text(exercise.name),
       backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+      automaticallyImplyLeading: false,
     );
   }
 

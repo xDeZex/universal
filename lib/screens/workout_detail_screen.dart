@@ -27,6 +27,7 @@ class WorkoutDetailScreen extends StatelessWidget {
   AppBar _buildAppBar() {
     return AppBar(
       title: Text(workoutList.name),
+      automaticallyImplyLeading: false,
     );
   }
 

@@ -27,6 +27,7 @@ class ShoppingListDetailScreen extends StatelessWidget {
   AppBar _buildAppBar() {
     return AppBar(
       title: Text(shoppingList.name),
+      automaticallyImplyLeading: false,
     );
   }
 

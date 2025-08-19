@@ -33,6 +33,7 @@ class _ExerciseGraphsScreenState extends State<ExerciseGraphsScreen> {
     return AppBar(
       title: const Text('Exercise Progress'),
       backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+      automaticallyImplyLeading: false,
       actions: [
         PopupMenuButton<TimeInterval>(
           icon: const Icon(Icons.calendar_today),
