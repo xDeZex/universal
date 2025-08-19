@@ -4,6 +4,7 @@ import '../models/shopping_item.dart';
 import '../models/workout_list.dart';
 import '../models/exercise.dart';
 import '../models/weight_entry.dart';
+import '../models/set_entry.dart';
 import '../models/exercise_history.dart';
 import '../services/list_manager.dart';
 import '../services/storage_service.dart';
@@ -177,6 +178,29 @@ class ShoppingAppState extends ChangeNotifier {
     if (workoutIndex != -1) {
       final originalWorkout = _workoutLists[workoutIndex];
       final updatedWorkout = WorkoutService.saveWeightForExercise(originalWorkout, exerciseId, weight, sets: sets, reps: reps, date: date);
+      _workoutLists[workoutIndex] = updatedWorkout;
+      
+      // Also save to global exercise history
+      final exercises = updatedWorkout.exercises;
+      final exerciseIndex = exercises.indexWhere((exercise) => exercise.id == exerciseId);
+      if (exerciseIndex != -1) {
+        final exercise = exercises[exerciseIndex];
+        if (exercise.weightHistory.isNotEmpty) {
+          final latestEntry = exercise.weightHistory.last;
+          _addOrUpdateExerciseHistoryInternal(exercise.name, latestEntry);
+        }
+      }
+      
+      _saveData();
+      notifyListeners();
+    }
+  }
+
+  void saveDetailedWeightForExercise(String workoutId, String exerciseId, String baseWeight, List<SetEntry> setEntries, {DateTime? date}) {
+    final workoutIndex = _workoutLists.indexWhere((list) => list.id == workoutId);
+    if (workoutIndex != -1) {
+      final originalWorkout = _workoutLists[workoutIndex];
+      final updatedWorkout = WorkoutService.saveDetailedWeightForExercise(originalWorkout, exerciseId, baseWeight, setEntries, date: date);
       _workoutLists[workoutIndex] = updatedWorkout;
       
       // Also save to global exercise history

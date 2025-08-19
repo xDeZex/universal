@@ -1,27 +1,26 @@
+import 'package:collection/collection.dart';
+import 'set_entry.dart';
+
 class WeightEntry {
   final DateTime date;
   final String weight;
-  final int? sets;
-  final int? reps;
+  final List<SetEntry> setEntries;
 
   const WeightEntry({
     required this.date,
     required this.weight,
-    this.sets,
-    this.reps,
+    this.setEntries = const [],
   });
 
   WeightEntry copyWith({
     DateTime? date,
     String? weight,
-    int? sets,
-    int? reps,
+    List<SetEntry>? setEntries,
   }) {
     return WeightEntry(
       date: date ?? this.date,
       weight: weight ?? this.weight,
-      sets: sets ?? this.sets,
-      reps: reps ?? this.reps,
+      setEntries: setEntries ?? this.setEntries,
     );
   }
 
@@ -29,17 +28,34 @@ class WeightEntry {
     return {
       'date': date.toIso8601String(),
       'weight': weight,
-      if (sets != null) 'sets': sets,
-      if (reps != null) 'reps': reps,
+      if (setEntries.isNotEmpty) 'setEntries': setEntries.map((e) => e.toJson()).toList(),
     };
   }
 
   factory WeightEntry.fromJson(Map<String, dynamic> json) {
+    List<SetEntry> setEntries = <SetEntry>[];
+    
+    if (json.containsKey('setEntries') && json['setEntries'] != null) {
+      final setEntriesList = json['setEntries'] as List<dynamic>;
+      setEntries = setEntriesList
+          .map((entry) => SetEntry.fromJson(entry as Map<String, dynamic>))
+          .toList();
+    } else if (json.containsKey('sets') && json.containsKey('reps')) {
+      // Handle backward compatibility: convert old format to new format
+      final sets = json['sets'] as int?;
+      final reps = json['reps'] as int?;
+      if (sets != null && reps != null) {
+        // Create SetEntry objects from the old sets/reps format
+        for (int i = 0; i < sets; i++) {
+          setEntries.add(SetEntry(reps: reps));
+        }
+      }
+    }
+
     return WeightEntry(
       date: DateTime.parse(json['date'] as String),
       weight: json['weight'] as String,
-      sets: json['sets'] as int?,
-      reps: json['reps'] as int?,
+      setEntries: setEntries,
     );
   }
 
@@ -50,14 +66,30 @@ class WeightEntry {
           runtimeType == other.runtimeType &&
           date == other.date &&
           weight == other.weight &&
-          sets == other.sets &&
-          reps == other.reps;
+          const ListEquality().equals(setEntries, other.setEntries);
 
   @override
-  int get hashCode => Object.hash(date, weight, sets, reps);
+  int get hashCode => Object.hash(date, weight, const ListEquality().hash(setEntries));
 
   @override
   String toString() {
-    return 'WeightEntry{date: $date, weight: $weight, sets: $sets, reps: $reps}';
+    return 'WeightEntry{date: $date, weight: $weight, setEntries: $setEntries}';
+  }
+
+  /// Returns true if this entry uses the new format with individual sets
+  bool get hasDetailedSets => setEntries.isNotEmpty;
+
+  /// Gets the total number of sets performed
+  int get totalSets => setEntries.length;
+
+  /// Gets the total reps performed across all sets
+  int get totalReps => setEntries.fold(0, (sum, set) => sum + set.reps);
+
+  /// Gets a formatted string showing sets and reps
+  String get setsRepsDisplay {
+    if (setEntries.isEmpty) {
+      return '';
+    }
+    return setEntries.map((set) => '${set.reps}').join(', ');
   }
 }

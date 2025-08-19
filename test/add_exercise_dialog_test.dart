@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:universal/providers/shopping_app_state.dart';
 import 'package:universal/models/weight_entry.dart';
+import 'package:universal/models/set_entry.dart';
 import 'package:universal/screens/workout_detail_screen.dart';
 
 void main() {
@@ -40,14 +41,20 @@ void main() {
         appState.addOrUpdateExerciseHistory('Push Ups', WeightEntry(
           date: DateTime.now(),
           weight: '80kg',
-          sets: 3,
-          reps: 10,
+          setEntries: [
+            SetEntry(reps: 10),
+            SetEntry(reps: 10),
+            SetEntry(reps: 10),
+          ],
         ));
         appState.addOrUpdateExerciseHistory('Pull Ups', WeightEntry(
           date: DateTime.now(),
           weight: '75kg',
-          sets: 3,
-          reps: 8,
+          setEntries: [
+            SetEntry(reps: 8),
+            SetEntry(reps: 8),
+            SetEntry(reps: 8),
+          ],
         ));
 
         await tester.pumpWidget(createTestWidget(workoutId));
@@ -134,8 +141,11 @@ void main() {
         appState.addOrUpdateExerciseHistory('Push Ups', WeightEntry(
           date: DateTime.now(),
           weight: '80kg',
-          sets: 3,
-          reps: 10,
+          setEntries: [
+            SetEntry(reps: 10),
+            SetEntry(reps: 10),
+            SetEntry(reps: 10),
+          ],
         ));
 
         await tester.pumpWidget(createTestWidget(workoutId));
@@ -205,16 +215,23 @@ void main() {
         appState.addOrUpdateExerciseHistory('Bench Press', WeightEntry(
           date: DateTime.now().subtract(const Duration(days: 1)),
           weight: '80kg',
-          sets: 3,
-          reps: 8,
+          setEntries: [
+            SetEntry(reps: 8),
+            SetEntry(reps: 8),
+            SetEntry(reps: 8),
+          ],
         ));
         
         // Add more recent exercise history
         appState.addOrUpdateExerciseHistory('Bench Press', WeightEntry(
           date: DateTime.now(),
           weight: '85kg',
-          sets: 4,
-          reps: 6,
+          setEntries: [
+            SetEntry(reps: 6),
+            SetEntry(reps: 6),
+            SetEntry(reps: 6),
+            SetEntry(reps: 6),
+          ],
         ));
 
         await tester.pumpWidget(createTestWidget(workoutId));

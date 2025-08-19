@@ -1,6 +1,7 @@
 import '../models/workout_list.dart';
 import '../models/exercise.dart';
 import '../models/weight_entry.dart';
+import '../models/set_entry.dart';
 import '../utils/id_generator.dart';
 import 'list_manager.dart';
 
@@ -81,8 +82,47 @@ class WorkoutService {
       final newWeightEntry = WeightEntry(
         date: entryDate,
         weight: weight,
-        sets: sets ?? (exercise.sets != null ? int.tryParse(exercise.sets!) : null),
-        reps: reps ?? (exercise.reps != null ? int.tryParse(exercise.reps!) : null),
+        setEntries: _createLegacySetEntries(
+          sets ?? (exercise.sets != null ? int.tryParse(exercise.sets!) : null),
+          reps ?? (exercise.reps != null ? int.tryParse(exercise.reps!) : null),
+        ),
+      );
+      
+      final updatedWeightHistory = List<WeightEntry>.from(exercise.weightHistory)
+        ..add(newWeightEntry);
+      
+      final updatedExercise = exercise.copyWith(weightHistory: updatedWeightHistory);
+      final updatedExercises = List<Exercise>.from(exercises);
+      updatedExercises[exerciseIndex] = updatedExercise;
+      
+      return workout.copyWith(exercises: updatedExercises);
+    }
+    return workout;
+  }
+
+  static WorkoutList saveDetailedWeightForExercise(
+    WorkoutList workout, 
+    String exerciseId, 
+    String baseWeight,
+    List<SetEntry> setEntries, 
+    {DateTime? date}
+  ) {
+    final exercises = workout.exercises;
+    final exerciseIndex = exercises.indexWhere((exercise) => exercise.id == exerciseId);
+    if (exerciseIndex != -1) {
+      final exercise = exercises[exerciseIndex];
+      var entryDate = date ?? DateTime.now();
+      
+      // Ensure unique timestamp by adding microseconds if needed
+      final existingTimes = exercise.weightHistory.map((e) => e.date.millisecondsSinceEpoch).toSet();
+      while (existingTimes.contains(entryDate.millisecondsSinceEpoch)) {
+        entryDate = entryDate.add(const Duration(microseconds: 1));
+      }
+      
+      final newWeightEntry = WeightEntry(
+        date: entryDate,
+        weight: baseWeight,
+        setEntries: setEntries,
       );
       
       final updatedWeightHistory = List<WeightEntry>.from(exercise.weightHistory)
@@ -149,5 +189,21 @@ class WorkoutService {
 
   static List<WorkoutList> reorderCollection(List<WorkoutList> workoutLists, int oldIndex, int newIndex) {
     return ListManager.reorderLists(workoutLists, oldIndex, newIndex);
+  }
+
+  /// Helper method to create SetEntry objects from legacy sets/reps format
+  static List<SetEntry> _createLegacySetEntries(int? sets, int? reps) {
+    if (sets == null && reps == null) {
+      return [];
+    }
+    
+    final actualSets = sets ?? 1;
+    final actualReps = reps ?? 1;
+    
+    final setEntries = <SetEntry>[];
+    for (int i = 0; i < actualSets; i++) {
+      setEntries.add(SetEntry(reps: actualReps));
+    }
+    return setEntries;
   }
 }

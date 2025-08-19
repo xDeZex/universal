@@ -32,7 +32,11 @@ void main() {
 
     testWidgets('should open training split dialog when Create Training Split is tapped', (tester) async {
       tester.view.physicalSize = const Size(1200, 1000);
-      addTearDown(() => tester.view.resetPhysicalSize());
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
       
       await tester.pumpWidget(createWidget());
 
@@ -46,7 +50,11 @@ void main() {
 
     testWidgets('should show success message after creating training split', (tester) async {
       tester.view.physicalSize = const Size(1200, 1000);
-      addTearDown(() => tester.view.resetPhysicalSize());
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
       
       await tester.pumpWidget(createWidget());
 
@@ -84,7 +92,11 @@ void main() {
 
     testWidgets('should handle Today button correctly', (tester) async {
       tester.view.physicalSize = const Size(1200, 1000);
-      addTearDown(() => tester.view.resetPhysicalSize());
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
       
       await tester.pumpWidget(createWidget());
 
@@ -98,7 +110,11 @@ void main() {
 
     testWidgets('should handle Tomorrow button correctly', (tester) async {
       tester.view.physicalSize = const Size(1200, 1000);
-      addTearDown(() => tester.view.resetPhysicalSize());
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
       
       await tester.pumpWidget(createWidget());
 

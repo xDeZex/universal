@@ -136,7 +136,7 @@ class ChartService {
       
       final volume = _calculateVolume(entry);
       
-      if (entry.sets != null && entry.reps != null) {
+      if (entry.hasDetailedSets) {
         volumeSpots.add(FlSpot(i.toDouble(), volume));
         volumes.add(volume);
       } else {
@@ -154,9 +154,10 @@ class ChartService {
   }
 
   static double _calculateVolume(WeightEntry entry) {
-    final sets = entry.sets ?? 1;
-    final reps = entry.reps ?? 1;
-    return (sets * reps).toDouble();
+    if (entry.hasDetailedSets) {
+      return entry.totalReps.toDouble();
+    }
+    return 1.0;
   }
 
   static _RangeData _calculateWeightRange(List<double> weights) {

@@ -101,8 +101,8 @@ class ChartStats extends StatelessWidget {
     final firstEntry = chartData.entries.first;
     final lastEntry = chartData.entries.last;
     
-    final firstVolume = (firstEntry.sets ?? 1) * (firstEntry.reps ?? 1);
-    final lastVolume = (lastEntry.sets ?? 1) * (lastEntry.reps ?? 1);
+    final firstVolume = firstEntry.hasDetailedSets ? firstEntry.totalReps : 1;
+    final lastVolume = lastEntry.hasDetailedSets ? lastEntry.totalReps : 1;
     
     if (chartData.entries.length == 1) {
       return _StatData(

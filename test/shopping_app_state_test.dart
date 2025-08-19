@@ -868,8 +868,8 @@ void main() {
         expect(exercise.weightHistory.length, 1);
         final entry = exercise.weightHistory[0];
         expect(entry.weight, '85kg');
-        expect(entry.sets, 3);
-        expect(entry.reps, 10);
+        expect(entry.totalSets, 3);
+        expect(entry.totalReps, 30); // 3 sets × 10 reps = 30 total reps
       });
 
       test('should save weight entry with custom date', () {
@@ -908,8 +908,8 @@ void main() {
         expect(exercise.weightHistory.length, 1);
         final entry = exercise.weightHistory[0];
         expect(entry.weight, '85kg');
-        expect(entry.sets, 4);
-        expect(entry.reps, 8);
+        expect(entry.totalSets, 4);
+        expect(entry.totalReps, 32); // 4 sets × 8 reps = 32 total reps
         expect(entry.date, customDate);
       });
 
@@ -929,13 +929,13 @@ void main() {
         
         final entry1 = exercise.weightHistory[0];
         expect(entry1.weight, '80kg');
-        expect(entry1.sets, 3);
-        expect(entry1.reps, 10);
+        expect(entry1.totalSets, 3);
+        expect(entry1.totalReps, 30); // 3 sets × 10 reps = 30 total reps
         
         final entry2 = exercise.weightHistory[1];
         expect(entry2.weight, '85kg');
-        expect(entry2.sets, 4);
-        expect(entry2.reps, 8);
+        expect(entry2.totalSets, 4);
+        expect(entry2.totalReps, 32); // 4 sets × 8 reps = 32 total reps
       });
 
       test('should inherit sets and reps from exercise when not provided', () {
@@ -951,8 +951,8 @@ void main() {
         expect(exercise.weightHistory.length, 1);
         final entry = exercise.weightHistory[0];
         expect(entry.weight, '85kg');
-        expect(entry.sets, 3); // Inherited from exercise
-        expect(entry.reps, 12); // Inherited from exercise
+        expect(entry.totalSets, 3); // Inherited from exercise
+        expect(entry.totalReps, 36); // 3 sets × 12 reps = 36 total reps (inherited from exercise)
       });
 
       test('should save to global exercise history with sets and reps', () {
@@ -968,8 +968,8 @@ void main() {
         expect(globalHistory!.weightHistory.length, 1);
         final entry = globalHistory.weightHistory[0];
         expect(entry.weight, '85kg');
-        expect(entry.sets, 3);
-        expect(entry.reps, 10);
+        expect(entry.totalSets, 3);
+        expect(entry.totalReps, 30); // 3 sets × 10 reps = 30 total reps
       });
     });
 

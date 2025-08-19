@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/shopping_app_state.dart';
 import '../models/workout_list.dart';
 import '../models/exercise.dart';
+import '../models/set_entry.dart';
 import '../constants/spacing.dart';
 
 class WorkoutDetailScreen extends StatelessWidget {
@@ -220,7 +221,6 @@ class CompletedExercisesSection extends StatelessWidget {
 }
 
 class SectionHeader extends StatelessWidget {
-  static const double _sectionPadding = 16.0;
   static const double _iconSize = 20.0;
   
   final IconData icon;
@@ -309,16 +309,14 @@ class ExerciseCard extends StatelessWidget {
   Widget? _buildSubtitle(BuildContext context) {
     final rows = <Widget>[];
     
-    // First row: Sets and Reps
-    if (exercise.sets != null || exercise.reps != null) {
-      final setsReps = [
-        if (exercise.sets != null) '${exercise.sets} sets',
-        if (exercise.reps != null) '${exercise.reps} reps',
-      ].join(' × ');
-      
+    // Check if we have today's logged entry with detailed sets
+    final todaysWeight = exercise.todaysWeight;
+    if (todaysWeight != null && todaysWeight.hasDetailedSets) {
+      // Show actual logged sets with reps
+      final setsDisplay = todaysWeight.setsRepsDisplay;
       rows.add(
         Text(
-          setsReps,
+          '${todaysWeight.totalSets} sets: $setsDisplay reps',
           style: TextStyle(
             color: exercise.isCompleted
                 ? Theme.of(context).colorScheme.onSurfaceVariant
@@ -326,17 +324,55 @@ class ExerciseCard extends StatelessWidget {
           ),
         ),
       );
-    }
-    
-    // Second row: Weight
-    if (exercise.weight != null) {
+      
+      // Show weight from today's entry
       rows.add(
         Text(
-          exercise.weight!,
+          todaysWeight.weight,
           style: TextStyle(
             color: exercise.isCompleted
                 ? Theme.of(context).colorScheme.onSurfaceVariant
                 : Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+      );
+    } else if (todaysWeight != null) {
+      // Show weight from today's entry (simple logging mode with no sets)
+      // Note: Simple mode entries now create SetEntry objects internally
+    } else {
+      // Only show planned sets/reps when no logging has occurred
+      if (exercise.sets != null || exercise.reps != null) {
+        final setsReps = [
+          if (exercise.sets != null) '${exercise.sets} sets',
+          if (exercise.reps != null) '${exercise.reps} reps',
+        ].join(' × ');
+        
+        rows.add(
+          Text(
+            'Target: $setsReps',
+            style: TextStyle(
+              color: exercise.isCompleted
+                  ? Theme.of(context).colorScheme.onSurfaceVariant
+                  : Theme.of(context).colorScheme.onSurfaceVariant,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        );
+      }
+    }
+    
+    // Show weight from logging or planned weight
+    final weightToShow = todaysWeight?.weight ?? exercise.weight;
+    if (weightToShow != null) {
+      final isPlanned = todaysWeight?.weight == null && exercise.weight != null;
+      rows.add(
+        Text(
+          isPlanned ? 'Target: $weightToShow' : weightToShow,
+          style: TextStyle(
+            color: exercise.isCompleted
+                ? Theme.of(context).colorScheme.onSurfaceVariant
+                : Theme.of(context).colorScheme.onSurfaceVariant,
+            fontStyle: isPlanned ? FontStyle.italic : null,
           ),
         ),
       );
@@ -446,104 +482,11 @@ class ExerciseCard extends StatelessWidget {
   }
 
   void _showAddWeightEntryDialog(BuildContext context) {
-    final weightController = TextEditingController(text: exercise.weight ?? '');
-    final setsController = TextEditingController(text: exercise.sets ?? '');
-    final repsController = TextEditingController(text: exercise.reps ?? '');
-    DateTime selectedDate = DateTime.now();
-
     showDialog(
       context: context,
-      builder: (BuildContext context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: Text('Weight Entry for ${exercise.name}'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Date selection
-                Card(
-                  child: ListTile(
-                    leading: const Icon(Icons.calendar_today),
-                    title: const Text('Date'),
-                    subtitle: Text(_formatDialogDate(selectedDate)),
-                    onTap: () async {
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate: selectedDate,
-                        firstDate: DateTime(2020),
-                        lastDate: DateTime.now(),
-                      );
-                      if (picked != null) {
-                        setState(() {
-                          selectedDate = picked;
-                        });
-                      }
-                    },
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.screenPadding),
-                // Weight input
-                TextField(
-                  controller: weightController,
-                  decoration: const InputDecoration(
-                    labelText: 'Weight',
-                    hintText: 'e.g., 80kg, bodyweight',
-                  ),
-                  textCapitalization: TextCapitalization.none,
-                ),
-                const SizedBox(height: AppSpacing.formFieldGap),
-                // Sets input
-                TextField(
-                  controller: setsController,
-                  decoration: const InputDecoration(
-                    labelText: 'Sets (optional)',
-                    hintText: 'e.g., 3',
-                  ),
-                  keyboardType: TextInputType.number,
-                ),
-                const SizedBox(height: AppSpacing.formFieldGap),
-                // Reps input
-                TextField(
-                  controller: repsController,
-                  decoration: const InputDecoration(
-                    labelText: 'Reps (optional)',
-                    hintText: 'e.g., 10',
-                  ),
-                  keyboardType: TextInputType.number,
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                if (weightController.text.trim().isNotEmpty) {
-                  final sets = setsController.text.trim().isNotEmpty 
-                      ? int.tryParse(setsController.text.trim())
-                      : null;
-                  final reps = repsController.text.trim().isNotEmpty 
-                      ? int.tryParse(repsController.text.trim())
-                      : null;
-                  
-                  context.read<ShoppingAppState>().saveWeightForExercise(
-                    workoutId,
-                    exercise.id,
-                    weightController.text.trim(),
-                    sets: sets,
-                    reps: reps,
-                    date: selectedDate,
-                  );
-                  Navigator.of(context).pop();
-                }
-              },
-              child: Text(_isToday(selectedDate) ? 'Save' : 'Save for ${_formatDialogDate(selectedDate)}'),
-            ),
-          ],
-        ),
+      builder: (BuildContext context) => DetailedWeightEntryDialog(
+        exercise: exercise,
+        workoutId: workoutId,
       ),
     );
   }
@@ -675,30 +618,6 @@ class ExerciseCard extends StatelessWidget {
       ),
     );
   }
-
-  bool _isToday(DateTime date) {
-    final now = DateTime.now();
-    return date.year == now.year && 
-           date.month == now.month && 
-           date.day == now.day;
-  }
-
-  String _formatDialogDate(DateTime date) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final selectedDay = DateTime(date.year, date.month, date.day);
-    final difference = today.difference(selectedDay).inDays;
-    
-    if (difference == 0) {
-      return 'Today';
-    } else if (difference == 1) {
-      return 'Yesterday';
-    } else if (difference < 7) {
-      return '$difference days ago';
-    } else {
-      return '${date.day}/${date.month}/${date.year}';
-    }
-  }
 }
 
 class AddExerciseDialog extends StatefulWidget {
@@ -760,11 +679,11 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
                           final history = appState.getExerciseHistory(exerciseName);
                           if (history != null && history.weightHistory.isNotEmpty) {
                             final lastEntry = history.weightHistory.last;
-                            if (lastEntry.sets != null) {
-                              setsController.text = lastEntry.sets.toString();
-                            }
-                            if (lastEntry.reps != null) {
-                              repsController.text = lastEntry.reps.toString();
+                            if (lastEntry.hasDetailedSets) {
+                              setsController.text = lastEntry.totalSets.toString();
+                              if (lastEntry.setEntries.isNotEmpty) {
+                                repsController.text = lastEntry.setEntries.first.reps.toString();
+                              }
                             }
                             weightController.text = lastEntry.weight;
                           }
@@ -852,6 +771,372 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
           ],
         );
       },
+    );
+  }
+}
+
+class DetailedWeightEntryDialog extends StatefulWidget {
+  final Exercise exercise;
+  final String workoutId;
+
+  const DetailedWeightEntryDialog({
+    super.key,
+    required this.exercise,
+    required this.workoutId,
+  });
+
+  @override
+  State<DetailedWeightEntryDialog> createState() => _DetailedWeightEntryDialogState();
+}
+
+class _DetailedWeightEntryDialogState extends State<DetailedWeightEntryDialog> {
+  final _baseWeightController = TextEditingController();
+  final List<_SetEntryController> _setControllers = [];
+  DateTime _selectedDate = DateTime.now();
+  bool _useDetailedSets = false;
+  
+  // Legacy mode controllers
+  final _legacySetsController = TextEditingController();
+  final _legacyRepsController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _baseWeightController.text = widget.exercise.weight ?? '';
+    
+    // Initialize with exercise's default sets/reps if available
+    if (widget.exercise.sets != null) {
+      _legacySetsController.text = widget.exercise.sets!;
+    }
+    if (widget.exercise.reps != null) {
+      _legacyRepsController.text = widget.exercise.reps!;
+    }
+    
+    // Add initial sets based on planned sets, or default to 1
+    final plannedSets = widget.exercise.sets != null ? int.tryParse(widget.exercise.sets!) ?? 1 : 1;
+    for (int i = 0; i < plannedSets; i++) {
+      _addSet();
+    }
+  }
+
+  @override
+  void dispose() {
+    _baseWeightController.dispose();
+    _legacySetsController.dispose();
+    _legacyRepsController.dispose();
+    for (final controller in _setControllers) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  void _addSet() {
+    setState(() {
+      _setControllers.add(_SetEntryController(
+        reps: widget.exercise.reps != null ? int.tryParse(widget.exercise.reps!) ?? 10 : 10,
+        weight: _baseWeightController.text,
+      ));
+    });
+  }
+
+  void _removeSet(int index) {
+    if (_setControllers.length > 1) {
+      setState(() {
+        _setControllers[index].dispose();
+        _setControllers.removeAt(index);
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
+    return AlertDialog(
+      title: Text('Weight Entry for ${widget.exercise.name}'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Date selection
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.calendar_today),
+                title: const Text('Date'),
+                subtitle: Text(_formatDialogDate(_selectedDate)),
+                onTap: () async {
+                  final picked = await showDatePicker(
+                    context: context,
+                    initialDate: _selectedDate,
+                    firstDate: DateTime(2020),
+                    lastDate: DateTime.now(),
+                  );
+                  if (picked != null) {
+                    setState(() {
+                      _selectedDate = picked;
+                    });
+                  }
+                },
+              ),
+            ),
+            const SizedBox(height: AppSpacing.screenPadding),
+            
+            // Base weight input
+            TextField(
+              controller: _baseWeightController,
+              decoration: const InputDecoration(
+                labelText: 'Base Weight',
+                hintText: 'e.g., 80kg, bodyweight',
+              ),
+              textCapitalization: TextCapitalization.none,
+            ),
+            const SizedBox(height: AppSpacing.screenPadding),
+            
+            // Toggle between modes
+            Row(
+              children: [
+                Text('Logging mode:', style: theme.textTheme.titleSmall),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: SegmentedButton<bool>(
+                    segments: const [
+                      ButtonSegment(value: false, label: Text('Simple')),
+                      ButtonSegment(value: true, label: Text('Detailed Sets')),
+                    ],
+                    selected: {_useDetailedSets},
+                    onSelectionChanged: (Set<bool> selection) {
+                      setState(() {
+                        _useDetailedSets = selection.first;
+                      });
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.screenPadding),
+            
+            if (_useDetailedSets) ...[
+              // Detailed sets mode
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Sets', style: theme.textTheme.titleSmall),
+                  TextButton.icon(
+                    onPressed: _addSet,
+                    icon: const Icon(Icons.add, size: 16),
+                    label: const Text('Add Set'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              
+              // List of sets
+              ..._setControllers.asMap().entries.map((entry) {
+                final index = entry.key;
+                final controller = entry.value;
+                return _buildSetRow(index, controller);
+              }),
+            ] else ...[
+              // Simple mode - legacy sets and reps
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _legacySetsController,
+                      decoration: const InputDecoration(
+                        labelText: 'Sets',
+                        hintText: '3',
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.screenPadding),
+                  Expanded(
+                    child: TextField(
+                      controller: _legacyRepsController,
+                      decoration: const InputDecoration(
+                        labelText: 'Reps',
+                        hintText: '10',
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: _saveEntry,
+          child: Text(_isToday(_selectedDate) ? 'Save' : 'Save for ${_formatDialogDate(_selectedDate)}'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSetRow(int index, _SetEntryController controller) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              Text('Set ${index + 1}:', style: const TextStyle(fontWeight: FontWeight.w500)),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 2,
+                child: TextField(
+                  controller: controller._repsController,
+                  decoration: const InputDecoration(
+                    labelText: 'Reps',
+                    hintText: '10',
+                    isDense: true,
+                  ),
+                  keyboardType: TextInputType.number,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                flex: 3,
+                child: TextField(
+                  controller: controller._weightController,
+                  decoration: const InputDecoration(
+                    labelText: 'Weight',
+                    hintText: '80kg',
+                    isDense: true,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              if (_setControllers.length > 1)
+                IconButton(
+                  onPressed: () => _removeSet(index),
+                  icon: const Icon(Icons.remove_circle_outline, size: 20),
+                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  padding: EdgeInsets.zero,
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _saveEntry() {
+    if (_baseWeightController.text.trim().isEmpty) {
+      return;
+    }
+
+    final appState = context.read<ShoppingAppState>();
+    
+    if (_useDetailedSets) {
+      // Save with detailed sets
+      final setEntries = _setControllers
+          .where((controller) => controller.isValid)
+          .map((controller) => controller.toSetEntry())
+          .toList();
+      
+      if (setEntries.isNotEmpty) {
+        appState.saveDetailedWeightForExercise(
+          widget.workoutId,
+          widget.exercise.id,
+          _baseWeightController.text.trim(),
+          setEntries,
+          date: _selectedDate,
+        );
+      }
+    } else {
+      // Save with legacy format
+      final sets = _legacySetsController.text.trim().isNotEmpty 
+          ? int.tryParse(_legacySetsController.text.trim())
+          : null;
+      final reps = _legacyRepsController.text.trim().isNotEmpty 
+          ? int.tryParse(_legacyRepsController.text.trim())
+          : null;
+      
+      appState.saveWeightForExercise(
+        widget.workoutId,
+        widget.exercise.id,
+        _baseWeightController.text.trim(),
+        sets: sets,
+        reps: reps,
+        date: _selectedDate,
+      );
+    }
+    
+    Navigator.of(context).pop();
+  }
+
+  bool _isToday(DateTime date) {
+    final now = DateTime.now();
+    return date.year == now.year && 
+           date.month == now.month && 
+           date.day == now.day;
+  }
+
+  String _formatDialogDate(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final selectedDay = DateTime(date.year, date.month, date.day);
+    final difference = today.difference(selectedDay).inDays;
+    
+    if (difference == 0) {
+      return 'Today';
+    } else if (difference == 1) {
+      return 'Yesterday';
+    } else if (difference < 7) {
+      return '$difference days ago';
+    } else {
+      return '${date.day}/${date.month}/${date.year}';
+    }
+  }
+}
+
+class _SetEntryController {
+  final TextEditingController _repsController;
+  final TextEditingController _weightController;
+  final TextEditingController _notesController;
+
+  _SetEntryController({
+    int reps = 10,
+    String weight = '',
+    String notes = '',
+  }) : _repsController = TextEditingController(text: reps.toString()),
+       _weightController = TextEditingController(text: weight),
+       _notesController = TextEditingController(text: notes);
+
+  void dispose() {
+    _repsController.dispose();
+    _weightController.dispose();
+    _notesController.dispose();
+  }
+
+  bool get isValid {
+    final reps = int.tryParse(_repsController.text.trim());
+    return reps != null && reps > 0;
+  }
+
+  SetEntry toSetEntry() {
+    final reps = int.tryParse(_repsController.text.trim()) ?? 0;
+    final weight = _weightController.text.trim().isNotEmpty 
+        ? _weightController.text.trim() 
+        : null;
+    final notes = _notesController.text.trim().isNotEmpty 
+        ? _notesController.text.trim() 
+        : null;
+    
+    return SetEntry(
+      reps: reps,
+      weight: weight,
+      notes: notes,
     );
   }
 }

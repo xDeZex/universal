@@ -33,8 +33,7 @@ class ExerciseService {
       final updatedEntry = WeightEntry(
         date: entryDate, 
         weight: weightEntry.weight,
-        sets: weightEntry.sets,
-        reps: weightEntry.reps,
+        setEntries: weightEntry.setEntries,
       );
       final updatedWeightHistory = List<WeightEntry>.from(existing.weightHistory)..add(updatedEntry);
       

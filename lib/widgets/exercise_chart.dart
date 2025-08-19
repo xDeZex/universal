@@ -174,15 +174,13 @@ class ExerciseChart extends StatelessWidget {
         getTooltipItems: (touchedSpots) {
           return touchedSpots.map((spot) {
             final entry = chartData.entries[spot.spotIndex];
-            final sets = entry.sets ?? 1;
-            final reps = entry.reps ?? 1;
-            final volume = sets * reps;
+            final volume = entry.hasDetailedSets ? entry.totalReps : 1;
             
             String text = '';
             if (spot.barIndex == 0 && showWeight) {
               text = 'Weight: ${entry.weight}';
             } else if (spot.barIndex == 1 && showVolume) {
-              text = 'Volume: $volume ($sets×$reps)';
+              text = 'Volume: $volume';
             }
             text += '\n${_formatTooltipDate(entry.date)}';
             

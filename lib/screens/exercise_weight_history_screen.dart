@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/shopping_app_state.dart';
 import '../models/exercise.dart';
 import '../models/weight_entry.dart';
+import '../models/set_entry.dart';
 
 class ExerciseWeightHistoryScreen extends StatelessWidget {
   final Exercise exercise;
@@ -302,7 +303,7 @@ class ExerciseWeightHistoryScreen extends StatelessWidget {
   }
 
   Widget _buildExerciseMetrics(BuildContext context, WeightEntry entry, ExerciseProgression? progression) {
-    if (entry.sets == null && entry.reps == null) return const SizedBox.shrink();
+    if (!entry.hasDetailedSets) return const SizedBox.shrink();
     
     return Padding(
       padding: const EdgeInsets.only(top: 12),
@@ -332,49 +333,36 @@ class ExerciseWeightHistoryScreen extends StatelessWidget {
             color: Colors.grey[600],
           ),
           const SizedBox(width: 8),
-          if (entry.sets != null) ...[
-            Text(
-              '${entry.sets}',
-              style: TextStyle(
-                color: Colors.grey[700],
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
+          Text(
+            '${entry.totalSets}',
+            style: TextStyle(
+              color: Colors.grey[700],
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
             ),
-            Text(
-              ' sets',
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 14,
-              ),
+          ),
+          Text(
+            ' sets: ',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 14,
             ),
-          ],
-          if (entry.sets != null && entry.reps != null) ...[
-            Text(
-              ' × ',
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 14,
-              ),
+          ),
+          Text(
+            entry.setsRepsDisplay,
+            style: TextStyle(
+              color: Colors.grey[700],
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
             ),
-          ],
-          if (entry.reps != null) ...[
-            Text(
-              '${entry.reps}',
-              style: TextStyle(
-                color: Colors.grey[700],
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
+          ),
+          Text(
+            ' reps',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 14,
             ),
-            Text(
-              ' reps',
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 14,
-              ),
-            ),
-          ],
+          ),
         ],
       ),
     );
@@ -503,9 +491,9 @@ class ExerciseWeightHistoryScreen extends StatelessWidget {
   }
 
   WeightProgression? _getSetsProgression(WeightEntry current, WeightEntry previous) {
-    if (current.sets == null || previous.sets == null) return null;
+    if (!current.hasDetailedSets || !previous.hasDetailedSets) return null;
     
-    final difference = current.sets! - previous.sets!;
+    final difference = current.totalSets - previous.totalSets;
     if (difference == 0) return null;
     
     return WeightProgression(
@@ -515,9 +503,9 @@ class ExerciseWeightHistoryScreen extends StatelessWidget {
   }
 
   WeightProgression? _getRepsProgression(WeightEntry current, WeightEntry previous) {
-    if (current.reps == null || previous.reps == null) return null;
+    if (!current.hasDetailedSets || !previous.hasDetailedSets) return null;
     
-    final difference = current.reps! - previous.reps!;
+    final difference = current.totalReps - previous.totalReps;
     if (difference == 0) return null;
     
     return WeightProgression(
@@ -655,11 +643,26 @@ class ExerciseWeightHistoryScreen extends StatelessWidget {
         WeightEntry(
           date: date,
           weight: weight,
-          sets: sets,
-          reps: reps,
+          setEntries: _createLegacySetEntries(sets, reps),
         ),
       );
     }
+  }
+
+  /// Helper method to create SetEntry objects from legacy sets/reps format
+  List<SetEntry> _createLegacySetEntries(int? sets, int? reps) {
+    if (sets == null && reps == null) {
+      return [];
+    }
+    
+    final actualSets = sets ?? 1;
+    final actualReps = reps ?? 1;
+    
+    final setEntries = <SetEntry>[];
+    for (int i = 0; i < actualSets; i++) {
+      setEntries.add(SetEntry(reps: actualReps));
+    }
+    return setEntries;
   }
 
   String _formatDialogDate(DateTime date) {

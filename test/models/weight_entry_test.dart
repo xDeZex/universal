@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:universal/models/weight_entry.dart';
+import 'package:universal/models/set_entry.dart';
 
 void main() {
   group('WeightEntry', () {
@@ -119,6 +120,119 @@ void main() {
       expect(string, contains('WeightEntry'));
       expect(string, contains(testDate.toString()));
       expect(string, contains(testWeight));
+    });
+
+    group('SetEntries functionality', () {
+      test('should create WeightEntry with setEntries', () {
+        const setEntries = <SetEntry>[
+          SetEntry(reps: 10, weight: '80kg'),
+          SetEntry(reps: 8, weight: '85kg'),
+          SetEntry(reps: 6, weight: '90kg'),
+        ];
+
+        final entry = WeightEntry(
+          date: testDate,
+          weight: '85kg',
+          setEntries: setEntries,
+        );
+
+        expect(entry.setEntries, equals(setEntries));
+        expect(entry.hasDetailedSets, isTrue);
+        expect(entry.totalSets, equals(3));
+        expect(entry.totalReps, equals(24));
+      });
+
+      test('should handle entry without setEntries', () {
+        final entry = WeightEntry(
+          date: testDate,
+          weight: '80kg',
+        );
+
+        expect(entry.hasDetailedSets, isFalse);
+        expect(entry.totalSets, equals(0));
+        expect(entry.totalReps, equals(0));
+      });
+
+      test('should format sets and reps display correctly', () {
+        final detailedEntry = WeightEntry(
+          date: testDate,
+          weight: '80kg',
+          setEntries: const [
+            SetEntry(reps: 12),
+            SetEntry(reps: 10),
+            SetEntry(reps: 8),
+          ],
+        );
+
+        expect(detailedEntry.setsRepsDisplay, equals('12, 10, 8'));
+
+        final legacyEntry = WeightEntry(
+          date: testDate,
+          weight: '80kg',
+          setEntries: const [
+            SetEntry(reps: 10),
+            SetEntry(reps: 10),
+            SetEntry(reps: 10),
+          ],
+        );
+
+        expect(legacyEntry.setsRepsDisplay, equals('10, 10, 10'));
+      });
+
+      test('should serialize setEntries to JSON correctly', () {
+        final entry = WeightEntry(
+          date: testDate,
+          weight: '80kg',
+          setEntries: const [
+            SetEntry(reps: 10, weight: '80kg'),
+            SetEntry(reps: 8, weight: '85kg'),
+          ],
+        );
+
+        final json = entry.toJson();
+
+        expect(json['setEntries'], isA<List>());
+        expect((json['setEntries'] as List).length, equals(2));
+        expect(json['setEntries'][0]['reps'], equals(10));
+        expect(json['setEntries'][0]['weight'], equals('80kg'));
+      });
+
+      test('should deserialize setEntries from JSON correctly', () {
+        final json = {
+          'date': testDate.toIso8601String(),
+          'weight': '80kg',
+          'setEntries': [
+            {'reps': 10, 'weight': '80kg'},
+            {'reps': 8, 'weight': '85kg'},
+          ],
+        };
+
+        final entry = WeightEntry.fromJson(json);
+
+        expect(entry.setEntries.length, equals(2));
+        expect(entry.setEntries[0].reps, equals(10));
+        expect(entry.setEntries[0].weight, equals('80kg'));
+        expect(entry.setEntries[1].reps, equals(8));
+        expect(entry.setEntries[1].weight, equals('85kg'));
+      });
+
+      test('should handle JSON round trip with setEntries', () {
+        final original = WeightEntry(
+          date: testDate,
+          weight: '80kg',
+          setEntries: const [
+            SetEntry(reps: 12, weight: '80kg', notes: 'Good'),
+            SetEntry(reps: 10, weight: '85kg'),
+          ],
+        );
+
+        final json = original.toJson();
+        final restored = WeightEntry.fromJson(json);
+
+        expect(restored, equals(original));
+        expect(restored.setEntries.length, equals(2));
+        expect(restored.setEntries[0].notes, equals('Good'));
+      });
     });
   });
 }
