@@ -74,9 +74,16 @@ class _MainScreenState extends State<MainScreen> {
           currentIndex: _currentIndex,
           onTap: (index) {
             if (index >= 0 && index < 4) {
-              setState(() {
-                _currentIndex = index;
-              });
+              // If tapping the same tab, pop to root
+              if (index == _currentIndex) {
+                _navigatorKeys[index].currentState?.popUntil((route) => route.isFirst);
+              } else {
+                // When switching to a different tab, always go to its root page
+                _navigatorKeys[index].currentState?.popUntil((route) => route.isFirst);
+                setState(() {
+                  _currentIndex = index;
+                });
+              }
             }
           },
           type: BottomNavigationBarType.fixed,

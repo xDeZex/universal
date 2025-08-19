@@ -498,7 +498,7 @@ class ExerciseWeightHistoryScreen extends StatelessWidget {
     
     return WeightProgression(
       isIncrease: difference > 0,
-      text: '${difference > 0 ? '+' : ''}${difference}s',
+      text: '${difference > 0 ? '+' : ''}${difference.abs()} ${difference.abs() == 1 ? 'set' : 'sets'}',
     );
   }
 
@@ -510,7 +510,7 @@ class ExerciseWeightHistoryScreen extends StatelessWidget {
     
     return WeightProgression(
       isIncrease: difference > 0,
-      text: '${difference > 0 ? '+' : ''}${difference}r',
+      text: '${difference > 0 ? '+' : ''}${difference.abs()} ${difference.abs() == 1 ? 'rep' : 'reps'}',
     );
   }
 
