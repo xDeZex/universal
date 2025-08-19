@@ -111,14 +111,14 @@ void main() {
     testWidgets('should arrange content in column', (tester) async {
       await tester.pumpWidget(createWidget());
 
-      final column = find.descendant(
+      final columns = find.descendant(
         of: find.byType(Card),
         matching: find.byType(Column),
       );
       
-      expect(column, findsOneWidget);
+      expect(columns, findsAtLeastNWidgets(1));
 
-      final columnWidget = tester.widget<Column>(column);
+      final columnWidget = tester.widget<Column>(columns.first);
       expect(columnWidget.crossAxisAlignment, equals(CrossAxisAlignment.start));
     });
 

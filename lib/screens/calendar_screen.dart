@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import '../widgets/calendar_date_card.dart';
 import '../widgets/date_info_card.dart';
 import '../widgets/quick_actions_card.dart';
+import '../widgets/create_training_split_dialog.dart';
+import '../services/training_split_service.dart';
+import '../models/training_split.dart';
+import '../models/calendar_event.dart';
 import '../utils/date_formatter.dart';
 
 class CalendarScreen extends StatefulWidget {
@@ -15,6 +19,7 @@ class CalendarScreen extends StatefulWidget {
 
 class _CalendarScreenState extends State<CalendarScreen> {
   DateTime _selectedDate = DateTime.now();
+  final TrainingSplitService _trainingSplitService = TrainingSplitService();
 
   @override
   Widget build(BuildContext context) {
@@ -31,11 +36,15 @@ class _CalendarScreenState extends State<CalendarScreen> {
               onDateChanged: _updateSelectedDate,
             ),
             const SizedBox(height: 24),
-            DateInfoCard(selectedDate: _selectedDate),
+            DateInfoCard(
+              selectedDate: _selectedDate,
+              events: _trainingSplitService.getEventsForDate(_selectedDate),
+            ),
             const SizedBox(height: 24),
             QuickActionsCard(
               onTodayPressed: _selectToday,
               onTomorrowPressed: _selectTomorrow,
+              onCreateSplitPressed: _showCreateSplitDialog,
             ),
           ],
         ),
@@ -86,5 +95,32 @@ class _CalendarScreenState extends State<CalendarScreen> {
     setState(() {
       _selectedDate = DateTime.now().add(const Duration(days: 1));
     });
+  }
+
+  void _showCreateSplitDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => CreateTrainingSplitDialog(
+        onSplitCreated: _handleSplitCreated,
+      ),
+    );
+  }
+
+  void _handleSplitCreated(TrainingSplit split) {
+    _trainingSplitService.addTrainingSplit(split);
+    final events = _trainingSplitService.generateCalendarEvents(split);
+    _trainingSplitService.addEvents(events);
+    
+    setState(() {
+      // Trigger rebuild to show new events
+    });
+
+    // Show success message
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Training split "${split.name}" created successfully!'),
+        backgroundColor: Theme.of(context).colorScheme.primary,
+      ),
+    );
   }
 }
