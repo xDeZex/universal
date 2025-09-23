@@ -30,19 +30,16 @@ jobs:
         flutter-version: '3.24.3'
         channel: 'stable'
         
+    - name: Accept Android licenses
+      run: yes | flutter doctor --android-licenses
+      
     - name: Verify Flutter installation
       run: |
-        echo "PATH: $PATH"
-        echo "Current directory: $(pwd)"
-        ls -la
-        which flutter || echo "Flutter not found in PATH"
         flutter --version
-        flutter doctor -v
+        flutter doctor
         
     - name: Get Flutter dependencies
-      run: |
-        echo "Running flutter pub get in $(pwd)"
-        flutter pub get
+      run: flutter pub get
       
     - name: Run tests
       run: flutter test --concurrency=4 --no-test-assets --reporter=compact
