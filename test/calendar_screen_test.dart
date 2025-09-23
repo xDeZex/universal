@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:universal/screens/calendar_screen.dart';
 import 'package:universal/widgets/calendar_date_card.dart';
 import 'package:universal/widgets/date_info_card.dart';
+import 'package:universal/widgets/monthly_calendar_view.dart';
 import 'package:universal/widgets/quick_actions_card.dart';
 
 void main() {
@@ -129,9 +130,9 @@ void main() {
         final dateCard = find.byType(CalendarDateCard);
         expect(dateCard, findsOneWidget);
 
-        // Note: CalendarDatePicker is complex to test interactions with directly
+        // Note: MonthlyCalendarView is complex to test interactions with directly
         // This test verifies the component integration exists
-        expect(find.byType(CalendarDatePicker), findsOneWidget);
+        expect(find.byType(MonthlyCalendarView), findsOneWidget);
       });
     });
 

@@ -78,12 +78,7 @@ void main() {
     testWidgets('should maintain selected date state', (tester) async {
       await tester.pumpWidget(createWidget());
 
-      // The calendar should show today's date initially
-      final today = DateTime.now();
-      final todayString = '${today.day}/${today.month}/${today.year}';
-      
-      // We can't easily test the exact date format without knowing the DateFormatter implementation
-      // But we can verify the DateInfoCard is present
+      // We can verify the DateInfoCard is present
       expect(find.text('Selected Date'), findsOneWidget);
       expect(find.text('Day of Week'), findsOneWidget);
     });

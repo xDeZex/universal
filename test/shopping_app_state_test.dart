@@ -1302,8 +1302,6 @@ void main() {
           date: DateTime.now(),
           weight: '80kg',
         ));
-        final history = appState.getExerciseHistory('Push Ups')!;
-        final updatedHistory = history.copyWith(weightHistory: []); // Clear weight history
         appState.deleteWeightFromExerciseHistory('Push Ups', DateTime.now());
         
         final recommendations = appState.getExerciseNamesWithLogsNotInWorkout(workoutId);

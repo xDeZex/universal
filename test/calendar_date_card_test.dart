@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:universal/widgets/calendar_date_card.dart';
+import 'package:universal/widgets/monthly_calendar_view.dart';
 
 void main() {
   setUpAll(() {
@@ -27,50 +28,53 @@ void main() {
       );
     }
 
-    testWidgets('should render card with calendar date picker', (tester) async {
+    testWidgets('should render card with monthly calendar view', (tester) async {
       await tester.pumpWidget(createWidget(testDate));
 
+      expect(find.byType(MonthlyCalendarView), findsOneWidget);
       expect(find.byType(Card), findsOneWidget);
-      expect(find.byType(CalendarDatePicker), findsOneWidget);
     });
 
     testWidgets('should display initial selected date', (tester) async {
       await tester.pumpWidget(createWidget(testDate));
 
-      final calendarPicker = tester.widget<CalendarDatePicker>(
-        find.byType(CalendarDatePicker),
+      final monthlyCalendar = tester.widget<MonthlyCalendarView>(
+        find.byType(MonthlyCalendarView),
       );
       
-      expect(calendarPicker.initialDate, equals(testDate));
+      expect(monthlyCalendar.selectedDate, equals(testDate));
     });
 
-    testWidgets('should have correct date range constraints', (tester) async {
+    testWidgets('should display month name and year', (tester) async {
       await tester.pumpWidget(createWidget(testDate));
-
-      final calendarPicker = tester.widget<CalendarDatePicker>(
-        find.byType(CalendarDatePicker),
-      );
       
-      expect(calendarPicker.firstDate, equals(DateTime(2020)));
-      expect(calendarPicker.lastDate, equals(DateTime(2030)));
+      // Should show the month name and year
+      expect(find.text('June 2024'), findsOneWidget);
+      
+      // Should show weekday headers
+      expect(find.text('Mon'), findsOneWidget);
+      expect(find.text('Tue'), findsOneWidget);
+      expect(find.text('Wed'), findsOneWidget);
+      expect(find.text('Thu'), findsOneWidget);
+      expect(find.text('Fri'), findsOneWidget);
+      expect(find.text('Sat'), findsOneWidget);
+      expect(find.text('Sun'), findsOneWidget);
     });
 
-    testWidgets('should call onDateChanged when date is selected', (tester) async {
+    testWidgets('should call onDateChanged when date is tapped', (tester) async {
       await tester.pumpWidget(createWidget(testDate));
-
-      // Find and tap on a different date (this is tricky with CalendarDatePicker)
-      // We'll verify the callback is properly wired
-      final calendarPicker = tester.widget<CalendarDatePicker>(
-        find.byType(CalendarDatePicker),
-      );
       
-      expect(calendarPicker.onDateChanged, isNotNull);
+      // Find a day number to tap (day 10 should be visible)
+      final day10 = find.text('10');
+      expect(day10, findsOneWidget);
       
-      // Simulate a date change by calling the callback directly
-      final newDate = DateTime(2024, 6, 20);
-      calendarPicker.onDateChanged(newDate);
+      // Tap on day 10
+      await tester.tap(day10);
+      await tester.pump();
       
-      expect(changedDates, contains(newDate));
+      // Should have called onDateChanged with June 10, 2024
+      final expectedDate = DateTime(2024, 6, 10);
+      expect(changedDates, contains(expectedDate));
     });
 
     testWidgets('should handle different initial dates', (tester) async {
@@ -83,11 +87,11 @@ void main() {
       for (final date in dates) {
         await tester.pumpWidget(createWidget(date));
 
-        final calendarPicker = tester.widget<CalendarDatePicker>(
-          find.byType(CalendarDatePicker),
+        final monthlyCalendar = tester.widget<MonthlyCalendarView>(
+          find.byType(MonthlyCalendarView),
         );
         
-        expect(calendarPicker.initialDate, equals(date));
+        expect(monthlyCalendar.selectedDate, equals(date));
       }
     });
 
@@ -128,37 +132,45 @@ void main() {
       expect(find.byKey(testKey), findsOneWidget);
     });
 
-    group('date constraints', () {
-      testWidgets('should respect first date constraint', (tester) async {
-        final validDate = DateTime(2025, 1, 1); // Use a valid date within range
-        await tester.pumpWidget(createWidget(validDate));
+    group('navigation', () {
+      testWidgets('should have navigation buttons', (tester) async {
+        await tester.pumpWidget(createWidget(testDate));
 
-        final calendarPicker = tester.widget<CalendarDatePicker>(
-          find.byType(CalendarDatePicker),
-        );
-        
-        expect(calendarPicker.firstDate, equals(DateTime(2020)));
+        // Should have previous and next month buttons
+        expect(find.byIcon(Icons.chevron_left), findsOneWidget);
+        expect(find.byIcon(Icons.chevron_right), findsOneWidget);
       });
 
-      testWidgets('should respect last date constraint', (tester) async {
-        final validDate = DateTime(2029, 12, 31); // Use a valid date within range
-        await tester.pumpWidget(createWidget(validDate));
+      testWidgets('should navigate to next month when next button is tapped', (tester) async {
+        await tester.pumpWidget(createWidget(testDate));
 
-        final calendarPicker = tester.widget<CalendarDatePicker>(
-          find.byType(CalendarDatePicker),
-        );
-        
-        expect(calendarPicker.lastDate, equals(DateTime(2030)));
+        // Tap next month button
+        await tester.tap(find.byIcon(Icons.chevron_right));
+        await tester.pump();
+
+        // Should show July 2024
+        expect(find.text('July 2024'), findsOneWidget);
+      });
+
+      testWidgets('should navigate to previous month when previous button is tapped', (tester) async {
+        await tester.pumpWidget(createWidget(testDate));
+
+        // Tap previous month button
+        await tester.tap(find.byIcon(Icons.chevron_left));
+        await tester.pump();
+
+        // Should show May 2024
+        expect(find.text('May 2024'), findsOneWidget);
       });
     });
 
     group('widget composition', () {
-      testWidgets('should be properly structured with card and padding', (tester) async {
+      testWidgets('should be properly structured with card and monthly calendar', (tester) async {
         await tester.pumpWidget(createWidget(testDate));
 
         // Verify the widget hierarchy exists
         expect(find.byType(Card), findsOneWidget);
-        expect(find.byType(CalendarDatePicker), findsOneWidget);
+        expect(find.byType(MonthlyCalendarView), findsOneWidget);
         
         // Verify there are padding widgets inside the card
         final paddings = find.descendant(

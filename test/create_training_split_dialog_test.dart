@@ -172,7 +172,9 @@ void main() {
       await tester.tap(find.text('Create'));
       await tester.pump();
       
-      // For now, just verify the form doesn't crash when submitted
+      // Note: The split creation would require proper date selection which is complex to test
+      // For now, we verify the form doesn't crash when submitted
+      // In a real scenario, createdSplit would be set if dates were properly selected
       // The actual validation and callback testing would require setting up dates
       // which makes the test complex. The important thing is no crash occurs.
       expect(find.byType(CreateTrainingSplitDialog), findsOneWidget);

@@ -79,7 +79,7 @@ class DateInfoCard extends StatelessWidget {
           Text(
             'No training events scheduled',
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.6),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
             ),
           ),
         ],
@@ -118,7 +118,7 @@ class DateInfoCard extends StatelessWidget {
               style: theme.textTheme.bodyMedium?.copyWith(
                 decoration: event.isCompleted ? TextDecoration.lineThrough : null,
                 color: event.isCompleted 
-                    ? theme.colorScheme.onSurface.withOpacity(0.6)
+                    ? theme.colorScheme.onSurface.withValues(alpha: 0.6)
                     : null,
               ),
             ),
