@@ -10,6 +10,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     
+    defaults:
+      run:
+        working-directory: ./
+    
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -20,15 +24,25 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
         
-    - name: Setup Flutter
+    - name: Setup Flutter SDK
       uses: subosito/flutter-action@v2
       with:
         flutter-version: '3.24.3'
         channel: 'stable'
-        cache: true
+        
+    - name: Verify Flutter installation
+      run: |
+        echo "PATH: $PATH"
+        echo "Current directory: $(pwd)"
+        ls -la
+        which flutter || echo "Flutter not found in PATH"
+        flutter --version
+        flutter doctor -v
         
     - name: Get Flutter dependencies
-      run: flutter pub get
+      run: |
+        echo "Running flutter pub get in $(pwd)"
+        flutter pub get
       
     - name: Run tests
       run: flutter test --concurrency=4 --no-test-assets --reporter=compact
