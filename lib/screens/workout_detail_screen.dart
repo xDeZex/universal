@@ -310,26 +310,16 @@ class ExerciseCard extends StatelessWidget {
   Widget? _buildSubtitle(BuildContext context) {
     final rows = <Widget>[];
     
-    // Check if we have today's logged entry with detailed sets
-    final todaysWeight = exercise.todaysWeight;
-    if (todaysWeight != null && todaysWeight.hasDetailedSets) {
-      // Show actual logged sets with reps
-      final setsDisplay = todaysWeight.setsRepsDisplay;
-      rows.add(
-        Text(
-          '${todaysWeight.totalSets} sets: $setsDisplay reps',
-          style: TextStyle(
-            color: exercise.isCompleted
-                ? Theme.of(context).colorScheme.onSurfaceVariant
-                : Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-        ),
-      );
+    // Always show target sets/reps if they exist, regardless of logging
+    if (exercise.sets != null || exercise.reps != null) {
+      final setsReps = [
+        if (exercise.sets != null) '${exercise.sets} sets',
+        if (exercise.reps != null) '${exercise.reps} reps',
+      ].join(' × ');
       
-      // Show weight from today's entry
       rows.add(
         Text(
-          todaysWeight.weight,
+          setsReps,
           style: TextStyle(
             color: exercise.isCompleted
                 ? Theme.of(context).colorScheme.onSurfaceVariant
@@ -337,43 +327,18 @@ class ExerciseCard extends StatelessWidget {
           ),
         ),
       );
-    } else if (todaysWeight != null) {
-      // Show weight from today's entry (simple logging mode with no sets)
-      // Note: Simple mode entries now create SetEntry objects internally
-    } else {
-      // Only show planned sets/reps when no logging has occurred
-      if (exercise.sets != null || exercise.reps != null) {
-        final setsReps = [
-          if (exercise.sets != null) '${exercise.sets} sets',
-          if (exercise.reps != null) '${exercise.reps} reps',
-        ].join(' × ');
-        
-        rows.add(
-          Text(
-            'Target: $setsReps',
-            style: TextStyle(
-              color: exercise.isCompleted
-                  ? Theme.of(context).colorScheme.onSurfaceVariant
-                  : Theme.of(context).colorScheme.onSurfaceVariant,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        );
-      }
     }
     
-    // Show weight from logging or planned weight
-    final weightToShow = todaysWeight?.weight ?? exercise.weight;
-    if (weightToShow != null) {
-      final isPlanned = todaysWeight?.weight == null && exercise.weight != null;
+    // Always show target weight if available
+    if (exercise.weight != null) {
       rows.add(
         Text(
-          isPlanned ? 'Target: $weightToShow' : weightToShow,
+          'Target: ${exercise.weight}',
           style: TextStyle(
             color: exercise.isCompleted
                 ? Theme.of(context).colorScheme.onSurfaceVariant
                 : Theme.of(context).colorScheme.onSurfaceVariant,
-            fontStyle: isPlanned ? FontStyle.italic : null,
+            fontStyle: FontStyle.italic,
           ),
         ),
       );
