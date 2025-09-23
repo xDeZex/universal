@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../models/shopping_list.dart';
-import '../models/shopping_item.dart';
 import '../models/workout_list.dart';
 import '../models/exercise.dart';
 import '../models/weight_entry.dart';

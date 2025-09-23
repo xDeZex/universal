@@ -5,7 +5,6 @@ import '../widgets/quick_actions_card.dart';
 import '../widgets/create_training_split_dialog.dart';
 import '../services/training_split_service.dart';
 import '../models/training_split.dart';
-import '../models/calendar_event.dart';
 import '../utils/date_formatter.dart';
 
 class CalendarScreen extends StatefulWidget {

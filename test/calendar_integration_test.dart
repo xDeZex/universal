@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:universal/screens/calendar_screen.dart';
-import 'package:universal/models/training_split.dart';
-import 'package:universal/models/calendar_event.dart';
 
 void main() {
   setUpAll(() {
