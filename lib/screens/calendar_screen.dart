@@ -3,8 +3,10 @@ import '../widgets/calendar_date_card.dart';
 import '../widgets/date_info_card.dart';
 import '../widgets/quick_actions_card.dart';
 import '../widgets/create_training_split_dialog.dart';
+import '../widgets/add_event_dialog.dart';
 import '../services/training_split_service.dart';
 import '../models/training_split.dart';
+import '../models/calendar_event.dart';
 import '../utils/date_formatter.dart';
 
 class CalendarScreen extends StatefulWidget {
@@ -33,6 +35,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
             CalendarDateCard(
               selectedDate: _selectedDate,
               onDateChanged: _updateSelectedDate,
+              onDayTap: _showAddEventDialog,
             ),
             const SizedBox(height: 24),
             DateInfoCard(
@@ -105,6 +108,16 @@ class _CalendarScreenState extends State<CalendarScreen> {
     );
   }
 
+  void _showAddEventDialog(DateTime date) {
+    showDialog(
+      context: context,
+      builder: (context) => AddEventDialog(
+        selectedDate: date,
+        onEventCreated: _handleEventCreated,
+      ),
+    );
+  }
+
   void _handleSplitCreated(TrainingSplit split) {
     _trainingSplitService.addTrainingSplit(split);
     final events = _trainingSplitService.generateCalendarEvents(split);
@@ -121,5 +134,25 @@ class _CalendarScreenState extends State<CalendarScreen> {
         backgroundColor: Theme.of(context).colorScheme.primary,
       ),
     );
+  }
+
+  void _handleEventCreated(CalendarEvent event) {
+    _trainingSplitService.addEvents([event]);
+    
+    setState(() {
+      // Trigger rebuild to show new event
+      // Update selected date to the event date to show it immediately
+      _selectedDate = event.date;
+    });
+    
+    // Show success message
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${event.title} added successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
   }
 }

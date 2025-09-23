@@ -7,10 +7,12 @@ class MonthlyCalendarView extends StatefulWidget {
     super.key,
     required this.selectedDate,
     required this.onDateChanged,
+    this.onDayTap,
   });
 
   final DateTime selectedDate;
   final ValueChanged<DateTime> onDateChanged;
+  final ValueChanged<DateTime>? onDayTap;
 
   @override
   State<MonthlyCalendarView> createState() => _MonthlyCalendarViewState();
@@ -154,6 +156,7 @@ class _MonthlyCalendarViewState extends State<MonthlyCalendarView> {
     
     return GestureDetector(
       onTap: () => widget.onDateChanged(date),
+      onLongPress: widget.onDayTap != null ? () => widget.onDayTap!(date) : null,
       child: Container(
         decoration: BoxDecoration(
           color: backgroundColor,
