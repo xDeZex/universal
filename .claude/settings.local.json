@@ -11,7 +11,9 @@
       "Bash(grep:*)",
       "Bash(mkdir:*)",
       "Bash(find:*)",
-      "Bash(flutter clean:*)"
+      "Bash(flutter clean:*)",
+      "Bash(.scriptstest_fast.bat)",
+      "Bash(scripts/test_fast.bat)"
     ],
     "deny": [],
     "ask": [],

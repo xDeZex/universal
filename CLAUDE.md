@@ -229,3 +229,30 @@ Before considering code complete, verify:
 - **Tight coupling**: Classes that know too much about each other
 - **Duplicate code**: Copy-paste programming
 - **Mixed concerns**: UI logic mixed with business logic
+
+## Fast Testing
+
+### Quick Test Commands
+- **Fast tests**: `scripts\test_fast.bat` (~4-5 seconds)
+- **Development**: `scripts\test_dev.bat` (for rapid iteration)
+- **Watch mode**: `scripts\test_watch.bat` (auto-run on file changes)
+- **Specific test**: `scripts\test_dev.bat test\specific_test.dart`
+
+### Manual Fast Testing
+```bash
+# Fastest option (parallel + no assets)
+flutter test --concurrency=6 --no-test-assets --reporter=compact --timeout=20s
+
+# Development iteration
+flutter test --concurrency=4 --no-test-assets --reporter=compact
+
+# Watch mode for continuous development
+flutter test --watch --concurrency=4 --no-test-assets --reporter=compact
+```
+
+### Test Optimization Strategies
+- **Parallel execution**: `--concurrency=6` (uses multiple CPU cores)
+- **Skip asset building**: `--no-test-assets` (saves 2-3 seconds)
+- **Compact reporter**: `--reporter=compact` (faster output)
+- **Shorter timeouts**: `--timeout=20s` (fails fast on hung tests)
+- **Specific test files**: Run only changed tests during development
