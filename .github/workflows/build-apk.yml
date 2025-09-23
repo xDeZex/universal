@@ -27,7 +27,6 @@ jobs:
     - name: Setup Flutter SDK
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: '3.24.3'
         channel: 'stable'
         
     - name: Accept Android licenses
@@ -36,6 +35,7 @@ jobs:
     - name: Verify Flutter installation
       run: |
         flutter --version
+        dart --version
         flutter doctor
         
     - name: Get Flutter dependencies
