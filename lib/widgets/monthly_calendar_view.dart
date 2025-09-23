@@ -204,9 +204,7 @@ class _MonthlyCalendarViewState extends State<MonthlyCalendarView> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: displayEvents.map((event) {
-        final color = event.type == CalendarEventType.workout
-            ? theme.colorScheme.primary
-            : theme.colorScheme.secondary;
+        final color = _getEventColor(theme, event.type);
             
         return Container(
           margin: const EdgeInsets.symmetric(vertical: 1, horizontal: 2),
@@ -218,6 +216,17 @@ class _MonthlyCalendarViewState extends State<MonthlyCalendarView> {
         );
       }).toList(),
     );
+  }
+
+  Color _getEventColor(ThemeData theme, CalendarEventType type) {
+    switch (type) {
+      case CalendarEventType.workout:
+        return theme.colorScheme.primary;
+      case CalendarEventType.restDay:
+        return theme.colorScheme.secondary;
+      case CalendarEventType.general:
+        return theme.colorScheme.tertiary;
+    }
   }
 
   void _previousMonth() {

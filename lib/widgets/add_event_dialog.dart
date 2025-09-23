@@ -19,12 +19,14 @@ class _AddEventDialogState extends State<AddEventDialog> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
-  CalendarEventType _selectedType = CalendarEventType.workout;
+  final _timeController = TextEditingController();
+  CalendarEventType _selectedType = CalendarEventType.general;
 
   @override
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
+    _timeController.dispose();
     super.dispose();
   }
 
@@ -46,7 +48,7 @@ class _AddEventDialogState extends State<AddEventDialog> {
                 controller: _titleController,
                 decoration: const InputDecoration(
                   labelText: 'Event Title',
-                  hintText: 'e.g., Push Day, Cardio',
+                  hintText: 'e.g., Lunch with Mom, Team Meeting',
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) {
@@ -72,12 +74,8 @@ class _AddEventDialogState extends State<AddEventDialog> {
                     child: Row(
                       children: [
                         Icon(
-                          type == CalendarEventType.workout 
-                              ? Icons.fitness_center 
-                              : Icons.hotel,
-                          color: type == CalendarEventType.workout
-                              ? theme.colorScheme.primary
-                              : theme.colorScheme.secondary,
+                          _getTypeIcon(type),
+                          color: _getTypeColor(theme, type),
                         ),
                         const SizedBox(width: 8),
                         Text(_getTypeDisplayName(type)),
@@ -92,6 +90,18 @@ class _AddEventDialogState extends State<AddEventDialog> {
                     });
                   }
                 },
+              ),
+              const SizedBox(height: 16),
+              
+              // Time (optional)
+              TextFormField(
+                controller: _timeController,
+                decoration: const InputDecoration(
+                  labelText: 'Time (Optional)',
+                  hintText: 'e.g., 2:30 PM, 14:30',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.access_time),
+                ),
               ),
               const SizedBox(height: 16),
               
@@ -136,6 +146,30 @@ class _AddEventDialogState extends State<AddEventDialog> {
         return 'Workout';
       case CalendarEventType.restDay:
         return 'Rest Day';
+      case CalendarEventType.general:
+        return 'General';
+    }
+  }
+
+  IconData _getTypeIcon(CalendarEventType type) {
+    switch (type) {
+      case CalendarEventType.workout:
+        return Icons.fitness_center;
+      case CalendarEventType.restDay:
+        return Icons.hotel;
+      case CalendarEventType.general:
+        return Icons.event;
+    }
+  }
+
+  Color _getTypeColor(ThemeData theme, CalendarEventType type) {
+    switch (type) {
+      case CalendarEventType.workout:
+        return theme.colorScheme.primary;
+      case CalendarEventType.restDay:
+        return theme.colorScheme.secondary;
+      case CalendarEventType.general:
+        return theme.colorScheme.tertiary;
     }
   }
 
@@ -152,6 +186,9 @@ class _AddEventDialogState extends State<AddEventDialog> {
       type: _selectedType,
       description: _descriptionController.text.trim().isNotEmpty 
           ? _descriptionController.text.trim() 
+          : null,
+      time: _timeController.text.trim().isNotEmpty 
+          ? _timeController.text.trim() 
           : null,
       isCompleted: false,
     );

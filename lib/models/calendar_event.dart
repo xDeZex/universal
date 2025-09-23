@@ -1,6 +1,7 @@
 enum CalendarEventType {
   workout,
   restDay,
+  general,
 }
 
 class CalendarEvent {
@@ -10,6 +11,7 @@ class CalendarEvent {
   final String trainingSplitId;
   final CalendarEventType type;
   final String? description;
+  final String? time; // Optional time (e.g., "14:30", "2:30 PM")
   final bool isCompleted;
 
   CalendarEvent({
@@ -17,8 +19,9 @@ class CalendarEvent {
     required this.title,
     required this.date,
     required this.trainingSplitId,
-    this.type = CalendarEventType.workout,
+    this.type = CalendarEventType.general,
     this.description,
+    this.time,
     this.isCompleted = false,
   }) {
     if (id.isEmpty) {
@@ -51,6 +54,7 @@ class CalendarEvent {
     String? trainingSplitId,
     CalendarEventType? type,
     String? description,
+    String? time,
     bool? isCompleted,
   }) {
     return CalendarEvent(
@@ -60,6 +64,7 @@ class CalendarEvent {
       trainingSplitId: trainingSplitId ?? this.trainingSplitId,
       type: type ?? this.type,
       description: description ?? this.description,
+      time: time ?? this.time,
       isCompleted: isCompleted ?? this.isCompleted,
     );
   }
@@ -72,6 +77,7 @@ class CalendarEvent {
       'trainingSplitId': trainingSplitId,
       'type': type.name,
       'description': description,
+      'time': time,
       'isCompleted': isCompleted,
     };
   }
@@ -84,6 +90,7 @@ class CalendarEvent {
       trainingSplitId: json['trainingSplitId'] as String,
       type: CalendarEventType.values.byName(json['type'] as String),
       description: json['description'] as String?,
+      time: json['time'] as String?,
       isCompleted: json['isCompleted'] as bool? ?? false,
     );
   }
@@ -99,6 +106,7 @@ class CalendarEvent {
            trainingSplitId == other.trainingSplitId &&
            type == other.type &&
            description == other.description &&
+           time == other.time &&
            isCompleted == other.isCompleted;
   }
 
@@ -111,6 +119,7 @@ class CalendarEvent {
       trainingSplitId,
       type,
       description,
+      time,
       isCompleted,
     );
   }
@@ -119,6 +128,6 @@ class CalendarEvent {
   String toString() {
     return 'CalendarEvent{id: $id, title: $title, date: $date, '
            'trainingSplitId: $trainingSplitId, type: $type, '
-           'description: $description, isCompleted: $isCompleted}';
+           'description: $description, time: $time, isCompleted: $isCompleted}';
   }
 }

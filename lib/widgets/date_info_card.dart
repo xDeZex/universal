@@ -102,9 +102,8 @@ class DateInfoCard extends StatelessWidget {
   }
 
   Widget _buildEventItem(CalendarEvent event, ThemeData theme) {
-    final isRestDay = event.type == CalendarEventType.restDay;
-    final iconColor = isRestDay ? theme.colorScheme.secondary : theme.colorScheme.primary;
-    final icon = isRestDay ? Icons.spa : Icons.fitness_center;
+    final icon = _getEventIcon(event.type);
+    final iconColor = _getEventColor(theme, event.type);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
@@ -113,14 +112,26 @@ class DateInfoCard extends StatelessWidget {
           Icon(icon, size: 16, color: iconColor),
           const SizedBox(width: 8),
           Expanded(
-            child: Text(
-              event.title,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                decoration: event.isCompleted ? TextDecoration.lineThrough : null,
-                color: event.isCompleted 
-                    ? theme.colorScheme.onSurface.withValues(alpha: 0.6)
-                    : null,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  event.title,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    decoration: event.isCompleted ? TextDecoration.lineThrough : null,
+                    color: event.isCompleted 
+                        ? theme.colorScheme.onSurface.withValues(alpha: 0.6)
+                        : null,
+                  ),
+                ),
+                if (event.time != null)
+                  Text(
+                    event.time!,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                    ),
+                  ),
+              ],
             ),
           ),
           if (event.isCompleted)
@@ -132,5 +143,27 @@ class DateInfoCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  IconData _getEventIcon(CalendarEventType type) {
+    switch (type) {
+      case CalendarEventType.workout:
+        return Icons.fitness_center;
+      case CalendarEventType.restDay:
+        return Icons.spa;
+      case CalendarEventType.general:
+        return Icons.event;
+    }
+  }
+
+  Color _getEventColor(ThemeData theme, CalendarEventType type) {
+    switch (type) {
+      case CalendarEventType.workout:
+        return theme.colorScheme.primary;
+      case CalendarEventType.restDay:
+        return theme.colorScheme.secondary;
+      case CalendarEventType.general:
+        return theme.colorScheme.tertiary;
+    }
   }
 }

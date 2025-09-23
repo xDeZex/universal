@@ -20,7 +20,7 @@ void main() {
         expect(event.title, equals('Push Workout'));
         expect(event.date, equals(DateTime(2024, 1, 15)));
         expect(event.trainingSplitId, equals('split1'));
-        expect(event.type, equals(CalendarEventType.workout));
+        expect(event.type, equals(CalendarEventType.general));
         expect(event.isCompleted, isFalse);
         expect(event.description, isNull);
       });
