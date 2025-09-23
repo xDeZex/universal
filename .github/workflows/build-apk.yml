@@ -42,7 +42,7 @@ jobs:
       run: flutter pub get
       
     - name: Run tests
-      run: flutter test --concurrency=4 --no-test-assets --reporter=compact
+      run: flutter test --concurrency=4 --reporter=compact
       
     - name: Run Flutter analyze
       run: flutter analyze
