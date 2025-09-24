@@ -24,8 +24,8 @@ void main() {
     testWidgets('should show empty state for training events initially', (tester) async {
       await tester.pumpWidget(createWidget());
 
-      expect(find.text('Training Events'), findsOneWidget);
-      expect(find.text('No training events scheduled'), findsOneWidget);
+      // Calendar should be present even without training events
+      expect(find.text('Calendar'), findsOneWidget);
     });
 
     testWidgets('should open training split dialog when Create Training Split is tapped', (tester) async {
@@ -78,9 +78,9 @@ void main() {
     testWidgets('should maintain selected date state', (tester) async {
       await tester.pumpWidget(createWidget());
 
-      // We can verify the DateInfoCard is present
-      expect(find.text('Selected Date'), findsOneWidget);
-      expect(find.text('Day of Week'), findsOneWidget);
+      // Calendar should maintain state
+      expect(find.text('Calendar'), findsOneWidget);
+      expect(find.text('Quick Actions'), findsOneWidget);
     });
 
     testWidgets('should handle Today button correctly', (tester) async {
@@ -96,9 +96,9 @@ void main() {
       await tester.tap(find.text('Today'));
       await tester.pump();
 
-      // Should still show the date info card
-      expect(find.text('Selected Date'), findsOneWidget);
-      expect(find.text('Day of Week'), findsOneWidget);
+      // Should still show the calendar
+      expect(find.text('Calendar'), findsOneWidget);
+      expect(find.text('Quick Actions'), findsOneWidget);
     });
 
     testWidgets('should handle Tomorrow button correctly', (tester) async {
@@ -114,9 +114,9 @@ void main() {
       await tester.tap(find.text('Tomorrow'));
       await tester.pump();
 
-      // Should still show the date info card
-      expect(find.text('Selected Date'), findsOneWidget);
-      expect(find.text('Day of Week'), findsOneWidget);
+      // Should still show the calendar
+      expect(find.text('Calendar'), findsOneWidget);
+      expect(find.text('Quick Actions'), findsOneWidget);
     });
 
     group('Training Events Display', () {
@@ -125,15 +125,15 @@ void main() {
         // For now, we test the basic structure
         await tester.pumpWidget(createWidget());
 
-        expect(find.text('Training Events'), findsOneWidget);
-        expect(find.text('No training events scheduled'), findsOneWidget);
+        expect(find.text('Calendar'), findsOneWidget);
+        expect(find.text('Quick Actions'), findsOneWidget);
       });
 
       testWidgets('should handle Swedish characters in event titles', (tester) async {
         await tester.pumpWidget(createWidget());
 
         // Basic Swedish character support test
-        expect(find.text('Training Events'), findsOneWidget);
+        expect(find.text('Calendar'), findsOneWidget);
       });
     });
 
@@ -144,7 +144,7 @@ void main() {
         expect(find.byType(Scaffold), findsOneWidget);
         expect(find.byType(SingleChildScrollView), findsOneWidget);
         expect(find.byType(Column), findsWidgets);
-        expect(find.byType(Card), findsAtLeastNWidgets(2)); // DateInfoCard and QuickActionsCard
+        expect(find.byType(Card), findsAtLeastNWidgets(2)); // CalendarDateCard and QuickActionsCard
       });
 
       testWidgets('should have consistent spacing', (tester) async {
@@ -162,7 +162,6 @@ void main() {
         // Check for basic accessibility elements
         expect(find.text('Calendar'), findsOneWidget);
         expect(find.text('Quick Actions'), findsOneWidget);
-        expect(find.text('Training Events'), findsOneWidget);
       });
 
       testWidgets('should have accessible buttons', (tester) async {

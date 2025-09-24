@@ -13,7 +13,9 @@
       "Bash(find:*)",
       "Bash(flutter clean:*)",
       "Bash(.scriptstest_fast.bat)",
-      "Bash(scripts/test_fast.bat)"
+      "Bash(scripts/test_fast.bat)",
+      "Bash(findstr:*)",
+      "Bash(scriptstest_fast.bat)"
     ],
     "deny": [],
     "ask": [],

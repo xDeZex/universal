@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:universal/screens/calendar_screen.dart';
 import 'package:universal/widgets/calendar_date_card.dart';
-import 'package:universal/widgets/date_info_card.dart';
 import 'package:universal/widgets/monthly_calendar_view.dart';
 import 'package:universal/widgets/quick_actions_card.dart';
 
@@ -22,7 +21,6 @@ void main() {
       await tester.pumpWidget(createWidget());
 
       expect(find.byType(CalendarDateCard), findsOneWidget);
-      expect(find.byType(DateInfoCard), findsOneWidget);
       expect(find.byType(QuickActionsCard), findsOneWidget);
     });
 
@@ -57,12 +55,7 @@ void main() {
 
       // Verify the components are rendered
       expect(find.byType(CalendarDateCard), findsOneWidget);
-      expect(find.byType(DateInfoCard), findsOneWidget);
       expect(find.byType(QuickActionsCard), findsOneWidget);
-      
-      // Verify basic text elements are present
-      expect(find.text('Selected Date'), findsOneWidget);
-      expect(find.text('Day of Week'), findsOneWidget);
     });
 
     testWidgets('should have scrollable content', (tester) async {
@@ -191,7 +184,6 @@ void main() {
         // The screen should be initialized and functional
         expect(find.byType(CalendarScreen), findsOneWidget);
         expect(find.byType(CalendarDateCard), findsOneWidget);
-        expect(find.byType(DateInfoCard), findsOneWidget);
         expect(find.byType(QuickActionsCard), findsOneWidget);
       });
     });
@@ -207,7 +199,6 @@ void main() {
         
         // Verify main components are present
         expect(find.byType(CalendarDateCard), findsOneWidget);
-        expect(find.byType(DateInfoCard), findsOneWidget);
         expect(find.byType(QuickActionsCard), findsOneWidget);
       });
     });
@@ -237,7 +228,6 @@ void main() {
 
         // Verify all main components are present for screen readers
         expect(find.byType(CalendarDateCard), findsOneWidget);
-        expect(find.byType(DateInfoCard), findsOneWidget);
         expect(find.byType(QuickActionsCard), findsOneWidget);
         expect(find.text('Today'), findsOneWidget);
         expect(find.text('Tomorrow'), findsOneWidget);

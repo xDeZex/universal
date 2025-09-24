@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../widgets/calendar_date_card.dart';
-import '../widgets/date_info_card.dart';
 import '../widgets/quick_actions_card.dart';
 import '../widgets/create_training_split_dialog.dart';
 import '../widgets/add_event_dialog.dart';
@@ -37,11 +36,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
               onDateChanged: _updateSelectedDate,
               onDayTap: _showAddEventDialog,
               trainingSplitService: _trainingSplitService,
-            ),
-            const SizedBox(height: 24),
-            DateInfoCard(
-              selectedDate: _selectedDate,
-              events: _trainingSplitService.getEventsForDate(_selectedDate),
             ),
             const SizedBox(height: 24),
             QuickActionsCard(
