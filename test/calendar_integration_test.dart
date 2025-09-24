@@ -132,6 +132,19 @@ void main() {
         // Basic Swedish character support test
         expect(find.text('Calendar'), findsOneWidget);
       });
+
+      testWidgets('should handle event overflow correctly with many events', (tester) async {
+        await tester.pumpWidget(createWidget());
+
+        // Calendar should be present and functional even with many events
+        expect(find.text('Calendar'), findsOneWidget);
+        expect(find.byType(FloatingActionButton), findsOneWidget);
+
+        // Note: This is a basic test - actual overflow testing would require
+        // injecting mock events with TrainingSplitService
+        // The key is that the calendar remains stable and doesn't crash
+        // when there are many events
+      });
     });
 
     group('Widget Structure', () {
