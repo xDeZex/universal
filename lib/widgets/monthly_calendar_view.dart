@@ -37,24 +37,20 @@ class _MonthlyCalendarViewState extends State<MonthlyCalendarView> {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CalendarMonthHeader(
-              currentMonth: _currentMonth,
-              onPreviousMonth: _navigateToPreviousMonth,
-              onNextMonth: _navigateToNextMonth,
-            ),
-            const SizedBox(height: 16),
-            const CalendarWeekdayHeaders(),
-            const SizedBox(height: 8),
-            _buildCalendarGrid(context),
-          ],
+    return Column(
+      children: [
+        CalendarMonthHeader(
+          currentMonth: _currentMonth,
+          onPreviousMonth: _navigateToPreviousMonth,
+          onNextMonth: _navigateToNextMonth,
         ),
-      ),
+        const SizedBox(height: 16),
+        const CalendarWeekdayHeaders(),
+        const SizedBox(height: 8),
+        Expanded(
+          child: _buildCalendarGrid(context),
+        ),
+      ],
     );
   }
 
@@ -71,23 +67,17 @@ class _MonthlyCalendarViewState extends State<MonthlyCalendarView> {
   }
 
   Widget _buildCalendarGrid(BuildContext context) {
-    final weeksNeeded = CalendarUtils.calculateWeeksNeeded(_currentMonth);
     final totalCells = CalendarUtils.calculateTotalCells(_currentMonth);
 
-    return SizedBox(
-      height: weeksNeeded * 60.0, // Fixed height per week
-      child: GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 7,
-          childAspectRatio: 1.0,
-          mainAxisSpacing: 2,
-          crossAxisSpacing: 2,
-        ),
-        itemCount: totalCells,
-        itemBuilder: (context, index) => _buildCalendarCell(context, index),
+    return GridView.builder(
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 7,
+        childAspectRatio: 1.0,
+        mainAxisSpacing: 4,
+        crossAxisSpacing: 4,
       ),
+      itemCount: totalCells,
+      itemBuilder: (context, index) => _buildCalendarCell(context, index),
     );
   }
 

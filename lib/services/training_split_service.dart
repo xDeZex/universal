@@ -1,10 +1,46 @@
 import '../models/training_split.dart';
 import '../models/calendar_event.dart';
 import '../utils/id_generator.dart';
+import 'storage_service.dart';
 
 class TrainingSplitService {
   final Map<String, TrainingSplit> _trainingSplits = {};
   final Map<String, CalendarEvent> _calendarEvents = {};
+  bool _isInitialized = false;
+
+  Future<void> initialize() async {
+    if (_isInitialized) return;
+
+    try {
+      // Load training splits
+      final trainingSplits = await StorageService.loadTrainingSplits();
+      for (final split in trainingSplits) {
+        _trainingSplits[split.id] = split;
+      }
+
+      // Load calendar events
+      final calendarEvents = await StorageService.loadCalendarEvents();
+      for (final event in calendarEvents) {
+        _calendarEvents[event.id] = event;
+      }
+
+      _isInitialized = true;
+    } catch (e) {
+      // If loading fails, continue with empty data
+      _isInitialized = true;
+    }
+  }
+
+  Future<void> _saveData() async {
+    if (!_isInitialized) return;
+
+    try {
+      await StorageService.saveTrainingSplits(_trainingSplits.values.toList());
+      await StorageService.saveCalendarEvents(_calendarEvents.values.toList());
+    } catch (e) {
+      // Ignore save errors - will retry on next save
+    }
+  }
 
   List<CalendarEvent> generateCalendarEvents(TrainingSplit split) {
     final events = <CalendarEvent>[];
@@ -72,6 +108,7 @@ class TrainingSplitService {
 
   void addTrainingSplit(TrainingSplit split) {
     _trainingSplits[split.id] = split;
+    _saveData();
   }
 
   TrainingSplit? getTrainingSplit(String id) {
@@ -100,12 +137,16 @@ class TrainingSplitService {
         isActive: false,
       );
       _trainingSplits[id] = deactivatedSplit;
+      _saveData();
     }
   }
 
   void addEvents(List<CalendarEvent> events) {
     for (final event in events) {
       _calendarEvents[event.id] = event;
+    }
+    if (events.isNotEmpty) {
+      _saveData();
     }
   }
 
@@ -139,11 +180,13 @@ class TrainingSplitService {
     if (event != null) {
       final completedEvent = event.copyWith(isCompleted: true);
       _calendarEvents[eventId] = completedEvent;
+      _saveData();
     }
   }
 
   void clearAllData() {
     _trainingSplits.clear();
     _calendarEvents.clear();
+    _saveData();
   }
 }

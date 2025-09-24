@@ -37,10 +37,14 @@ class CalendarDayCell extends StatelessWidget {
           borderRadius: BorderRadius.circular(8),
         ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildDayNumber(theme),
             Expanded(
-              child: CalendarEventIndicators(events: events),
+              child: Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: CalendarEventIndicators(events: events),
+              ),
             ),
           ],
         ),
@@ -49,13 +53,16 @@ class CalendarDayCell extends StatelessWidget {
   }
 
   Widget _buildDayNumber(ThemeData theme) {
-    return Padding(
-      padding: const EdgeInsets.all(4.0),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(4.0, 2.0, 4.0, 0.0),
       child: Text(
         '${date.day}',
-        style: theme.textTheme.labelMedium?.copyWith(
+        textAlign: TextAlign.center,
+        style: theme.textTheme.labelSmall?.copyWith(
           fontWeight: isSelected || isToday ? FontWeight.bold : FontWeight.normal,
           color: _getDayNumberColor(theme),
+          fontSize: 11,
         ),
       ),
     );

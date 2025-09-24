@@ -142,9 +142,8 @@ void main() {
         await tester.pumpWidget(createWidget());
 
         expect(find.byType(Scaffold), findsOneWidget);
-        expect(find.byType(SingleChildScrollView), findsOneWidget);
         expect(find.byType(Column), findsWidgets);
-        expect(find.byType(Card), findsAtLeastNWidgets(2)); // CalendarDateCard and QuickActionsCard
+        expect(find.byType(Card), findsAtLeastNWidgets(1)); // QuickActionsCard
       });
 
       testWidgets('should have consistent spacing', (tester) async {

@@ -32,7 +32,6 @@ void main() {
       await tester.pumpWidget(createWidget(testDate));
 
       expect(find.byType(MonthlyCalendarView), findsOneWidget);
-      expect(find.byType(Card), findsOneWidget);
     });
 
     testWidgets('should display initial selected date', (tester) async {
@@ -95,23 +94,15 @@ void main() {
       }
     });
 
-    testWidgets('should maintain proper padding', (tester) async {
+    testWidgets('should maintain proper layout structure', (tester) async {
       await tester.pumpWidget(createWidget(testDate));
 
-      final paddings = find.descendant(
-        of: find.byType(Card),
-        matching: find.byType(Padding),
-      );
-      
-      // Should have at least one padding widget with 16.0 all around
+      // Check for Column layout structure
+      expect(find.byType(Column), findsAtLeast(1));
+
+      // Check that basic padding widgets exist in the layout
+      final paddings = find.byType(Padding);
       expect(paddings, findsAtLeast(1));
-      
-      // Find the specific padding we added
-      final mainPadding = tester.widgetList<Padding>(paddings)
-          .where((p) => p.padding == const EdgeInsets.all(16.0))
-          .first;
-      
-      expect(mainPadding.padding, equals(const EdgeInsets.all(16.0)));
     });
 
     testWidgets('should have consistent key parameter', (tester) async {
@@ -165,18 +156,14 @@ void main() {
     });
 
     group('widget composition', () {
-      testWidgets('should be properly structured with card and monthly calendar', (tester) async {
+      testWidgets('should be properly structured with monthly calendar', (tester) async {
         await tester.pumpWidget(createWidget(testDate));
 
         // Verify the widget hierarchy exists
-        expect(find.byType(Card), findsOneWidget);
         expect(find.byType(MonthlyCalendarView), findsOneWidget);
-        
-        // Verify there are padding widgets inside the card
-        final paddings = find.descendant(
-          of: find.byType(Card),
-          matching: find.byType(Padding),
-        );
+
+        // Verify there are padding widgets in the layout
+        final paddings = find.byType(Padding);
         expect(paddings, findsAtLeast(1));
       });
     });

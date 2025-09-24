@@ -22,29 +22,49 @@ class _CalendarScreenState extends State<CalendarScreen> {
   final TrainingSplitService _trainingSplitService = TrainingSplitService();
 
   @override
+  void initState() {
+    super.initState();
+    _initializeService();
+  }
+
+  void _initializeService() async {
+    await _trainingSplitService.initialize();
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: _buildAppBar(context),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildScreenTitle(context),
-            CalendarDateCard(
-              selectedDate: _selectedDate,
-              onDateChanged: _updateSelectedDate,
-              onDayTap: _showAddEventDialog,
-              trainingSplitService: _trainingSplitService,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: _buildScreenTitle(context),
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: CalendarDateCard(
+                selectedDate: _selectedDate,
+                onDateChanged: _updateSelectedDate,
+                onDayTap: _showAddEventDialog,
+                trainingSplitService: _trainingSplitService,
+              ),
             ),
-            const SizedBox(height: 24),
-            QuickActionsCard(
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: QuickActionsCard(
               onTodayPressed: _selectToday,
               onTomorrowPressed: _selectTomorrow,
               onCreateSplitPressed: _showCreateSplitDialog,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
