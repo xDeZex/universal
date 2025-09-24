@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -83,7 +86,6 @@ jobs:
           **Branch**: ${{ github.ref_name }}
           **Build Time**: ${{ steps.commit.outputs.timestamp }}
         prerelease: false
-        make_latest: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
