@@ -63,7 +63,30 @@ jobs:
       run: |
         echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
         echo "message=$(git log --format=%B -n 1 HEAD | head -1)" >> $GITHUB_OUTPUT
-        
+        echo "timestamp=$(date +'%Y%m%d_%H%M%S')" >> $GITHUB_OUTPUT
+
+    - name: Create release on main branch
+      if: github.ref == 'refs/heads/main'
+      uses: softprops/action-gh-release@v1
+      with:
+        files: build/app/outputs/flutter-apk/app-release.apk
+        tag_name: "build-${{ steps.commit.outputs.timestamp }}-${{ steps.commit.outputs.sha }}"
+        name: "Build ${{ steps.commit.outputs.timestamp }}"
+        body: |
+          ## Automated Build
+          ${{ steps.commit.outputs.message }}
+
+          ## Download
+          - **APK**: app-release.apk
+
+          **Commit**: ${{ steps.commit.outputs.sha }}
+          **Branch**: ${{ github.ref_name }}
+          **Build Time**: ${{ steps.commit.outputs.timestamp }}
+        prerelease: false
+        make_latest: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     - name: Create release on tag
       if: startsWith(github.ref, 'refs/tags/')
       uses: softprops/action-gh-release@v1
@@ -73,10 +96,10 @@ jobs:
         body: |
           ## Changes
           ${{ steps.commit.outputs.message }}
-          
+
           ## Download
           - **APK**: app-release.apk
-          
+
           Built from commit: ${{ steps.commit.outputs.sha }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
