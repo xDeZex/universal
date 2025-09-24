@@ -8,11 +8,13 @@ class MonthlyCalendarView extends StatefulWidget {
     required this.selectedDate,
     required this.onDateChanged,
     this.onDayTap,
+    this.trainingSplitService,
   });
 
   final DateTime selectedDate;
   final ValueChanged<DateTime> onDateChanged;
   final ValueChanged<DateTime>? onDayTap;
+  final TrainingSplitService? trainingSplitService;
 
   @override
   State<MonthlyCalendarView> createState() => _MonthlyCalendarViewState();
@@ -20,12 +22,13 @@ class MonthlyCalendarView extends StatefulWidget {
 
 class _MonthlyCalendarViewState extends State<MonthlyCalendarView> {
   late DateTime _currentMonth;
-  final TrainingSplitService _trainingSplitService = TrainingSplitService();
+  late TrainingSplitService _trainingSplitService;
 
   @override
   void initState() {
     super.initState();
     _currentMonth = DateTime(widget.selectedDate.year, widget.selectedDate.month);
+    _trainingSplitService = widget.trainingSplitService ?? TrainingSplitService();
   }
 
   @override

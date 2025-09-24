@@ -36,6 +36,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
               selectedDate: _selectedDate,
               onDateChanged: _updateSelectedDate,
               onDayTap: _showAddEventDialog,
+              trainingSplitService: _trainingSplitService,
             ),
             const SizedBox(height: 24),
             DateInfoCard(
