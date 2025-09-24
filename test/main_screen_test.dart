@@ -68,7 +68,7 @@ void main() {
       
       // Should now show the calendar screen content
       expect(find.text('Calendar'), findsAtLeast(1)); // Title + bottom nav
-      expect(find.text('Quick Actions'), findsOneWidget);
+      expect(find.byType(FloatingActionButton), findsOneWidget);
       
       // Go back to first tab
       await tester.tap(find.text('Shopping Lists').last);

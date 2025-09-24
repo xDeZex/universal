@@ -72,7 +72,7 @@ class _MonthlyCalendarViewState extends State<MonthlyCalendarView> {
     return GridView.builder(
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 7,
-        childAspectRatio: 1.0,
+        childAspectRatio: 0.6,
         mainAxisSpacing: 4,
         crossAxisSpacing: 4,
       ),

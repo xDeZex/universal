@@ -41,30 +41,25 @@ class _CalendarScreenState extends State<CalendarScreen> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: _buildScreenTitle(context),
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              child: CalendarDateCard(
-                selectedDate: _selectedDate,
-                onDateChanged: _updateSelectedDate,
-                onDayTap: _showAddEventDialog,
-                trainingSplitService: _trainingSplitService,
-              ),
+          if (!widget.showAppBar)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 8.0),
+              child: _buildScreenTitle(context),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: QuickActionsCard(
-              onTodayPressed: _selectToday,
-              onTomorrowPressed: _selectTomorrow,
-              onCreateSplitPressed: _showCreateSplitDialog,
+          Expanded(
+            child: CalendarDateCard(
+              selectedDate: _selectedDate,
+              onDateChanged: _updateSelectedDate,
+              onDayTap: _showAddEventDialog,
+              trainingSplitService: _trainingSplitService,
             ),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showCreateSplitDialog,
+        child: const Icon(Icons.add),
+        tooltip: 'Create Training Split',
       ),
     );
   }
@@ -81,15 +76,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   Widget _buildScreenTitle(BuildContext context) {
     if (widget.showAppBar) return const SizedBox.shrink();
-    
+
     final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 24.0),
-      child: Text(
-        'Calendar',
-        style: theme.textTheme.headlineMedium?.copyWith(
-          fontWeight: FontWeight.bold,
-        ),
+    return Text(
+      'Calendar',
+      style: theme.textTheme.headlineMedium?.copyWith(
+        fontWeight: FontWeight.bold,
       ),
     );
   }

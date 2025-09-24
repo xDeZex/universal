@@ -21,7 +21,7 @@ void main() {
       await tester.pumpWidget(createWidget());
 
       expect(find.byType(CalendarDateCard), findsOneWidget);
-      expect(find.byType(QuickActionsCard), findsOneWidget);
+      expect(find.byType(FloatingActionButton), findsOneWidget);
     });
 
     testWidgets('should show app bar when showAppBar is true', (tester) async {
@@ -55,7 +55,7 @@ void main() {
 
       // Verify the components are rendered
       expect(find.byType(CalendarDateCard), findsOneWidget);
-      expect(find.byType(QuickActionsCard), findsOneWidget);
+      expect(find.byType(FloatingActionButton), findsOneWidget);
     });
 
     testWidgets('should have main column layout', (tester) async {
@@ -92,19 +92,16 @@ void main() {
     });
 
     group('button interaction', () {
-      testWidgets('should have functional Today and Tomorrow buttons', (tester) async {
+      testWidgets('should have functional Create Training Split button', (tester) async {
         await tester.pumpWidget(createWidget());
 
-        // Verify buttons exist
-        expect(find.text('Today'), findsOneWidget);
-        expect(find.text('Tomorrow'), findsOneWidget);
-        
-        // The buttons should be tappable (test framework limitation - can't easily test state changes)
-        final todayButton = find.text('Today');
-        final tomorrowButton = find.text('Tomorrow');
-        
-        expect(todayButton, findsOneWidget);
-        expect(tomorrowButton, findsOneWidget);
+        // Verify floating action button exists
+        expect(find.byType(FloatingActionButton), findsOneWidget);
+        expect(find.byIcon(Icons.add), findsOneWidget);
+
+        // Button should have proper tooltip
+        final fab = tester.widget<FloatingActionButton>(find.byType(FloatingActionButton));
+        expect(fab.tooltip, equals('Create Training Split'));
       });
     });
 
@@ -162,10 +159,10 @@ void main() {
 
         expect(titlePaddings, findsAtLeast(1));
         
-        // Verify that at least one padding has the expected bottom padding
+        // Verify that at least one padding has the expected padding for screen title area
         final hasTitlePadding = tester.widgetList<Padding>(titlePaddings)
-            .any((p) => p.padding == const EdgeInsets.only(bottom: 24.0));
-        
+            .any((p) => p.padding == const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 8.0));
+
         expect(hasTitlePadding, isTrue);
       });
     });
@@ -177,7 +174,7 @@ void main() {
         // The screen should be initialized and functional
         expect(find.byType(CalendarScreen), findsOneWidget);
         expect(find.byType(CalendarDateCard), findsOneWidget);
-        expect(find.byType(QuickActionsCard), findsOneWidget);
+        expect(find.byType(FloatingActionButton), findsOneWidget);
       });
     });
 
@@ -191,7 +188,7 @@ void main() {
         
         // Verify main components are present
         expect(find.byType(CalendarDateCard), findsOneWidget);
-        expect(find.byType(QuickActionsCard), findsOneWidget);
+        expect(find.byType(FloatingActionButton), findsOneWidget);
       });
     });
 
@@ -202,7 +199,7 @@ void main() {
         // Verify components exist before rebuild
         expect(find.byType(CalendarScreen), findsOneWidget);
         expect(find.byType(CalendarDateCard), findsOneWidget);
-        expect(find.byType(QuickActionsCard), findsOneWidget);
+        expect(find.byType(FloatingActionButton), findsOneWidget);
 
         // Rebuild the widget
         await tester.pumpWidget(createWidget());
@@ -210,7 +207,7 @@ void main() {
         // The widget should still be functional after rebuild
         expect(find.byType(CalendarScreen), findsOneWidget);
         expect(find.byType(CalendarDateCard), findsOneWidget);
-        expect(find.byType(QuickActionsCard), findsOneWidget);
+        expect(find.byType(FloatingActionButton), findsOneWidget);
       });
     });
 
@@ -220,9 +217,8 @@ void main() {
 
         // Verify all main components are present for screen readers
         expect(find.byType(CalendarDateCard), findsOneWidget);
-        expect(find.byType(QuickActionsCard), findsOneWidget);
-        expect(find.text('Today'), findsOneWidget);
-        expect(find.text('Tomorrow'), findsOneWidget);
+        expect(find.byType(FloatingActionButton), findsOneWidget);
+        expect(find.text('Calendar'), findsOneWidget);
       });
     });
 

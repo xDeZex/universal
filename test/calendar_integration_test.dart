@@ -14,10 +14,10 @@ void main() {
       );
     }
 
-    testWidgets('should show Create Training Split button in quick actions', (tester) async {
+    testWidgets('should show Create Training Split floating action button', (tester) async {
       await tester.pumpWidget(createWidget());
 
-      expect(find.text('Create Training Split'), findsOneWidget);
+      expect(find.byType(FloatingActionButton), findsOneWidget);
       expect(find.byIcon(Icons.add), findsOneWidget);
     });
 
@@ -38,10 +38,10 @@ void main() {
       
       await tester.pumpWidget(createWidget());
 
-      await tester.tap(find.text('Create Training Split'));
+      await tester.tap(find.byType(FloatingActionButton));
       await tester.pumpAndSettle();
 
-      expect(find.text('Create Training Split'), findsNWidgets(2)); // One in button, one in dialog title
+      expect(find.text('Create Training Split'), findsOneWidget); // Dialog title
       expect(find.text('Split Name'), findsOneWidget);
       expect(find.text('Workouts'), findsOneWidget);
     });
@@ -57,7 +57,7 @@ void main() {
       await tester.pumpWidget(createWidget());
 
       // Open dialog
-      await tester.tap(find.text('Create Training Split'));
+      await tester.tap(find.byType(FloatingActionButton));
       await tester.pumpAndSettle();
 
       // Fill in the form
@@ -80,43 +80,40 @@ void main() {
 
       // Calendar should maintain state
       expect(find.text('Calendar'), findsOneWidget);
-      expect(find.text('Quick Actions'), findsOneWidget);
+      expect(find.byType(FloatingActionButton), findsOneWidget);
     });
 
-    testWidgets('should handle Today button correctly', (tester) async {
+    testWidgets('should handle calendar interactions correctly', (tester) async {
       tester.view.physicalSize = const Size(1200, 1000);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() {
         tester.view.resetPhysicalSize();
         tester.view.resetDevicePixelRatio();
       });
-      
+
       await tester.pumpWidget(createWidget());
 
-      await tester.tap(find.text('Today'));
-      await tester.pump();
-
-      // Should still show the calendar
+      // Calendar should remain functional
       expect(find.text('Calendar'), findsOneWidget);
-      expect(find.text('Quick Actions'), findsOneWidget);
+      expect(find.byType(FloatingActionButton), findsOneWidget);
     });
 
-    testWidgets('should handle Tomorrow button correctly', (tester) async {
+    testWidgets('should handle floating action button correctly', (tester) async {
       tester.view.physicalSize = const Size(1200, 1000);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() {
         tester.view.resetPhysicalSize();
         tester.view.resetDevicePixelRatio();
       });
-      
+
       await tester.pumpWidget(createWidget());
 
-      await tester.tap(find.text('Tomorrow'));
-      await tester.pump();
+      await tester.tap(find.byType(FloatingActionButton));
+      await tester.pumpAndSettle();
 
-      // Should still show the calendar
-      expect(find.text('Calendar'), findsOneWidget);
-      expect(find.text('Quick Actions'), findsOneWidget);
+      // Should open the training split dialog
+      expect(find.text('Create Training Split'), findsOneWidget);
+      expect(find.text('Split Name'), findsOneWidget);
     });
 
     group('Training Events Display', () {
@@ -126,7 +123,7 @@ void main() {
         await tester.pumpWidget(createWidget());
 
         expect(find.text('Calendar'), findsOneWidget);
-        expect(find.text('Quick Actions'), findsOneWidget);
+        expect(find.byType(FloatingActionButton), findsOneWidget);
       });
 
       testWidgets('should handle Swedish characters in event titles', (tester) async {
@@ -143,7 +140,7 @@ void main() {
 
         expect(find.byType(Scaffold), findsOneWidget);
         expect(find.byType(Column), findsWidgets);
-        expect(find.byType(Card), findsAtLeastNWidgets(1)); // QuickActionsCard
+        expect(find.byType(FloatingActionButton), findsOneWidget);
       });
 
       testWidgets('should have consistent spacing', (tester) async {
@@ -160,15 +157,16 @@ void main() {
 
         // Check for basic accessibility elements
         expect(find.text('Calendar'), findsOneWidget);
-        expect(find.text('Quick Actions'), findsOneWidget);
+        expect(find.byType(FloatingActionButton), findsOneWidget);
       });
 
       testWidgets('should have accessible buttons', (tester) async {
         await tester.pumpWidget(createWidget());
 
-        expect(find.widgetWithText(ElevatedButton, 'Today'), findsOneWidget);
-        expect(find.widgetWithText(ElevatedButton, 'Tomorrow'), findsOneWidget);
-        expect(find.text('Create Training Split'), findsOneWidget); // Text is in ElevatedButton.icon
+        expect(find.byType(FloatingActionButton), findsOneWidget);
+
+        final fab = tester.widget<FloatingActionButton>(find.byType(FloatingActionButton));
+        expect(fab.tooltip, equals('Create Training Split'));
       });
     });
   });
