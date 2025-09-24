@@ -16,8 +16,6 @@ class CalendarEventIndicators extends StatelessWidget {
     }
 
     final theme = Theme.of(context);
-    final displayEvents = events.take(5).toList(); // Show more events with taller calendar
-    final hasMoreEvents = events.length > 5;
 
     return LayoutBuilder(
       builder: (context, constraints) {

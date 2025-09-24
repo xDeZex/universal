@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../models/calendar_event.dart';
 import '../services/training_split_service.dart';
 import '../utils/calendar_utils.dart';
 import 'calendar_month_header.dart';

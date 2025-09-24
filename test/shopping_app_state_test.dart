@@ -1298,11 +1298,12 @@ void main() {
         final workoutId = appState.workoutLists[0].id;
         
         // Add exercise history with empty weight history
+        final testDate = DateTime.now();
         appState.addOrUpdateExerciseHistory('Push Ups', WeightEntry(
-          date: DateTime.now(),
+          date: testDate,
           weight: '80kg',
         ));
-        appState.deleteWeightFromExerciseHistory('Push Ups', DateTime.now());
+        appState.deleteWeightFromExerciseHistory('Push Ups', testDate);
         
         final recommendations = appState.getExerciseNamesWithLogsNotInWorkout(workoutId);
         
@@ -1443,12 +1444,13 @@ void main() {
         final emptyHistory = appState.getExerciseHistory('Empty Exercise');
         if (emptyHistory == null) {
           // Create exercise history with empty weight history
+          final testDate = DateTime.now();
           appState.addOrUpdateExerciseHistory('Empty Exercise', WeightEntry(
-            date: DateTime.now(),
+            date: testDate,
             weight: '80kg',
           ));
           // Then remove the weight entry
-          appState.deleteWeightFromExerciseHistory('Empty Exercise', DateTime.now());
+          appState.deleteWeightFromExerciseHistory('Empty Exercise', testDate);
         }
         
         final recommendations = appState.getExerciseNamesWithLogsNotInWorkout(workoutId);

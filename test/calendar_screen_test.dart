@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:universal/screens/calendar_screen.dart';
 import 'package:universal/widgets/calendar_date_card.dart';
 import 'package:universal/widgets/monthly_calendar_view.dart';
-import 'package:universal/widgets/quick_actions_card.dart';
 
 void main() {
   setUpAll(() {

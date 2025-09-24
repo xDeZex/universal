@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../widgets/calendar_date_card.dart';
-import '../widgets/quick_actions_card.dart';
 import '../widgets/create_training_split_dialog.dart';
 import '../widgets/add_event_dialog.dart';
 import '../services/training_split_service.dart';
@@ -58,8 +57,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showCreateSplitDialog,
-        child: const Icon(Icons.add),
         tooltip: 'Create Training Split',
+        child: const Icon(Icons.add),
       ),
     );
   }
@@ -94,17 +93,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
     }
   }
 
-  void _selectToday() {
-    setState(() {
-      _selectedDate = DateTime.now();
-    });
-  }
-
-  void _selectTomorrow() {
-    setState(() {
-      _selectedDate = DateTime.now().add(const Duration(days: 1));
-    });
-  }
 
   void _showCreateSplitDialog() {
     showDialog(
