@@ -103,8 +103,14 @@ class DateNavigationService extends ChangeNotifier {
     final firstDay = firstDayOfCurrentMonth;
     final lastDay = lastDayOfCurrentMonth;
     final firstWeekday = firstDay.weekday % 7; // 0 = Monday, 6 = Sunday
-    final startDate = firstDay.subtract(Duration(days: firstWeekday));
-    final cellDate = startDate.add(Duration(days: cellIndex));
+
+    // Use date arithmetic instead of duration arithmetic to avoid DST issues
+    final startYear = firstDay.year;
+    final startMonth = firstDay.month;
+    final startDayOfMonth = firstDay.day - firstWeekday;
+
+    // Calculate the actual date by adding days to the start day
+    final cellDate = DateTime(startYear, startMonth, startDayOfMonth + cellIndex);
 
     // Only return dates that are in the current month
     if (cellDate.isBefore(firstDay) || cellDate.isAfter(lastDay)) {
