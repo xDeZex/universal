@@ -30,6 +30,33 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
   void _loadEvents() {
     setState(() {
       _events = widget.trainingSplitService.getEventsForDate(widget.selectedDate);
+      _sortEvents();
+    });
+  }
+
+  void _sortEvents() {
+    _events.sort((a, b) {
+      // All-day events first
+      if (a.isAllDay && !b.isAllDay) return -1;
+      if (!a.isAllDay && b.isAllDay) return 1;
+
+      // If both are all-day events, sort by title
+      if (a.isAllDay && b.isAllDay) {
+        return a.title.compareTo(b.title);
+      }
+
+      // For timed events, sort by start time
+      final aTime = a.startTime ?? TimeOfDay(hour: 0, minute: 0);
+      final bTime = b.startTime ?? TimeOfDay(hour: 0, minute: 0);
+
+      // Convert to minutes for easy comparison
+      final aMinutes = aTime.hour * 60 + aTime.minute;
+      final bMinutes = bTime.hour * 60 + bTime.minute;
+
+      final timeComparison = aMinutes.compareTo(bMinutes);
+
+      // If times are the same, sort by title
+      return timeComparison != 0 ? timeComparison : a.title.compareTo(b.title);
     });
   }
 
