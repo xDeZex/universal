@@ -116,13 +116,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
       appBar: AppBar(
         title: Text('${DateFormatter.formatWeekday(widget.selectedDate)}, ${DateFormatter.formatDate(widget.selectedDate)}'),
         backgroundColor: theme.colorScheme.surface,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: _showAddEventDialog,
-            tooltip: 'Add Event',
-          ),
-        ],
+        automaticallyImplyLeading: false,
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
