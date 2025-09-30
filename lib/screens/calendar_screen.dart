@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import '../widgets/calendar_date_card.dart';
 import '../widgets/create_training_split_dialog.dart';
-import '../widgets/add_event_dialog.dart';
 import '../services/training_split_service.dart';
 import '../models/training_split.dart';
-import '../models/calendar_event.dart';
 import '../utils/date_formatter.dart';
+import 'day_detail_screen.dart';
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key, this.showAppBar = false});
@@ -49,7 +48,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
             child: CalendarDateCard(
               selectedDate: _selectedDate,
               onDateChanged: _updateSelectedDate,
-              onDayTap: _showAddEventDialog,
+              onDayTap: _showDayDetail,
               trainingSplitService: _trainingSplitService,
             ),
           ),
@@ -103,12 +102,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
     );
   }
 
-  void _showAddEventDialog(DateTime date) {
-    showDialog(
-      context: context,
-      builder: (context) => AddEventDialog(
-        selectedDate: date,
-        onEventCreated: _handleEventCreated,
+
+  void _showDayDetail(DateTime date) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => DayDetailScreen(
+          selectedDate: date,
+          trainingSplitService: _trainingSplitService,
+        ),
       ),
     );
   }
@@ -131,23 +132,4 @@ class _CalendarScreenState extends State<CalendarScreen> {
     );
   }
 
-  void _handleEventCreated(CalendarEvent event) {
-    _trainingSplitService.addEvents([event]);
-    
-    setState(() {
-      // Trigger rebuild to show new event
-      // Update selected date to the event date to show it immediately
-      _selectedDate = event.date;
-    });
-    
-    // Show success message
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${event.title} added successfully!'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    }
-  }
 }

@@ -97,8 +97,11 @@ class _MonthlyCalendarViewState extends State<MonthlyCalendarView> {
       events: events,
       isSelected: isSelected,
       isToday: isToday,
-      onTap: () => widget.onDateChanged(date),
-      onLongPress: widget.onDayTap != null ? () => widget.onDayTap!(date) : null,
+      onTap: widget.onDayTap != null ? () {
+        widget.onDateChanged(date);
+        widget.onDayTap!(date);
+      } : () => widget.onDateChanged(date),
+      onLongPress: null,
     );
   }
 }

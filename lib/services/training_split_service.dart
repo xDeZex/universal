@@ -150,6 +150,11 @@ class TrainingSplitService {
     }
   }
 
+  void addCalendarEvent(CalendarEvent event) {
+    _calendarEvents[event.id] = event;
+    _saveData();
+  }
+
   List<CalendarEvent> getEventsForDate(DateTime date) {
     return _calendarEvents.values
         .where((event) => event.isOnDate(date))
@@ -182,6 +187,20 @@ class TrainingSplitService {
       _calendarEvents[eventId] = completedEvent;
       _saveData();
     }
+  }
+
+  void toggleEventCompletion(String eventId) {
+    final event = _calendarEvents[eventId];
+    if (event != null) {
+      final toggledEvent = event.copyWith(isCompleted: !event.isCompleted);
+      _calendarEvents[eventId] = toggledEvent;
+      _saveData();
+    }
+  }
+
+  void deleteEvent(String eventId) {
+    _calendarEvents.remove(eventId);
+    _saveData();
   }
 
   void clearAllData() {
