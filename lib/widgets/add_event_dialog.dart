@@ -19,14 +19,15 @@ class _AddEventDialogState extends State<AddEventDialog> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final _timeController = TextEditingController();
   CalendarEventType _selectedType = CalendarEventType.general;
+  bool _isAllDay = true;
+  TimeOfDay? _startTime;
+  Duration? _duration;
 
   @override
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
-    _timeController.dispose();
     super.dispose();
   }
 
@@ -92,17 +93,25 @@ class _AddEventDialogState extends State<AddEventDialog> {
                 },
               ),
               const SizedBox(height: 16),
-              
-              // Time (optional)
-              TextFormField(
-                controller: _timeController,
-                decoration: const InputDecoration(
-                  labelText: 'Time (Optional)',
-                  hintText: 'e.g., 2:30 PM, 14:30',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.access_time),
-                ),
+
+              // All day toggle
+              CheckboxListTile(
+                title: const Text('All day'),
+                value: _isAllDay,
+                onChanged: (bool? value) {
+                  setState(() {
+                    _isAllDay = value ?? true;
+                    if (_isAllDay) {
+                      _startTime = null;
+                      _duration = null;
+                    }
+                  });
+                },
+                contentPadding: EdgeInsets.zero,
               ),
+
+              // Time selection (only shown if not all day)
+              if (!_isAllDay) ...[const SizedBox(height: 16), _buildTimeSection()],
               const SizedBox(height: 16),
               
               // Description (optional)
@@ -184,17 +193,143 @@ class _AddEventDialogState extends State<AddEventDialog> {
       date: widget.selectedDate,
       trainingSplitId: 'user_created', // Special ID for user-created events
       type: _selectedType,
-      description: _descriptionController.text.trim().isNotEmpty 
-          ? _descriptionController.text.trim() 
+      description: _descriptionController.text.trim().isNotEmpty
+          ? _descriptionController.text.trim()
           : null,
-      time: _timeController.text.trim().isNotEmpty 
-          ? _timeController.text.trim() 
-          : null,
+      startTime: _startTime,
+      duration: _duration,
+      isAllDay: _isAllDay,
       isCompleted: false,
     );
 
     widget.onEventCreated(event);
     Navigator.of(context).pop();
+  }
+
+  Widget _buildTimeSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Start time
+        InkWell(
+          onTap: _selectStartTime,
+          child: InputDecorator(
+            decoration: const InputDecoration(
+              labelText: 'Start Time',
+              border: OutlineInputBorder(),
+              prefixIcon: Icon(Icons.access_time),
+            ),
+            child: Text(
+              _startTime != null ? _formatTimeOfDay(_startTime!) : 'Select time',
+              style: TextStyle(
+                color: _startTime != null ? null : Theme.of(context).hintColor,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // Duration selection
+        InkWell(
+          onTap: _selectDuration,
+          child: InputDecorator(
+            decoration: const InputDecoration(
+              labelText: 'Duration (Optional)',
+              border: OutlineInputBorder(),
+              prefixIcon: Icon(Icons.timer),
+            ),
+            child: Text(
+              _duration != null ? _formatDuration(_duration!) : 'No end time',
+              style: TextStyle(
+                color: _duration != null ? null : Theme.of(context).hintColor,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _selectStartTime() async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: _startTime ?? TimeOfDay.now(),
+      builder: (context, child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null) {
+      setState(() {
+        _startTime = picked;
+      });
+    }
+  }
+
+  Future<void> _selectDuration() async {
+    final List<Duration> commonDurations = [
+      const Duration(minutes: 15),
+      const Duration(minutes: 30),
+      const Duration(minutes: 45),
+      const Duration(hours: 1),
+      const Duration(hours: 1, minutes: 30),
+      const Duration(hours: 2),
+      const Duration(hours: 3),
+      const Duration(hours: 4),
+    ];
+
+    final Duration? picked = await showDialog<Duration>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Select Duration'),
+        content: SizedBox(
+          width: double.maxFinite,
+          height: 400, // Constrain height to prevent overflow
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  title: const Text('No end time'),
+                  onTap: () => Navigator.of(context).pop(null),
+                  selected: _duration == null,
+                ),
+                const Divider(),
+                ...commonDurations.map((duration) => ListTile(
+                  title: Text(_formatDuration(duration)),
+                  onTap: () => Navigator.of(context).pop(duration),
+                  selected: _duration == duration,
+                )),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    setState(() {
+      _duration = picked;
+    });
+  }
+
+  String _formatTimeOfDay(TimeOfDay time) {
+    final hour = time.hour.toString().padLeft(2, '0');
+    final minute = time.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
+  }
+
+  String _formatDuration(Duration duration) {
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes % 60;
+    if (hours > 0 && minutes > 0) {
+      return '${hours}h ${minutes}m';
+    } else if (hours > 0) {
+      return '${hours}h';
+    } else {
+      return '${minutes}m';
+    }
   }
 
   String _generateEventId() {
