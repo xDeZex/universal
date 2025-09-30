@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/training_split_service.dart';
+import '../services/date_navigation_service.dart';
+import '../services/calendar_event_service.dart';
 import '../utils/calendar_utils.dart';
 import 'calendar_month_header.dart';
 import 'calendar_weekday_headers.dart';
@@ -12,26 +14,60 @@ class MonthlyCalendarView extends StatefulWidget {
     required this.onDateChanged,
     this.onDayTap,
     this.trainingSplitService,
+    this.calendarEventService,
   });
 
   final DateTime selectedDate;
   final ValueChanged<DateTime> onDateChanged;
   final ValueChanged<DateTime>? onDayTap;
   final TrainingSplitService? trainingSplitService;
+  final CalendarEventService? calendarEventService;
 
   @override
   State<MonthlyCalendarView> createState() => _MonthlyCalendarViewState();
 }
 
 class _MonthlyCalendarViewState extends State<MonthlyCalendarView> {
-  late DateTime _currentMonth;
+  late DateNavigationService _dateNavigationService;
   late TrainingSplitService _trainingSplitService;
+  CalendarEventService? _calendarEventService;
 
   @override
   void initState() {
     super.initState();
-    _currentMonth = DateTime(widget.selectedDate.year, widget.selectedDate.month);
+    _initializeServices();
+  }
+
+  void _initializeServices() {
+    _dateNavigationService = DateNavigationService(initialDate: widget.selectedDate);
     _trainingSplitService = widget.trainingSplitService ?? TrainingSplitService();
+    _calendarEventService = widget.calendarEventService;
+
+    // Listen to navigation changes to trigger rebuilds
+    _dateNavigationService.addListener(_onNavigationChanged);
+
+    // Listen to calendar event changes if service is provided
+    _calendarEventService?.addListener(_onEventChanged);
+  }
+
+  @override
+  void dispose() {
+    _dateNavigationService.removeListener(_onNavigationChanged);
+    _calendarEventService?.removeListener(_onEventChanged);
+    _dateNavigationService.dispose();
+    super.dispose();
+  }
+
+  void _onNavigationChanged() {
+    setState(() {
+      // Trigger rebuild when navigation state changes
+    });
+  }
+
+  void _onEventChanged() {
+    setState(() {
+      // Trigger rebuild when events change
+    });
   }
 
   @override
@@ -39,7 +75,7 @@ class _MonthlyCalendarViewState extends State<MonthlyCalendarView> {
     return Column(
       children: [
         CalendarMonthHeader(
-          currentMonth: _currentMonth,
+          currentMonth: _dateNavigationService.currentMonth,
           onPreviousMonth: _navigateToPreviousMonth,
           onNextMonth: _navigateToNextMonth,
         ),
@@ -54,19 +90,15 @@ class _MonthlyCalendarViewState extends State<MonthlyCalendarView> {
   }
 
   void _navigateToPreviousMonth() {
-    setState(() {
-      _currentMonth = DateTime(_currentMonth.year, _currentMonth.month - 1);
-    });
+    _dateNavigationService.navigateToPreviousMonth();
   }
 
   void _navigateToNextMonth() {
-    setState(() {
-      _currentMonth = DateTime(_currentMonth.year, _currentMonth.month + 1);
-    });
+    _dateNavigationService.navigateToNextMonth();
   }
 
   Widget _buildCalendarGrid(BuildContext context) {
-    final totalCells = CalendarUtils.calculateTotalCells(_currentMonth);
+    final totalCells = _dateNavigationService.totalCalendarCells;
 
     return GridView.builder(
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -81,16 +113,18 @@ class _MonthlyCalendarViewState extends State<MonthlyCalendarView> {
   }
 
   Widget _buildCalendarCell(BuildContext context, int index) {
-    final date = CalendarUtils.calculateDateForCell(_currentMonth, index);
+    final date = _dateNavigationService.getDateForCell(index);
 
     // Return empty cell if no date for this position
     if (date == null) {
       return const SizedBox.shrink();
     }
 
-    final events = _trainingSplitService.getEventsForDate(date);
-    final isSelected = CalendarUtils.isSameDay(date, widget.selectedDate);
-    final isToday = CalendarUtils.isToday(date);
+    // Use CalendarEventService if available, otherwise fall back to TrainingSplitService
+    final events = _calendarEventService?.getEventsForDate(date) ??
+                  _trainingSplitService.getEventsForDate(date);
+    final isSelected = _dateNavigationService.isSelectedDate(date);
+    final isToday = _dateNavigationService.isToday(date);
 
     return CalendarDayCell(
       date: date,

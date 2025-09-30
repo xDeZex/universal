@@ -15,7 +15,8 @@
       "Bash(.scriptstest_fast.bat)",
       "Bash(scripts/test_fast.bat)",
       "Bash(findstr:*)",
-      "Bash(scriptstest_fast.bat)"
+      "Bash(scriptstest_fast.bat)",
+      "Bash(dart:*)"
     ],
     "deny": [],
     "ask": [],
