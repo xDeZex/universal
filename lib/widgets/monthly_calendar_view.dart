@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../services/training_split_service.dart';
 import '../services/date_navigation_service.dart';
 import '../services/calendar_event_service.dart';
-import '../utils/calendar_utils.dart';
 import 'calendar_month_header.dart';
 import 'calendar_weekday_headers.dart';
 import 'calendar_day_cell.dart';

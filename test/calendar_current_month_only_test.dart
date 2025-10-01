@@ -130,7 +130,6 @@ void main() {
       // Pattern should be: 6 nulls, then 1-30, then 6 nulls
       final expectedNullsAtStart = 6;
       final expectedDays = 30;
-      final expectedNullsAtEnd = 42 - expectedNullsAtStart - expectedDays;
 
       expect(pattern.length, equals(42));
 

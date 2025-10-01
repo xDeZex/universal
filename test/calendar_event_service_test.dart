@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:universal/services/calendar_event_service.dart';
 import 'package:universal/models/calendar_event.dart';
