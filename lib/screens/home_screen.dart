@@ -1,0 +1,202 @@
+import 'package:flutter/material.dart';
+
+import '../models/checklist.dart';
+import '../services/storage_service.dart';
+import '../widgets/checklist_tile.dart';
+import 'checklist_screen.dart';
+
+class HomeScreen extends StatefulWidget {
+  final List<Checklist>? initialChecklists;
+
+  const HomeScreen({super.key, this.initialChecklists});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final StorageService _storage = StorageService();
+  List<Checklist> _checklists = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadChecklists();
+  }
+
+  Future<void> _loadChecklists() async {
+    if (widget.initialChecklists != null) {
+      setState(() {
+        _checklists = widget.initialChecklists!;
+        _isLoading = false;
+      });
+      return;
+    }
+
+    final checklists = await _storage.loadChecklists();
+    setState(() {
+      _checklists = checklists;
+      _isLoading = false;
+    });
+  }
+
+  Future<void> _saveChecklists() async {
+    await _storage.saveChecklists(_checklists);
+  }
+
+  void _addChecklist() {
+    final controller = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('New Checklist'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: const InputDecoration(hintText: 'Checklist name'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              final name = controller.text.trim();
+              if (name.isNotEmpty) {
+                setState(() {
+                  _checklists = [..._checklists, Checklist(name: name)];
+                });
+                _saveChecklists();
+              }
+              Navigator.pop(context);
+            },
+            child: const Text('Create'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _deleteChecklist(int index) {
+    setState(() {
+      _checklists = [
+        ..._checklists.sublist(0, index),
+        ..._checklists.sublist(index + 1),
+      ];
+    });
+    _saveChecklists();
+  }
+
+  void _renameChecklist(int index) {
+    final controller = TextEditingController(text: _checklists[index].name);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Rename Checklist'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: const InputDecoration(hintText: 'Checklist name'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              final name = controller.text.trim();
+              if (name.isNotEmpty) {
+                setState(() {
+                  _checklists = [
+                    ..._checklists.sublist(0, index),
+                    _checklists[index].copyWith(name: name),
+                    ..._checklists.sublist(index + 1),
+                  ];
+                });
+                _saveChecklists();
+              }
+              Navigator.pop(context);
+            },
+            child: const Text('Rename'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _reorderChecklists(int oldIndex, int newIndex) {
+    setState(() {
+      if (newIndex > oldIndex) newIndex--;
+      final item = _checklists[oldIndex];
+      final newList = List<Checklist>.from(_checklists);
+      newList.removeAt(oldIndex);
+      newList.insert(newIndex, item);
+      _checklists = newList;
+    });
+    _saveChecklists();
+  }
+
+  void _openChecklist(int index) async {
+    final result = await Navigator.push<Checklist>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ChecklistScreen(checklist: _checklists[index]),
+      ),
+    );
+
+    if (result != null) {
+      setState(() {
+        _checklists = [
+          ..._checklists.sublist(0, index),
+          result,
+          ..._checklists.sublist(index + 1),
+        ];
+      });
+      _saveChecklists();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Checklists'),
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _checklists.isEmpty
+              ? const Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('No checklists yet'),
+                      SizedBox(height: 8),
+                      Text('Tap + to create one'),
+                    ],
+                  ),
+                )
+              : ReorderableListView.builder(
+                  itemCount: _checklists.length,
+                  onReorder: _reorderChecklists,
+                  itemBuilder: (context, index) {
+                    return ChecklistTile(
+                      key: ValueKey(_checklists[index].name + index.toString()),
+                      checklist: _checklists[index],
+                      onTap: () => _openChecklist(index),
+                      onDelete: () => _deleteChecklist(index),
+                      onRename: () => _renameChecklist(index),
+                    );
+                  },
+                ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _addChecklist,
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+}
