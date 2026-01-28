@@ -28,7 +28,7 @@ I know this is unsafe, I just want it to be easy. No one except me is using this
    storePassword=YOUR_PASSWORD
    keyPassword=YOUR_PASSWORD
    keyAlias=upload
-   storeFile=../android/app/upload-keystore.jks
+   storeFile=upload-keystore.jks
    ```
 
 3. **Commit both files** to the repo
