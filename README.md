@@ -1,16 +1,13 @@
-# universal
+# Universal
 
-A new Flutter project.
+A personal all-in-one app. Currently features a checklist, with more tools to come.
 
-## Getting Started
+## Features
 
-This project is a starting point for a Flutter application.
+- Checklist with drag-and-drop reordering
+- Dark mode support
+- Auto-save with local storage
 
-A few resources to get you started if this is your first Flutter project:
+## Download
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Get the latest APK from the [Releases](../../releases) page.

@@ -51,13 +51,13 @@ jobs:
       run: flutter analyze
       
     - name: Build APK
-      run: flutter build apk --release
-      
+      run: flutter build apk --release --output=build/Universal.apk
+
     - name: Upload APK artifact
       uses: actions/upload-artifact@v4
       with:
-        name: app-release-apk
-        path: build/app/outputs/flutter-apk/app-release.apk
+        name: Universal-apk
+        path: build/Universal.apk
         retention-days: 30
         
     - name: Get commit info
@@ -71,7 +71,7 @@ jobs:
       if: github.ref == 'refs/heads/main'
       uses: softprops/action-gh-release@v1
       with:
-        files: build/app/outputs/flutter-apk/app-release.apk
+        files: build/Universal.apk
         tag_name: "build-${{ steps.commit.outputs.timestamp }}-${{ steps.commit.outputs.sha }}"
         name: "Build ${{ steps.commit.outputs.timestamp }}"
         body: |
@@ -79,7 +79,7 @@ jobs:
           ${{ steps.commit.outputs.message }}
 
           ## Download
-          - **APK**: app-release.apk
+          - **APK**: Universal.apk
 
           **Commit**: ${{ steps.commit.outputs.sha }}
           **Branch**: ${{ github.ref_name }}
@@ -92,14 +92,14 @@ jobs:
       if: startsWith(github.ref, 'refs/tags/')
       uses: softprops/action-gh-release@v1
       with:
-        files: build/app/outputs/flutter-apk/app-release.apk
+        files: build/Universal.apk
         name: Release ${{ github.ref_name }}
         body: |
           ## Changes
           ${{ steps.commit.outputs.message }}
 
           ## Download
-          - **APK**: app-release.apk
+          - **APK**: Universal.apk
 
           Built from commit: ${{ steps.commit.outputs.sha }}
       env:
