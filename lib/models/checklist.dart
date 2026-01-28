@@ -77,15 +77,19 @@ class Checklist {
   }
 
   Checklist toggleItem(String itemName) {
-    return Checklist(
-      name: name,
-      items: items.map((item) {
-        if (item.name == itemName) {
-          return item.copyWith(isChecked: !item.isChecked);
-        }
-        return item;
-      }).toList(),
-    );
+    final item = items.firstWhere((i) => i.name == itemName);
+    final toggled = item.copyWith(isChecked: !item.isChecked);
+
+    final unchecked = uncheckedItems.where((i) => i.name != itemName).toList();
+    final checked = checkedItems.where((i) => i.name != itemName).toList();
+
+    if (toggled.isChecked) {
+      // Checking: add to TOP of Done
+      return Checklist(name: name, items: [...unchecked, toggled, ...checked]);
+    } else {
+      // Unchecking: add to BOTTOM of To Do
+      return Checklist(name: name, items: [...unchecked, toggled, ...checked]);
+    }
   }
 
   Checklist reorderUnchecked(int oldIndex, int newIndex) {

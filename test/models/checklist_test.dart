@@ -153,6 +153,49 @@ void main() {
       expect(updated.items[0].isChecked, false);
     });
 
+    test('toggleItem moves newly checked item to top of Done section', () {
+      // Items stored with checked items BEFORE unchecked in internal list
+      // This simulates real usage where items get reordered over time
+      final checklist = Checklist(
+        name: 'Groceries',
+        items: [
+          ChecklistItem(name: 'OldDone1', isChecked: true),
+          ChecklistItem(name: 'OldDone2', isChecked: true),
+          ChecklistItem(name: 'Todo1', isChecked: false),
+          ChecklistItem(name: 'Todo2', isChecked: false),
+        ],
+      );
+
+      // When I check Todo1, it should appear at TOP of Done, not bottom
+      final updated = checklist.toggleItem('Todo1');
+      final checked = updated.checkedItems;
+
+      expect(checked[0].name, 'Todo1'); // Newly checked at top
+      expect(checked[1].name, 'OldDone1');
+      expect(checked[2].name, 'OldDone2');
+    });
+
+    test('toggleItem moves newly unchecked item to bottom of To Do section', () {
+      // Items stored with checked items BEFORE unchecked in internal list
+      final checklist = Checklist(
+        name: 'Groceries',
+        items: [
+          ChecklistItem(name: 'Done1', isChecked: true),
+          ChecklistItem(name: 'Done2', isChecked: true),
+          ChecklistItem(name: 'Todo1', isChecked: false),
+          ChecklistItem(name: 'Todo2', isChecked: false),
+        ],
+      );
+
+      // When I uncheck Done1, it should appear at BOTTOM of To Do, not top
+      final updated = checklist.toggleItem('Done1');
+      final unchecked = updated.uncheckedItems;
+
+      expect(unchecked[0].name, 'Todo1');
+      expect(unchecked[1].name, 'Todo2');
+      expect(unchecked[2].name, 'Done1'); // Newly unchecked at bottom
+    });
+
     test('ordering keeps unchecked items before checked items', () {
       final checklist = Checklist(
         name: 'Groceries',
