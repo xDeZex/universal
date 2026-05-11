@@ -95,22 +95,23 @@ jobs:
         echo "message=$(git log --format=%B -n 1 HEAD | head -1)" >> $GITHUB_OUTPUT
         echo "timestamp=$(date +'%Y%m%d_%H%M%S')" >> $GITHUB_OUTPUT
 
+    - name: Write release body
+      env:
+        COMMIT_MSG: ${{ steps.commit.outputs.message }}
+        COMMIT_SHA: ${{ steps.commit.outputs.sha }}
+        BRANCH: ${{ github.ref_name }}
+        BUILD_TIME: ${{ steps.commit.outputs.timestamp }}
+      run: |
+        printf '## Automated Build\n%s\n\n## Download\n- **APK**: Universal.apk\n\n**Commit**: %s\n**Branch**: %s\n**Build Time**: %s\n' \
+          "$COMMIT_MSG" "$COMMIT_SHA" "$BRANCH" "$BUILD_TIME" > release_body.md
+
     - name: Create release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@26994186c0ac3ef5cae75ac16aa32e8153525f77
       with:
         files: build/app/outputs/flutter-apk/Universal.apk
         tag_name: "build-${{ steps.commit.outputs.timestamp }}-${{ steps.commit.outputs.sha }}"
         name: "Build ${{ steps.commit.outputs.timestamp }}"
-        body: |
-          ## Automated Build
-          ${{ steps.commit.outputs.message }}
-
-          ## Download
-          - **APK**: Universal.apk
-
-          **Commit**: ${{ steps.commit.outputs.sha }}
-          **Branch**: ${{ github.ref_name }}
-          **Build Time**: ${{ steps.commit.outputs.timestamp }}
+        body_path: release_body.md
         prerelease: false
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
