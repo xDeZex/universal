@@ -17,7 +17,17 @@
       "Bash(findstr:*)",
       "Bash(scriptstest_fast.bat)",
       "Bash(dart:*)",
-      "Bash(flutter create:*)"
+      "Bash(flutter create:*)",
+      "PowerShell(flutter test:*)",
+      "PowerShell(flutter analyze:*)",
+      "PowerShell(flutter pub:*)",
+      "PowerShell(flutter run:*)",
+      "PowerShell(flutter clean:*)",
+      "PowerShell(flutter create:*)",
+      "PowerShell(dart:*)",
+      "WebFetch(domain:openspec.dev)",
+      "WebFetch(domain:github.com)",
+      "Skill(update-config)"
     ],
     "deny": [],
     "ask": [],

@@ -9,7 +9,7 @@ void main() {
       final checklist = Checklist(name: 'Groceries');
 
       await tester.pumpWidget(
-        MaterialApp(home: ChecklistScreen(checklist: checklist)),
+        MaterialApp(home: ChecklistScreen(checklist: checklist, onChanged: (_) {})),
       );
 
       expect(find.text('Groceries'), findsOneWidget);
@@ -19,7 +19,7 @@ void main() {
       final checklist = Checklist(name: 'Groceries');
 
       await tester.pumpWidget(
-        MaterialApp(home: ChecklistScreen(checklist: checklist)),
+        MaterialApp(home: ChecklistScreen(checklist: checklist, onChanged: (_) {})),
       );
 
       expect(find.text('No items yet'), findsOneWidget);
@@ -30,7 +30,7 @@ void main() {
       final checklist = Checklist(name: 'Groceries');
 
       await tester.pumpWidget(
-        MaterialApp(home: ChecklistScreen(checklist: checklist)),
+        MaterialApp(home: ChecklistScreen(checklist: checklist, onChanged: (_) {})),
       );
 
       expect(find.byType(FloatingActionButton), findsOneWidget);
@@ -41,7 +41,7 @@ void main() {
       final checklist = Checklist(name: 'Groceries');
 
       await tester.pumpWidget(
-        MaterialApp(home: ChecklistScreen(checklist: checklist)),
+        MaterialApp(home: ChecklistScreen(checklist: checklist, onChanged: (_) {})),
       );
 
       await tester.tap(find.byType(FloatingActionButton));
@@ -55,7 +55,7 @@ void main() {
       final checklist = Checklist(name: 'Groceries');
 
       await tester.pumpWidget(
-        MaterialApp(home: ChecklistScreen(checklist: checklist)),
+        MaterialApp(home: ChecklistScreen(checklist: checklist, onChanged: (_) {})),
       );
 
       await tester.tap(find.byType(FloatingActionButton));
@@ -78,7 +78,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        MaterialApp(home: ChecklistScreen(checklist: checklist)),
+        MaterialApp(home: ChecklistScreen(checklist: checklist, onChanged: (_) {})),
       );
 
       expect(find.text('Milk'), findsOneWidget);
@@ -92,7 +92,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        MaterialApp(home: ChecklistScreen(checklist: checklist)),
+        MaterialApp(home: ChecklistScreen(checklist: checklist, onChanged: (_) {})),
       );
 
       await tester.tap(find.byType(Checkbox));
@@ -109,7 +109,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        MaterialApp(home: ChecklistScreen(checklist: checklist)),
+        MaterialApp(home: ChecklistScreen(checklist: checklist, onChanged: (_) {})),
       );
 
       await tester.tap(find.byIcon(Icons.delete));
@@ -126,7 +126,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        MaterialApp(home: ChecklistScreen(checklist: checklist)),
+        MaterialApp(home: ChecklistScreen(checklist: checklist, onChanged: (_) {})),
       );
 
       await tester.tap(find.byType(FloatingActionButton));
@@ -147,7 +147,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        MaterialApp(home: ChecklistScreen(checklist: checklist)),
+        MaterialApp(home: ChecklistScreen(checklist: checklist, onChanged: (_) {})),
       );
 
       await tester.tap(find.byType(FloatingActionButton));
@@ -161,6 +161,101 @@ void main() {
       expect(checkbox.value, false);
     });
 
+    testWidgets('onChanged is called when item is toggled', (tester) async {
+      final checklist = Checklist(
+        name: 'Groceries',
+        items: [ChecklistItem(name: 'Milk', isChecked: false)],
+      );
+      Checklist? captured;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ChecklistScreen(
+            checklist: checklist,
+            onChanged: (c) => captured = c,
+          ),
+        ),
+      );
+
+      await tester.tap(find.byType(Checkbox));
+      await tester.pumpAndSettle();
+
+      expect(captured, isNotNull);
+      expect(captured!.items.first.isChecked, true);
+    });
+
+    testWidgets('onChanged is called when item is added', (tester) async {
+      final checklist = Checklist(name: 'Groceries');
+      Checklist? captured;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ChecklistScreen(
+            checklist: checklist,
+            onChanged: (c) => captured = c,
+          ),
+        ),
+      );
+
+      await tester.tap(find.byType(FloatingActionButton));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'Milk');
+      await tester.tap(find.text('Add'));
+      await tester.pumpAndSettle();
+
+      expect(captured, isNotNull);
+      expect(captured!.items.any((i) => i.name == 'Milk'), true);
+    });
+
+    testWidgets('onChanged is called when duplicate item is re-added', (tester) async {
+      final checklist = Checklist(
+        name: 'Groceries',
+        items: [ChecklistItem(name: 'Milk', isChecked: true)],
+      );
+      Checklist? captured;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ChecklistScreen(
+            checklist: checklist,
+            onChanged: (c) => captured = c,
+          ),
+        ),
+      );
+
+      await tester.tap(find.byType(FloatingActionButton));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'milk');
+      await tester.tap(find.text('Add'));
+      await tester.pumpAndSettle();
+
+      expect(captured, isNotNull);
+      expect(captured!.items.first.isChecked, false);
+    });
+
+    testWidgets('onChanged is called when item is deleted', (tester) async {
+      final checklist = Checklist(
+        name: 'Groceries',
+        items: [ChecklistItem(name: 'Milk')],
+      );
+      Checklist? captured;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ChecklistScreen(
+            checklist: checklist,
+            onChanged: (c) => captured = c,
+          ),
+        ),
+      );
+
+      await tester.tap(find.byIcon(Icons.delete));
+      await tester.pumpAndSettle();
+
+      expect(captured, isNotNull);
+      expect(captured!.items, isEmpty);
+    });
+
     testWidgets('displays section headers', (tester) async {
       final checklist = Checklist(
         name: 'Groceries',
@@ -171,7 +266,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        MaterialApp(home: ChecklistScreen(checklist: checklist)),
+        MaterialApp(home: ChecklistScreen(checklist: checklist, onChanged: (_) {})),
       );
 
       expect(find.text('To Do'), findsOneWidget);
