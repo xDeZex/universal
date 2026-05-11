@@ -80,6 +80,12 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  List<Checklist> _replaceAt(int index, Checklist updated) => [
+        ..._checklists.sublist(0, index),
+        updated,
+        ..._checklists.sublist(index + 1),
+      ];
+
   void _deleteChecklist(int index) {
     setState(() {
       _checklists = [
@@ -112,11 +118,10 @@ class _HomeScreenState extends State<HomeScreen> {
               final name = controller.text.trim();
               if (name.isNotEmpty) {
                 setState(() {
-                  _checklists = [
-                    ..._checklists.sublist(0, index),
+                  _checklists = _replaceAt(
+                    index,
                     _checklists[index].copyWith(name: name),
-                    ..._checklists.sublist(index + 1),
-                  ];
+                  );
                 });
                 _saveChecklists();
               }
@@ -141,24 +146,23 @@ class _HomeScreenState extends State<HomeScreen> {
     _saveChecklists();
   }
 
-  void _openChecklist(int index) async {
-    final result = await Navigator.push<Checklist>(
+  void _onChecklistChanged(int index, Checklist updated) {
+    setState(() {
+      _checklists = _replaceAt(index, updated);
+    });
+    _saveChecklists();
+  }
+
+  void _openChecklist(int index) {
+    Navigator.push<void>(
       context,
       MaterialPageRoute(
-        builder: (context) => ChecklistScreen(checklist: _checklists[index]),
+        builder: (context) => ChecklistScreen(
+          checklist: _checklists[index],
+          onChanged: (updated) => _onChecklistChanged(index, updated),
+        ),
       ),
     );
-
-    if (result != null) {
-      setState(() {
-        _checklists = [
-          ..._checklists.sublist(0, index),
-          result,
-          ..._checklists.sublist(index + 1),
-        ];
-      });
-      _saveChecklists();
-    }
   }
 
   @override

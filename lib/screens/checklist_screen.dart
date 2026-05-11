@@ -5,8 +5,13 @@ import '../widgets/item_tile.dart';
 
 class ChecklistScreen extends StatefulWidget {
   final Checklist checklist;
+  final void Function(Checklist) onChanged;
 
-  const ChecklistScreen({super.key, required this.checklist});
+  const ChecklistScreen({
+    super.key,
+    required this.checklist,
+    required this.onChanged,
+  });
 
   @override
   State<ChecklistScreen> createState() => _ChecklistScreenState();
@@ -47,6 +52,7 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
                   final unchecked = _checklist.findDuplicateAndUncheck(name);
                   if (unchecked != null) {
                     setState(() => _checklist = unchecked);
+                    widget.onChanged(_checklist);
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text('Item already exists - moved to unchecked'),
@@ -55,6 +61,7 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
                   }
                 } else {
                   setState(() => _checklist = result);
+                  widget.onChanged(_checklist);
                 }
               }
               Navigator.pop(context);
@@ -70,24 +77,28 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
     setState(() {
       _checklist = _checklist.toggleItem(name);
     });
+    widget.onChanged(_checklist);
   }
 
   void _deleteItem(String name) {
     setState(() {
       _checklist = _checklist.removeItem(name);
     });
+    widget.onChanged(_checklist);
   }
 
   void _reorderUnchecked(int oldIndex, int newIndex) {
     setState(() {
       _checklist = _checklist.reorderUnchecked(oldIndex, newIndex);
     });
+    widget.onChanged(_checklist);
   }
 
   void _reorderChecked(int oldIndex, int newIndex) {
     setState(() {
       _checklist = _checklist.reorderChecked(oldIndex, newIndex);
     });
+    widget.onChanged(_checklist);
   }
 
   @override
