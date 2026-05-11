@@ -83,13 +83,7 @@ class Checklist {
     final unchecked = uncheckedItems.where((i) => i.name != itemName).toList();
     final checked = checkedItems.where((i) => i.name != itemName).toList();
 
-    if (toggled.isChecked) {
-      // Checking: add to TOP of Done
-      return Checklist(name: name, items: [...unchecked, toggled, ...checked]);
-    } else {
-      // Unchecking: add to BOTTOM of To Do
-      return Checklist(name: name, items: [...unchecked, toggled, ...checked]);
-    }
+    return Checklist(name: name, items: [...unchecked, toggled, ...checked]);
   }
 
   Checklist reorderUnchecked(int oldIndex, int newIndex) {
