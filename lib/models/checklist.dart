@@ -97,6 +97,10 @@ class Checklist {
     return Checklist(name: name, items: [...unchecked, ...checked]);
   }
 
+  Checklist clearChecked() {
+    return Checklist(name: name, items: uncheckedItems);
+  }
+
   Checklist reorderChecked(int oldIndex, int newIndex) {
     final unchecked = uncheckedItems;
     final checked = checkedItems.toList();

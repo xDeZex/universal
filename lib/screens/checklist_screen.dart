@@ -94,6 +94,13 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
     widget.onChanged(_checklist);
   }
 
+  void _clearChecked() {
+    setState(() {
+      _checklist = _checklist.clearChecked();
+    });
+    widget.onChanged(_checklist);
+  }
+
   void _reorderChecked(int oldIndex, int newIndex) {
     setState(() {
       _checklist = _checklist.reorderChecked(oldIndex, newIndex);
@@ -110,6 +117,14 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
     return Scaffold(
         appBar: AppBar(
           title: Text(_checklist.name),
+          actions: [
+            if (_checklist.checkedItems.isNotEmpty)
+              IconButton(
+                icon: const Icon(Icons.playlist_remove),
+                tooltip: 'Clear checked',
+                onPressed: _clearChecked,
+              ),
+          ],
         ),
         body: !hasItems
             ? const Center(

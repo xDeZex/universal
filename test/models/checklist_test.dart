@@ -362,5 +362,67 @@ void main() {
       expect(checklist.items.length, 1);
       expect(checklist.items[0].name, 'Milk');
     });
+
+    group('clearChecked', () {
+      test('removes all checked items', () {
+        final checklist = Checklist(
+          name: 'Test',
+          items: const [
+            ChecklistItem(name: 'A', isChecked: false),
+            ChecklistItem(name: 'B', isChecked: true),
+            ChecklistItem(name: 'C', isChecked: true),
+          ],
+        );
+
+        final result = checklist.clearChecked();
+
+        expect(result.items.length, 1);
+        expect(result.items[0].name, 'A');
+      });
+
+      test('preserves unchecked items', () {
+        final checklist = Checklist(
+          name: 'Test',
+          items: const [
+            ChecklistItem(name: 'A', isChecked: false),
+            ChecklistItem(name: 'B', isChecked: false),
+            ChecklistItem(name: 'C', isChecked: true),
+          ],
+        );
+
+        final result = checklist.clearChecked();
+
+        expect(result.items.map((i) => i.name), containsAll(['A', 'B']));
+        expect(result.items.any((i) => i.isChecked), isFalse);
+      });
+
+      test('returns empty list when all items are checked', () {
+        final checklist = Checklist(
+          name: 'Test',
+          items: const [
+            ChecklistItem(name: 'A', isChecked: true),
+            ChecklistItem(name: 'B', isChecked: true),
+          ],
+        );
+
+        final result = checklist.clearChecked();
+
+        expect(result.items, isEmpty);
+      });
+
+      test('returns same items when no items are checked', () {
+        final checklist = Checklist(
+          name: 'Test',
+          items: const [
+            ChecklistItem(name: 'A', isChecked: false),
+            ChecklistItem(name: 'B', isChecked: false),
+          ],
+        );
+
+        final result = checklist.clearChecked();
+
+        expect(result.items.length, 2);
+      });
+    });
   });
 }
