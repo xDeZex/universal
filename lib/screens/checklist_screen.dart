@@ -107,14 +107,7 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
     final checked = _checklist.checkedItems;
     final hasItems = unchecked.isNotEmpty || checked.isNotEmpty;
 
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
-        if (!didPop) {
-          Navigator.of(context).pop(_checklist);
-        }
-      },
-      child: Scaffold(
+    return Scaffold(
         appBar: AppBar(
           title: Text(_checklist.name),
         ),
@@ -191,7 +184,6 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
           onPressed: _addItem,
           child: const Icon(Icons.add),
         ),
-      ),
     );
   }
 }
