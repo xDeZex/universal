@@ -1,8 +1,8 @@
-name: Build APK
+name: CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main ]
   pull_request:
     branches: [ main ]
 
@@ -10,23 +10,49 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
-    
-    defaults:
-      run:
-        working-directory: ./
-    
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-      
+
     - name: Setup Java JDK
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
         java-version: '17'
-        
+
+    - name: Setup Flutter SDK
+      uses: subosito/flutter-action@v2
+      with:
+        channel: 'stable'
+        cache: true
+
+    - name: Get Flutter dependencies
+      run: flutter pub get
+
+    - name: Run tests
+      run: flutter test --concurrency=4 --reporter=compact
+
+    - name: Run Flutter analyze
+      run: flutter analyze
+
+  build-and-release:
+    needs: test
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Java JDK
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
     - name: Setup Flutter SDK
       uses: subosito/flutter-action@v2
       with:
@@ -42,24 +68,12 @@ jobs:
         key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
         restore-keys: |
           gradle-${{ runner.os }}-
-        
+
     - name: Accept Android licenses
       run: yes | flutter doctor --android-licenses
-      
-    - name: Verify Flutter installation
-      run: |
-        flutter --version
-        dart --version
-        flutter doctor
-        
+
     - name: Get Flutter dependencies
       run: flutter pub get
-      
-    - name: Run tests
-      run: flutter test --concurrency=4 --reporter=compact
-      
-    - name: Run Flutter analyze
-      run: flutter analyze
 
     - name: Build APK
       run: flutter build apk --release
@@ -73,7 +87,7 @@ jobs:
         name: Universal-apk
         path: build/app/outputs/flutter-apk/Universal.apk
         retention-days: 30
-        
+
     - name: Get commit info
       id: commit
       run: |
@@ -81,8 +95,7 @@ jobs:
         echo "message=$(git log --format=%B -n 1 HEAD | head -1)" >> $GITHUB_OUTPUT
         echo "timestamp=$(date +'%Y%m%d_%H%M%S')" >> $GITHUB_OUTPUT
 
-    - name: Create release on main branch
-      if: github.ref == 'refs/heads/main'
+    - name: Create release
       uses: softprops/action-gh-release@v1
       with:
         files: build/app/outputs/flutter-apk/Universal.apk
@@ -99,22 +112,5 @@ jobs:
           **Branch**: ${{ github.ref_name }}
           **Build Time**: ${{ steps.commit.outputs.timestamp }}
         prerelease: false
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Create release on tag
-      if: startsWith(github.ref, 'refs/tags/')
-      uses: softprops/action-gh-release@v1
-      with:
-        files: build/app/outputs/flutter-apk/Universal.apk
-        name: Release ${{ github.ref_name }}
-        body: |
-          ## Changes
-          ${{ steps.commit.outputs.message }}
-
-          ## Download
-          - **APK**: Universal.apk
-
-          Built from commit: ${{ steps.commit.outputs.sha }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
