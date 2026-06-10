@@ -43,3 +43,8 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Vendored agent skills (installed locally)
+.claude/skills/
+.agents/
+skills-lock.json
