@@ -136,7 +136,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _reorderChecklists(int oldIndex, int newIndex) {
     setState(() {
-      if (newIndex > oldIndex) newIndex--;
       final item = _checklists[oldIndex];
       final newList = List<Checklist>.from(_checklists);
       newList.removeAt(oldIndex);
@@ -186,7 +185,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 )
               : ReorderableListView.builder(
                   itemCount: _checklists.length,
-                  onReorder: _reorderChecklists,
+                  onReorderItem: _reorderChecklists,
                   itemBuilder: (context, index) {
                     return ChecklistTile(
                       key: ValueKey(_checklists[index].name + index.toString()),

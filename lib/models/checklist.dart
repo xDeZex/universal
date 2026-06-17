@@ -90,7 +90,6 @@ class Checklist {
     final unchecked = uncheckedItems.toList();
     final checked = checkedItems;
 
-    if (newIndex > oldIndex) newIndex--;
     final item = unchecked.removeAt(oldIndex);
     unchecked.insert(newIndex, item);
 
@@ -101,7 +100,6 @@ class Checklist {
     final unchecked = uncheckedItems;
     final checked = checkedItems.toList();
 
-    if (newIndex > oldIndex) newIndex--;
     final item = checked.removeAt(oldIndex);
     checked.insert(newIndex, item);
 
