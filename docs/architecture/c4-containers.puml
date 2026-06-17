@@ -1,0 +1,49 @@
+@startuml
+!include <C4/C4_Container.puml>
+
+title Container Diagram: Universal
+
+Person(oliver, "Oliver", "Developer and sole user.")
+
+System_Boundary(universal, "Universal") {
+    Container(flutterApp, "Flutter App", "Flutter / Dart", "Checklist today; gym session tracking on Android (Phase 3).")
+
+    Container(traefik, "Traefik", "Go", "Ingress — TLS termination and HTTP routing into the cluster.")
+    Container(goServices, "Go Services", "Go", "Business logic. Hello service (Phase 0); workout-stats (Phase 2).")
+    Container(nats, "NATS JetStream", "Go", "Event bus for async workout events (Phase 2).")
+    Container(prometheus, "Prometheus", "Go", "Metrics scraping and storage (Phase 1).")
+    Container(grafana, "Grafana", "TypeScript", "Dashboards and alerting (Phase 1).")
+    Container(argocd, "ArgoCD Core", "Go", "Watches deploy/ on main; auto-syncs k3s cluster state.")
+    Container(duckdnsUpdater, "DuckDNS Updater", "Shell / CronJob", "Keeps public hostname pointed at Pi's current IP (Phase 0).")
+}
+
+System_Ext(github, "GitHub + GHCR", "Source control, GitHub Actions CI, and container image registry.")
+System_Ext(duckdns, "DuckDNS", "Dynamic DNS service.")
+
+Rel(oliver, flutterApp, "Uses checklist and gym tracker", "Android")
+Rel(oliver, grafana, "Views dashboards", "HTTPS")
+Rel(oliver, github, "Pushes code", "HTTPS/git")
+
+Rel(flutterApp, traefik, "API requests", "HTTPS/REST")
+Rel(traefik, goServices, "Routes requests to", "HTTP")
+Rel(goServices, nats, "Publishes workout events", "NATS")
+Rel(prometheus, goServices, "Scrapes metrics", "HTTP")
+Rel(prometheus, traefik, "Scrapes metrics", "HTTP")
+Rel(grafana, prometheus, "Queries metrics", "HTTP/PromQL")
+Rel(argocd, github, "Watches manifests and pulls images", "HTTPS/git")
+Rel(duckdnsUpdater, duckdns, "Updates IP on schedule", "HTTPS/API")
+
+Lay_R(flutterApp, argocd)
+Lay_R(argocd, duckdnsUpdater)
+Lay_D(flutterApp, traefik)
+Lay_D(argocd, goServices)
+Lay_D(duckdnsUpdater, nats)
+Lay_R(traefik, goServices)
+Lay_R(goServices, nats)
+Lay_D(traefik, prometheus)
+Lay_D(goServices, prometheus)
+Lay_R(prometheus, grafana)
+
+LAYOUT_LANDSCAPE()
+LAYOUT_WITH_LEGEND()
+@enduml
