@@ -139,7 +139,7 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: unchecked.length,
-                      onReorder: _reorderUnchecked,
+                      onReorderItem: _reorderUnchecked,
                       itemBuilder: (context, index) {
                         final item = unchecked[index];
                         return ItemTile(
@@ -166,7 +166,7 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: checked.length,
-                      onReorder: _reorderChecked,
+                      onReorderItem: _reorderChecked,
                       itemBuilder: (context, index) {
                         final item = checked[index];
                         return ItemTile(
