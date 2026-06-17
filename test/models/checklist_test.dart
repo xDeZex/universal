@@ -277,7 +277,7 @@ void main() {
         ],
       );
 
-      final updated = checklist.reorderUnchecked(0, 2);
+      final updated = checklist.reorderUnchecked(0, 1);
       final unchecked = updated.uncheckedItems;
 
       expect(unchecked[0].name, 'B');
@@ -296,7 +296,7 @@ void main() {
         ],
       );
 
-      final updated = checklist.reorderChecked(0, 2);
+      final updated = checklist.reorderChecked(0, 1);
       final checked = updated.checkedItems;
 
       expect(checked[0].name, 'Y');
