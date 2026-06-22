@@ -48,3 +48,4 @@ deploy/         # Kubernetes manifests synced by ArgoCD (planned, Phase 0)
 ## Git & Environment
 
 - No auto hot-reload, user triggers manually
+- After cloning, activate shared git hooks: `git config core.hooksPath .githooks`
