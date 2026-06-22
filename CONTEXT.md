@@ -15,6 +15,14 @@ _Avoid_: release, push to prod
 **Phase**:
 A numbered rung of the learning roadmap (0: GitOps loop, 1: observability, 2: events, 3: gym UI). Phases gate scope: work belonging to a later Phase is out of scope by default.
 
+**Root app**:
+The single ArgoCD Application installed during Bootstrap that watches `deploy/apps/` on `main`. Every workload is an Application file in `deploy/apps/`; the root app syncs them all. It is the only ArgoCD object that is never committed to `deploy/apps/` itself.
+_Avoid_: app-of-apps, parent app
+
+**Bootstrap**:
+The one-time `kubectl apply -k deploy/bootstrap/` that installs ArgoCD and the root Application on a fresh cluster. After Bootstrap, the cluster is self-managing; no further kubectl is needed to deploy workloads.
+_Avoid_: setup, install, init
+
 ## Example dialogue
 
 > **Dev:** The hello Service is built — how do I deploy it?
