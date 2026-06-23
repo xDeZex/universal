@@ -23,6 +23,14 @@ _Avoid_: app-of-apps, parent app
 The one-time `kubectl apply -k deploy/bootstrap/` that installs ArgoCD and the root Application on a fresh cluster. After Bootstrap, the cluster is self-managing; no further kubectl is needed to deploy workloads.
 _Avoid_: setup, install, init
 
+**Health endpoint**:
+`GET /healthz` on every Service — returns HTTP 200 with no body. Used by k8s liveness/readiness probes.
+_Avoid_: /health, /ping, /status
+
+**Root endpoint**:
+`GET /` on every Service — returns JSON `{"service":"<name>","version":"<git-sha>"}`. Version is the short git commit SHA baked in at build time via `ldflags`.
+_Avoid_: returning plain text, hardcoded version strings
+
 ## Example dialogue
 
 > **Dev:** The hello Service is built — how do I deploy it?
