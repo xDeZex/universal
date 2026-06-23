@@ -46,5 +46,6 @@ app.*.map.json
 
 # Vendored agent skills (installed locally)
 .claude/skills/
+.claude/commands/
 .agents/
 skills-lock.json
