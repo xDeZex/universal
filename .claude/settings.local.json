@@ -43,7 +43,10 @@
       "Bash(~/go-sdk/go/bin/go test *)",
       "Bash(go test *)",
       "Bash(go vet *)",
-      "Bash(gh pr *)"
+      "Bash(gh pr *)",
+      "PowerShell(flutter test *)",
+      "PowerShell(git fetch *)",
+      "PowerShell(git add *)"
     ],
     "deny": [],
     "ask": [],
