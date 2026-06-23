@@ -23,27 +23,18 @@ When asked to "automerge": fetch origin, check `git log origin/main..HEAD` and o
 ## Commands
 
 ```bash
-flutter test       # run all tests — must pass before any work is considered done
+flutter test       # must pass before any work is considered done
 flutter analyze    # fix warnings before committing
 ```
 
 ## Architecture
 
 ```
-lib/models/     # Data only
-lib/services/   # Business logic
-lib/screens/    # UI pages
-lib/widgets/    # Reusable UI
-test/           # Flutter tests
-services/       # Go backend services, one dir per service (planned, Phase 0)
-deploy/         # Kubernetes manifests synced by ArgoCD (planned, Phase 0)
+lib/        # Flutter app (models, services, screens, widgets)
+services/   # Go backend services, one dir per service
+deploy/     # Kubernetes manifests synced by ArgoCD
+test/       # Flutter tests
 ```
-
-## Flutter Standards
-
-- Material 3 design, `const` constructors, camelCase/PascalCase naming
-- Provider pattern for state, auto-save with SharedPreferences
-- Wrap async in try-catch, use null-safe operators
 
 ## Git & Environment
 

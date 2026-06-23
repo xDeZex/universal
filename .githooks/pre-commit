@@ -15,7 +15,7 @@ fi
 
 # YAML/manifest checks on staged deploy/, .github/, or .yamllint.yml files
 staged_infra=$(git diff --cached --name-only | grep -E '^(deploy/|\.github/|\.yamllint\.yml$)')
-staged_deploy=$(git diff --cached --name-only | grep '^deploy/')
+staged_deploy=$(git diff --cached --name-only | grep '^deploy/' | grep -vE '\.(md|txt)$')
 if [ -n "$staged_infra" ]; then
   echo "Infrastructure files staged — running manifest linting..."
 
@@ -30,6 +30,7 @@ if [ -n "$staged_infra" ]; then
   # ignore: block only applies to directory walks, not per-file invocations.
   while IFS= read -r f; do
     [ -z "$f" ] && continue
+    echo "$f" | grep -qE '\.(md|txt)$' && continue
     echo "$f" | grep -q 'argocd-install\.yaml' && continue
     yamllint "$f" || exit 1
   done <<EOF

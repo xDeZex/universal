@@ -46,7 +46,9 @@
       "Bash(gh pr *)",
       "PowerShell(flutter test *)",
       "PowerShell(git fetch *)",
-      "PowerShell(git add *)"
+      "PowerShell(git add *)",
+      "PowerShell(kubeconform *)",
+      "PowerShell(Get-ChildItem \"C:\\\\Users\\\\ollib\\\\Documents\\\\projects\\\\universal\" -Depth 2 | Where-Object { $_.PSIsContainer } | Select-Object FullName)"
     ],
     "deny": [],
     "ask": [],
