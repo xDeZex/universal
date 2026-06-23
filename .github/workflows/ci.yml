@@ -7,9 +7,24 @@ on:
     branches: [ main ]
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
+  filter:
+    runs-on: ubuntu-latest
+    outputs:
+      infra: ${{ steps.changes.outputs.infra }}
+    steps:
+    - uses: actions/checkout@v4
+    - uses: dorny/paths-filter@d1c1ffe0248fe513906c8e24db8ea791d46f8590  # v3
+      id: changes
+      with:
+        filters: |
+          infra:
+            - 'deploy/**'
+            - '.github/workflows/ci.yml'
+            - '.yamllint.yml'
+
   test:
     runs-on: ubuntu-latest
 
@@ -38,10 +53,74 @@ jobs:
     - name: Run Flutter analyze
       run: flutter analyze
 
-  build-and-release:
-    needs: test
-    if: github.event_name == 'push'
+  lint-deploy:
+    needs: filter
+    if: needs.filter.outputs.infra == 'true' || github.event_name == 'push'
     runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install yamllint
+      run: pip install yamllint==1.38.0
+
+    - name: Install kustomize
+      run: |
+        curl -sLo kustomize.tar.gz \
+          https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv5.4.3/kustomize_v5.4.3_linux_amd64.tar.gz
+        echo "3669470b454d865c8184d6bce78df05e977c9aea31c30df3c669317d43bcc7a7  kustomize.tar.gz" | sha256sum --check
+        tar -xzf kustomize.tar.gz
+        sudo mv kustomize /usr/local/bin/kustomize
+        kustomize version
+
+    - name: Install kubeconform
+      run: |
+        curl -sLo kubeconform.tar.gz \
+          https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz
+        echo "95f14e87aa28c09d5941f11bd024c1d02fdc0303ccaa23f61cef67bc92619d73  kubeconform.tar.gz" | sha256sum --check
+        tar -xzf kubeconform.tar.gz
+        sudo mv kubeconform /usr/local/bin/kubeconform
+        kubeconform -v
+
+    - name: Lint YAML (yamllint)
+      run: yamllint deploy/ .yamllint.yml .github/
+
+    - name: Validate Kubernetes schemas (kubeconform)
+      run: |
+        set -eo pipefail
+        kustomize build deploy/bootstrap > /tmp/bootstrap.yaml
+        [ -s /tmp/bootstrap.yaml ] || { echo "ERROR: kustomize produced empty output"; exit 1; }
+        kubeconform \
+          -strict \
+          -skip CustomResourceDefinition \
+          -output json \
+          -verbose \
+          -schema-location default \
+          -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/1de95b7e9cb737ba46b14fa5a033fee2e47d90a3/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
+          /tmp/bootstrap.yaml > /tmp/kubeconform.json
+        python3 -c "
+        import sys, json
+        with open('/tmp/kubeconform.json') as f:
+            records = json.load(f).get('resources', [])
+        bad = [r for r in records if r.get('status') not in ('statusValid', 'statusSkipped')]
+        if bad:
+            print('ERROR: non-valid resources:')
+            for r in bad: print(f'  {r[\"status\"]} {r.get(\"apiVersion\",\"\")} {r.get(\"kind\",\"\")}/{r.get(\"name\",\"?\")}')
+            sys.exit(1)
+        valid = [r for r in records if r.get('status') == 'statusValid']
+        print(f'kubeconform: {len(valid)} resources validated')
+        "
+
+  build-and-release:
+    needs: [test, lint-deploy]
+    if: |
+      github.event_name == 'push' &&
+      needs.test.result == 'success' &&
+      (needs.lint-deploy.result == 'success' || needs.lint-deploy.result == 'skipped')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
     - name: Checkout repository

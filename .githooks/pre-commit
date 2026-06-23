@@ -4,3 +4,82 @@ if [ "$branch" = "main" ]; then
   echo "ERROR: Direct commits to main are not allowed. Create a branch first."
   exit 1
 fi
+
+# Flutter checks on staged Dart or Flutter config files
+staged_flutter=$(git diff --cached --name-only | grep -E '(\.dart$|pubspec\.yaml$|pubspec\.lock$|analysis_options\.yaml$)')
+if [ -n "$staged_flutter" ]; then
+  echo "Flutter files staged — running tests and analysis..."
+  flutter test --concurrency=4 --reporter=compact || exit 1
+  flutter analyze || exit 1
+fi
+
+# YAML/manifest checks on staged deploy/, .github/, or .yamllint.yml files
+staged_infra=$(git diff --cached --name-only | grep -E '^(deploy/|\.github/|\.yamllint\.yml$)')
+staged_deploy=$(git diff --cached --name-only | grep '^deploy/')
+if [ -n "$staged_infra" ]; then
+  echo "Infrastructure files staged — running manifest linting..."
+
+  for cmd in yamllint kustomize kubeconform; do
+    command -v "$cmd" >/dev/null 2>&1 || {
+      echo "ERROR: $cmd not found. Install it before committing infrastructure changes."
+      exit 1
+    }
+  done
+
+  # Lint all staged infra files. Skip argocd-install.yaml explicitly — yamllint's
+  # ignore: block only applies to directory walks, not per-file invocations.
+  while IFS= read -r f; do
+    [ -z "$f" ] && continue
+    echo "$f" | grep -q 'argocd-install\.yaml' && continue
+    yamllint "$f" || exit 1
+  done <<EOF
+$staged_infra
+EOF
+
+  # kustomize and kubeconform only apply when deploy/ files are staged
+  if [ -n "$staged_deploy" ]; then
+    # Set up temp files and trap immediately so any early exit cleans up.
+    tmp=$(mktemp)
+    kc_out=$(mktemp)
+    trap 'rm -f "$tmp" "$kc_out"' EXIT INT TERM
+
+    # Stash unstaged deploy/ changes so validations run against what will be
+    # committed, not the full working tree. Use rev-parse to reliably detect
+    # whether a stash entry was created, and only pop if one was.
+    stash_before=$(git rev-parse --verify refs/stash 2>/dev/null || true)
+    stash_err=$(git stash push --keep-index --include-untracked --quiet -- deploy/ 2>&1)
+    stash_rc=$?
+    stash_after=$(git rev-parse --verify refs/stash 2>/dev/null || true)
+    if [ "$stash_before" != "$stash_after" ]; then
+      trap 'rm -f "$tmp" "$kc_out"; git stash pop --quiet || echo "WARNING: git stash pop failed — check git stash list and clean up manually"' EXIT INT TERM
+    elif [ $stash_rc -ne 0 ]; then
+      echo "ERROR: git stash push failed: $stash_err"
+      exit 1
+    fi
+
+    kustomize build deploy/bootstrap > "$tmp" || exit 1
+    kubeconform \
+      -strict \
+      -ignore-missing-schemas \
+      -skip CustomResourceDefinition \
+      -output json \
+      -schema-location default \
+      -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/1de95b7e9cb737ba46b14fa5a033fee2e47d90a3/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
+      < "$tmp" > "$kc_out" || { cat "$kc_out"; exit 1; }
+    python3 - "$kc_out" <<'PYEOF' || exit 1
+import sys, json
+with open(sys.argv[1]) as f:
+    records = [json.loads(l) for l in f if l.strip()]
+if not records:
+    print('ERROR: kubeconform produced no output — validation did not run')
+    sys.exit(1)
+bad = [r for r in records if r.get('status') != 'statusValid']
+if bad:
+    print('ERROR: non-valid resources:')
+    for r in bad:
+        print(f'  {r["status"]} {r.get("apiVersion","")} {r.get("kind","")}/{r.get("name","?")}')
+    sys.exit(1)
+print(f'kubeconform: {len(records)} resources validated')
+PYEOF
+  fi
+fi
