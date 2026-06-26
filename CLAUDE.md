@@ -20,23 +20,14 @@ Each PR must have exactly one commit and must target `main`. Before creating a P
 
 When asked to "automerge": fetch origin, check `git log origin/main..HEAD` and open PRs (`gh pr list`) to understand the current state. If the branch contains an OpenSpec change, ensure it has been archived before squashing. Then create a PR for the latest commit and enable automerge (`gh pr merge --auto --rebase`).
 
-## Commands
-
-```bash
-flutter test       # must pass before any work is considered done
-flutter analyze    # fix warnings before committing
-```
-
 ## Architecture
 
 ```
-lib/        # Flutter app (models, services, screens, widgets)
+app/        # Flutter app — see app/CLAUDE.md
 services/   # Go backend services, one dir per service
 deploy/     # Kubernetes manifests synced by ArgoCD
-test/       # Flutter tests
 ```
 
 ## Git & Environment
 
-- No auto hot-reload, user triggers manually
 - After cloning, activate shared git hooks: `git config core.hooksPath .githooks`

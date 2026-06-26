@@ -36,8 +36,7 @@ Target CI/CD loop (Phase 0, in progress): push to `main` → GitHub Actions buil
 ## Repo layout
 
 ```
-lib/         Flutter app
-test/        Flutter tests
+app/         Flutter app (lib/, test/, android/)
 services/    Go backend services, one dir per service (planned, Phase 0)
 deploy/      Kubernetes manifests, synced by ArgoCD (planned, Phase 0)
 ```
@@ -60,10 +59,10 @@ I know this is unsafe, I just want it to be easy. No one except me is using this
 
 1. **Generate a keystore**:
    ```powershell
-   keytool -genkey -v -keystore android/app/upload-keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+   keytool -genkey -v -keystore app/android/app/upload-keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload
    ```
 
-2. **Update `android/key.properties`** with your password:
+2. **Update `app/android/key.properties`** with your password:
    ```properties
    storePassword=YOUR_PASSWORD
    keyPassword=YOUR_PASSWORD
