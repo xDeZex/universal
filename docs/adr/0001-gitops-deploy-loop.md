@@ -11,6 +11,6 @@ Config lives in this same monorepo rather than a separate config repo (solo proj
 
 ## Considered options
 
-- **ArgoCD Image Updater** — watches GHCR and bumps tags in-cluster. Rejected: deploys would no longer originate in git history (the deciding argument; it also adds an in-cluster component).
+- **ArgoCD Image Updater** — watches GHCR and bumps tags in-cluster. Rejected: its git write-back mode commits a generated `.argocd-source-<app>.yaml` overlay rather than patching `kustomization.yaml` directly, splitting the source of truth for the running image tag. For a single-service monorepo the branch-bypass rule is a one-time setup cost, and CI-commits keeps `kustomization.yaml` as the sole authoritative record. Image Updater's value scales with the number of images tracked; it's not worth the extra in-cluster component here.
 - **`:latest` + rollout restart** — rejected: no audit trail, no `git revert` rollback, Kubernetes can't observe that an image behind a mutable tag changed.
 - **Separate config repo** (Argo docs' default recommendation) — rejected for a solo monorepo; the isolation it buys is already achieved with workflow path filters.
