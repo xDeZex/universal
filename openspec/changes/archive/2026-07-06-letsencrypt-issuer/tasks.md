@@ -7,6 +7,6 @@
 
 ## 2. Issuer reports Ready after HTTP-01 registration
 
-- [ ] 2.1 Commit and let ArgoCD sync; confirm the `letsencrypt-issuer` Application reaches `Synced`/`Healthy`
-- [ ] 2.2 Confirm the `letsencrypt-prod` `ClusterIssuer` reports `Ready: True` (`ssh miniser` → `sudo kubectl describe clusterissuer letsencrypt-prod`)
-- [ ] 2.3 Confirm the ACME account private key `Secret` exists in the `cert-manager` namespace, referenced by the `ClusterIssuer`'s `privateKeySecretRef`
+- [x] 2.1 Commit and let ArgoCD sync; confirm the `letsencrypt-issuer` Application reaches `Synced`/`Healthy`
+- [x] 2.2 Confirm the `letsencrypt-prod` `ClusterIssuer` reports `Ready: True` (`ssh miniser` → `sudo kubectl describe clusterissuer letsencrypt-prod`)
+- [x] 2.3 Confirm the ACME account private key `Secret` exists in the `cert-manager` namespace, referenced by the `ClusterIssuer`'s `privateKeySecretRef`
