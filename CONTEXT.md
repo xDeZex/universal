@@ -5,8 +5,12 @@ A personal all-in-one Flutter app paired with self-hosted services on a Beelink 
 ## Language
 
 **Infra component**:
-A piece of cluster infrastructure installed via its own ArgoCD Application under `deploy/infra/` — third-party, not authored by this project, and not a Service. Covers both long-running controllers (Sealed Secrets) and periodic jobs (the DuckDNS updater CronJob) — the distinguishing trait is "not a Service," not runtime shape.
+A piece of cluster infrastructure installed via its own ArgoCD Application under `deploy/infra/` — third-party, not authored by this project, and not a Service. Covers both long-running controllers (Sealed Secrets) and periodic jobs (the DuckDNS updater CronJob) — the distinguishing trait is "not a Service," not runtime shape. Configuring one you've already installed, without installing anything new, is Infra config instead.
 _Avoid_: service (lowercase), controller (too narrow for the category)
+
+**Infra config**:
+A manifest we author that configures an existing Infra component or a platform-provided controller (e.g. k3s's bundled Traefik) — no new software is installed. Lives under `deploy/infra-config/`, a sibling of `deploy/infra/`, each still with its own ArgoCD Application under `deploy/apps/`. Distinguishes "we wrote this YAML" from "we installed this third-party program."
+_Avoid_: infra component (reserved for installed third-party software), config, patch
 
 **Service**:
 An independently deployable Go backend program with its own directory under `services/`, its own container image, and its own manifests. The app is not a Service; it is the client.
