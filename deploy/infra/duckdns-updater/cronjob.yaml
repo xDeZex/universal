@@ -1,0 +1,26 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: duckdns-updater
+  namespace: duckdns-updater
+spec:
+  schedule: "*/5 * * * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: duckdns-updater
+              image: curlimages/curl:8.11.1
+              env:
+                - name: DUCKDNS_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: duckdns-token
+                      key: token
+              command:
+                - sh
+                - -c
+                - 'curl -sf "https://www.duckdns.org/update?domains=xdezex&token=${DUCKDNS_TOKEN}"'

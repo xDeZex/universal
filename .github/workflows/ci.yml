@@ -13,7 +13,7 @@ jobs:
   filter:
     runs-on: ubuntu-latest
     outputs:
-      infra: ${{ steps.changes.outputs.infra }}
+      deploy: ${{ steps.changes.outputs.deploy }}
       services: ${{ steps.changes.outputs.services }}
       hello: ${{ steps.changes.outputs.hello }}
     steps:
@@ -22,7 +22,7 @@ jobs:
       id: changes
       with:
         filters: |
-          infra:
+          deploy:
             - 'deploy/**'
             - '.github/workflows/ci.yml'
             - '.yamllint.yml'
@@ -86,7 +86,7 @@ jobs:
 
   lint-deploy:
     needs: filter
-    if: needs.filter.outputs.infra == 'true' || github.event_name == 'push'
+    if: needs.filter.outputs.deploy == 'true' || github.event_name == 'push'
     runs-on: ubuntu-latest
 
     steps:
@@ -115,7 +115,7 @@ jobs:
       run: |
         set -eo pipefail
         > /tmp/manifests.yaml
-        for dir in deploy/bootstrap deploy/services/hello; do
+        for dir in deploy/bootstrap deploy/services/hello deploy/infra/sealed-secrets deploy/infra/duckdns-updater; do
           kustomize build "$dir" > /tmp/build.yaml
           [ -s /tmp/build.yaml ] || { echo "ERROR: kustomize produced empty output for $dir"; exit 1; }
           cat /tmp/build.yaml >> /tmp/manifests.yaml
