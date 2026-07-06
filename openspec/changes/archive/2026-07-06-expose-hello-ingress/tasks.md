@@ -10,5 +10,5 @@
 
 ## 3. Verify external reachability
 
-- [ ] 3.1 After ArgoCD syncs, `http://xdezex.duckdns.org/hello` answers from outside the LAN (e.g. checked from mobile data), confirming router port forward, DuckDNS, and the Ingress rule all line up
-- [ ] 3.2 A request to an unmatched path on the same host (e.g. `/nonexistent`) returns 404 rather than hitting the `hello` Service
+- [x] 3.1 After ArgoCD syncs, `http://xdezex.duckdns.org/hello` answers from outside the LAN (e.g. checked from mobile data), confirming router port forward, DuckDNS, and the Ingress rule all line up
+- [x] 3.2 A request to an unmatched path on the same host (e.g. `/nonexistent`) returns 404 rather than hitting the `hello` Service
