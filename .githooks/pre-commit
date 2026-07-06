@@ -26,12 +26,13 @@ if [ -n "$staged_lint" ]; then
     }
   done
 
-  # Lint all staged infra files. Skip argocd-install.yaml explicitly — yamllint's
-  # ignore: block only applies to directory walks, not per-file invocations.
+  # Lint all staged infra files. Skip argocd-install.yaml and sealedsecret.yaml
+  # explicitly — yamllint's ignore: block only applies to directory walks, not
+  # per-file invocations.
   while IFS= read -r f; do
     [ -z "$f" ] && continue
     echo "$f" | grep -qE '\.(md|txt)$' && continue
-    echo "$f" | grep -q 'argocd-install\.yaml' && continue
+    echo "$f" | grep -qE 'argocd-install\.yaml|sealedsecret\.yaml' && continue
     yamllint "$f" || exit 1
   done <<EOF
 $staged_lint
