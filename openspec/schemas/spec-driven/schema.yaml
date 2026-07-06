@@ -250,7 +250,8 @@ apply:
     `plan [temporary]: <change-name>`. This preserves the plan as a restore point if the
     apply needs to be reset. If all artifacts are already committed, skip this step.
 
-    Read context files, then implement each task using strict TDD — one behavior at a time.
+    Read context files, then implement each task using strict TDD — one behavior at a time,
+    working through the numbered groups (`## N.` headings) in tasks.md in order.
 
     For each task:
 
@@ -284,14 +285,17 @@ apply:
     4. **COMMIT** — Commit all changes for this cycle (implementation, tests, and the
        updated task checkbox) in one commit, with message `task X.Y [temporary]: <short description>`.
 
-    5. **REVIEW COMMIT** — Review the files changed in this
-       commit. Fix appropriate findings in a single `review finding (task X.Y) [temporary]: <short description>`
-       commit. Does not loop and does not trigger another review. If there are no
-       findings, proceed to the next task.
+    **After the last task in a group (`## N.`) is complete**:
+
+    **REVIEW GROUP** — Find the group's first `task N.1 [temporary]` commit in `git log`
+    and diff its parent against HEAD (`git diff <parent>..HEAD`) — this spans every commit
+    made for the group. Fix appropriate findings in a single
+    `review finding (group N) [temporary]: <short description>` commit. Does not loop and
+    does not trigger another review. If there are no findings, proceed to the next group.
 
     **After all tasks are complete**:
 
-    1. Run the `code-review` skill against the full branch diff (`git diff origin/main`).
+    1. Review the full branch diff (`git diff origin/main`).
        Loop: review → fix (`review finding (full) [temporary]: <short description>`)
        → review again until no inline-fixable findings remain. Filed-only findings
        (GitHub issues) do not keep the loop running.
