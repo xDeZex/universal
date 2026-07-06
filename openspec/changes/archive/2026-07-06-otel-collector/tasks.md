@@ -13,6 +13,6 @@
 
 ## 3. Post-deploy verification (requires the live sync — do last)
 
-- [ ] 3.1 After ArgoCD syncs, `ssh miniser` + `kubectl -n observability get pods` shows the collector pod `Running` and `Ready`
-- [ ] 3.2 A test OTLP payload sent to the collector (grpc `:4317` or http `:4318`, port-forwarded or from a throwaway in-cluster pod) appears in `kubectl -n observability logs` via the `debug` exporter
-- [ ] 3.3 `kubectl -n observability top pod` shows actual usage within the requests/limits set in 1.4; adjust the Helm values if sizing is off
+- [x] 3.1 After ArgoCD syncs, `ssh miniser` + `kubectl -n observability get pods` shows the collector pod `Running` and `Ready`
+- [x] 3.2 A test OTLP payload sent to the collector (grpc `:4317` or http `:4318`, port-forwarded or from a throwaway in-cluster pod) appears in `kubectl -n observability logs` via the `debug` exporter
+- [x] 3.3 `kubectl -n observability top pod` shows actual usage within the requests/limits set in 1.4 (2m CPU / 29Mi memory observed, well within the 100m/128Mi request and 500m/256Mi limit — no adjustment needed)
