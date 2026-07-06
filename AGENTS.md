@@ -31,3 +31,7 @@ deploy/     # Kubernetes manifests synced by ArgoCD
 ## Git & Environment
 
 - After cloning, activate shared git hooks: `git config core.hooksPath .githooks`
+
+## Infrastructure Access
+
+- The k3s host is reachable over SSH via the `miniser` alias (`ssh miniser`), configured in `~/.ssh/config` with key-based auth.
