@@ -8,17 +8,17 @@
 ## 2. CI: Go test gate for services/hello
 
 - [x] 2.1 Add a `test-hello` job running `go test ./...` and `go vet ./...` for `services/hello`, gated on `services/**` changes
-- [ ] 2.2 Add `test-hello` to `main`'s ruleset required status checks
+- [x] 2.2 Add `test-hello` to `main`'s ruleset required status checks
 
 ## 3. CI: build and push the hello image
 
 - [x] 3.1 Add a `build-push-hello` job: build `linux/amd64` from `services/hello/Dockerfile` on push to `main` touching `services/hello/**`
 - [x] 3.2 Tag and push the image to `ghcr.io/xdezex/universal/hello` using the short git SHA, passed as both the GHCR tag and the `VERSION` build-arg
-- [ ] 3.3 Set the `ghcr.io/xdezex/universal/hello` package visibility to public once it exists
+- [x] 3.3 Set the `ghcr.io/xdezex/universal/hello` package visibility to public once it exists
 
 ## 4. CI: Deploy commit
 
-- [ ] 4.1 Add a repo secret (e.g. `DEPLOY_TOKEN`) holding the fine-grained PAT (`contents: write` only)
+- [x] 4.1 Add a repo secret (e.g. `DEPLOY_TOKEN`) holding the fine-grained PAT (`contents: write` only)
 - [x] 4.2 Add a `deploy-hello` job: after a successful build/push, bump the image tag in `deploy/services/hello/kustomization.yaml` and commit to `main` as `github-actions[bot]`, message `deploy: hello@<short-sha>`, authenticating the push with `DEPLOY_TOKEN`
 
 ## 5. Kubernetes manifests for hello
@@ -29,6 +29,6 @@
 
 ## 6. Verify end-to-end
 
-- [ ] 6.1 Confirm the first merge to `main` (including a trivial `services/hello` touch) triggers `test-hello` → `build-push-hello` → `deploy-hello` in order, and the resulting Deploy commit's tag matches what was pushed to GHCR
-- [ ] 6.2 Confirm ArgoCD syncs the `hello` Application, the `services` namespace is created, and the pod goes Ready
-- [ ] 6.3 Confirm in-cluster `GET /` and `GET /healthz` against the hello Service respond as the `hello-service` spec describes, with `version` matching the deployed tag
+- [x] 6.1 Confirm the first merge to `main` (including a trivial `services/hello` touch) triggers `test-hello` → `build-push-hello` → `deploy-hello` in order, and the resulting Deploy commit's tag matches what was pushed to GHCR
+- [x] 6.2 Confirm ArgoCD syncs the `hello` Application, the `services` namespace is created, and the pod goes Ready
+- [x] 6.3 Confirm in-cluster `GET /` and `GET /healthz` against the hello Service respond as the `hello-service` spec describes, with `version` matching the deployed tag
