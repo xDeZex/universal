@@ -49,3 +49,9 @@ app.*.map.json
 .claude/commands/
 .agents/
 skills-lock.json
+
+# Local symlink to AGENTS.md for tools that look for CLAUDE.md
+/CLAUDE.md
+
+# Local Claude Code permission overrides (machine-specific)
+.claude/settings.local.json
