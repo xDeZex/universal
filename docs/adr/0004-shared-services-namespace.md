@@ -1,0 +1,3 @@
+# Shared `services` namespace for all backend Services
+
+All backend Services run in a single `services` namespace rather than one namespace per Service. We decided this because the cluster is single-node and single-operator — per-Service isolation (NetworkPolicies, quotas, RBAC boundaries) doesn't pay for itself yet, and a shared namespace keeps onboarding a new Service down to "add a Deployment + Service," with no new namespace boilerplate each time. Revisit if isolation between Services becomes necessary (e.g. before adding other users, or before Phase 2's event-driven services need trust boundaries between them).
