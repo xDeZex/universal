@@ -5,8 +5,16 @@ A personal all-in-one Flutter app paired with self-hosted services on a Beelink 
 ## Language
 
 **Infra component**:
-A piece of cluster infrastructure installed via its own ArgoCD Application under `deploy/infra/` — third-party, not authored by this project, and not a Service. Covers both long-running controllers (Sealed Secrets) and periodic jobs (the DuckDNS updater CronJob) — the distinguishing trait is "not a Service," not runtime shape. Configuring one you've already installed, without installing anything new, is Infra config instead.
-_Avoid_: service (lowercase), controller (too narrow for the category)
+A piece of cluster infrastructure installed via its own ArgoCD Application under `deploy/infra/`, each in its own namespace — third-party, not authored by this project, and not a Service. Covers both long-running controllers (Sealed Secrets) and periodic jobs (the DuckDNS updater CronJob) — the distinguishing trait is "not a Service," not runtime shape. Configuring one you've already installed, without installing anything new, is Infra config instead. An Observability component is also third-party and not a Service, but isolation doesn't apply to it — see that entry.
+_Avoid_: service (lowercase), controller (too narrow for the category), observability component (reserved for the shared-namespace stack)
+
+**Observability component**:
+A piece of the observability stack (otel-collector, the metrics backend, Grafana, Loki, later a traces backend) installed via its own ArgoCD Application under `deploy/observability/` — third-party and not a Service, like an Infra component, but sharing the single `observability` namespace with its siblings instead of getting one of its own (see ADR-0008: none of them holds privilege whose blast radius needs bounding, unlike Sealed Secrets).
+_Avoid_: infra component (reserved for per-component namespace isolation)
+
+**Observability namespace**:
+The single Kubernetes namespace (`observability`) every Observability component runs in. One shared namespace across all of them, not one per component — mirrors the Services namespace's reasoning: no component here holds privilege whose blast radius needs bounding, and they're mutually interdependent by design (see ADR-0008).
+_Avoid_: infra namespace, per-component namespace
 
 **Infra config**:
 A manifest we author that configures an existing Infra component or a platform-provided controller (e.g. k3s's bundled Traefik) — no new software is installed. Lives under `deploy/infra-config/`, a sibling of `deploy/infra/`, each still with its own ArgoCD Application under `deploy/apps/`. Distinguishes "we wrote this YAML" from "we installed this third-party program."
