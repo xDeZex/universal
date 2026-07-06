@@ -8,6 +8,10 @@ A personal all-in-one Flutter app paired with self-hosted services on a Beelink 
 An independently deployable Go backend program with its own directory under `services/`, its own container image, and its own manifests. The app is not a Service; it is the client.
 _Avoid_: microservice, server, backend (for a single one)
 
+**Services namespace**:
+The single Kubernetes namespace (`services`) every Service runs in. One shared namespace across all Services, not one per Service — the cluster is single-node, single-operator, so per-Service isolation doesn't pay for itself yet; revisit if that changes.
+_Avoid_: default namespace, per-service namespace
+
 **Deploy commit**:
 A CI-authored commit to `main` that changes which image version the cluster should run. A Deploy commit is the deploy — nothing else changes what runs on the Beelink.
 _Avoid_: release, push to prod
@@ -34,6 +38,6 @@ _Avoid_: returning plain text, hardcoded version strings
 ## Example dialogue
 
 > **Dev:** The hello Service is built — how do I deploy it?
-> **Expert:** You don't, directly. CI makes a Deploy commit and ArgoCD brings the Pi in line with it. If it's not in git, it's not deployed.
+> **Expert:** You don't, directly. CI makes a Deploy commit and ArgoCD brings the Beelink in line with it. If it's not in git, it's not deployed.
 > **Dev:** Can I add a Grafana dashboard while I'm at it?
 > **Expert:** That's Phase 1. Phase 0 ends when the loop works, not when the cluster is fancy.

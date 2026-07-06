@@ -14,6 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       infra: ${{ steps.changes.outputs.infra }}
+      services: ${{ steps.changes.outputs.services }}
+      hello: ${{ steps.changes.outputs.hello }}
     steps:
     - uses: actions/checkout@v4
     - uses: dorny/paths-filter@d1c1ffe0248fe513906c8e24db8ea791d46f8590  # v3
@@ -24,6 +26,10 @@ jobs:
             - 'deploy/**'
             - '.github/workflows/ci.yml'
             - '.yamllint.yml'
+          services:
+            - 'services/**'
+          hello:
+            - 'services/hello/**'
 
   test:
     runs-on: ubuntu-latest
@@ -56,6 +62,28 @@ jobs:
       working-directory: app
       run: flutter analyze
 
+  test-hello:
+    needs: filter
+    if: needs.filter.outputs.services == 'true' || github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Go
+      uses: actions/setup-go@v5
+      with:
+        go-version-file: services/hello/go.mod
+
+    - name: Run tests
+      working-directory: services/hello
+      run: go test ./...
+
+    - name: Run go vet
+      working-directory: services/hello
+      run: go vet ./...
+
   lint-deploy:
     needs: filter
     if: needs.filter.outputs.infra == 'true' || github.event_name == 'push'
@@ -69,13 +97,7 @@ jobs:
       run: pip install yamllint==1.38.0
 
     - name: Install kustomize
-      run: |
-        curl -sLo kustomize.tar.gz \
-          https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv5.4.3/kustomize_v5.4.3_linux_amd64.tar.gz
-        echo "3669470b454d865c8184d6bce78df05e977c9aea31c30df3c669317d43bcc7a7  kustomize.tar.gz" | sha256sum --check
-        tar -xzf kustomize.tar.gz
-        sudo mv kustomize /usr/local/bin/kustomize
-        kustomize version
+      uses: ./.github/actions/setup-kustomize
 
     - name: Install kubeconform
       run: |
@@ -92,8 +114,18 @@ jobs:
     - name: Validate Kubernetes schemas (kubeconform)
       run: |
         set -eo pipefail
-        kustomize build deploy/bootstrap > /tmp/bootstrap.yaml
-        [ -s /tmp/bootstrap.yaml ] || { echo "ERROR: kustomize produced empty output"; exit 1; }
+        > /tmp/manifests.yaml
+        for dir in deploy/bootstrap deploy/services/hello; do
+          kustomize build "$dir" > /tmp/build.yaml
+          [ -s /tmp/build.yaml ] || { echo "ERROR: kustomize produced empty output for $dir"; exit 1; }
+          cat /tmp/build.yaml >> /tmp/manifests.yaml
+          echo "---" >> /tmp/manifests.yaml
+        done
+        for f in deploy/apps/*.yaml; do
+          [ -e "$f" ] || continue
+          cat "$f" >> /tmp/manifests.yaml
+          echo "---" >> /tmp/manifests.yaml
+        done
         kubeconform \
           -strict \
           -skip CustomResourceDefinition \
@@ -101,7 +133,7 @@ jobs:
           -verbose \
           -schema-location default \
           -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/1de95b7e9cb737ba46b14fa5a033fee2e47d90a3/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
-          /tmp/bootstrap.yaml > /tmp/kubeconform.json
+          /tmp/manifests.yaml > /tmp/kubeconform.json
         python3 -c "
         import sys, json
         with open('/tmp/kubeconform.json') as f:
@@ -114,6 +146,83 @@ jobs:
         valid = [r for r in records if r.get('status') == 'statusValid']
         print(f'kubeconform: {len(valid)} resources validated')
         "
+
+  build-push-hello:
+    needs: [filter, test-hello, lint-deploy]
+    if: |
+      github.event_name == 'push' &&
+      needs.filter.outputs.hello == 'true' &&
+      needs.test-hello.result == 'success' &&
+      (needs.lint-deploy.result == 'success' || needs.lint-deploy.result == 'skipped')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      sha: ${{ steps.commit.outputs.sha }}
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Get short SHA
+      id: commit
+      run: echo "sha=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v4
+
+    - name: Log in to GHCR
+      uses: docker/login-action@v4
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build and push hello image
+      uses: docker/build-push-action@v7
+      with:
+        context: services/hello
+        platforms: linux/amd64
+        push: true
+        tags: ghcr.io/xdezex/universal/hello:${{ steps.commit.outputs.sha }}
+        build-args: |
+          VERSION=${{ steps.commit.outputs.sha }}
+
+  deploy-hello:
+    needs: [filter, build-push-hello]
+    if: |
+      github.event_name == 'push' &&
+      needs.filter.outputs.hello == 'true' &&
+      needs.build-push-hello.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.DEPLOY_TOKEN }}
+
+    - name: Install kustomize
+      uses: ./.github/actions/setup-kustomize
+
+    - name: Bump hello image tag
+      working-directory: deploy/services/hello
+      env:
+        SHA: ${{ needs.build-push-hello.outputs.sha }}
+      run: kustomize edit set image "ghcr.io/xdezex/universal/hello=ghcr.io/xdezex/universal/hello:${SHA}"
+
+    - name: Commit and push deploy commit
+      env:
+        SHA: ${{ needs.build-push-hello.outputs.sha }}
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git add deploy/services/hello/kustomization.yaml
+        git commit -m "deploy: hello@${SHA}"
+        git push
 
   build-and-release:
     needs: [test, lint-deploy]

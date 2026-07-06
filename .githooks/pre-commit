@@ -40,8 +40,8 @@ EOF
   # kustomize and kubeconform only apply when deploy/ files are staged
   if [ -n "$staged_deploy" ]; then
     # Set up temp files and trap immediately so any early exit cleans up.
-    tmp=$(mktemp)
-    kc_out=$(mktemp)
+    tmp=$(mktemp --suffix=.yaml)
+    kc_out=$(mktemp --suffix=.json)
     trap 'rm -f "$tmp" "$kc_out"' EXIT INT TERM
 
     # Stash unstaged deploy/ changes so validations run against what will be
@@ -58,29 +58,41 @@ EOF
       exit 1
     fi
 
-    kustomize build deploy/bootstrap > "$tmp" || exit 1
+    : > "$tmp"
+    for dir in deploy/bootstrap deploy/services/hello; do
+      [ -d "$dir" ] || continue
+      kustomize build "$dir" >> "$tmp" || exit 1
+      echo "---" >> "$tmp"
+    done
+    for f in deploy/apps/*.yaml; do
+      [ -e "$f" ] || continue
+      cat "$f" >> "$tmp"
+      echo "---" >> "$tmp"
+    done
     kubeconform \
       -strict \
       -ignore-missing-schemas \
       -skip CustomResourceDefinition \
       -output json \
+      -verbose \
       -schema-location default \
       -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/1de95b7e9cb737ba46b14fa5a033fee2e47d90a3/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
-      < "$tmp" > "$kc_out" || { cat "$kc_out"; exit 1; }
+      "$tmp" > "$kc_out" || { cat "$kc_out"; exit 1; }
     python3 - "$kc_out" <<'PYEOF' || exit 1
 import sys, json
 with open(sys.argv[1]) as f:
-    records = [json.loads(l) for l in f if l.strip()]
+    records = json.load(f).get('resources', [])
 if not records:
     print('ERROR: kubeconform produced no output — validation did not run')
     sys.exit(1)
-bad = [r for r in records if r.get('status') != 'statusValid']
+bad = [r for r in records if r.get('status') not in ('statusValid', 'statusSkipped')]
 if bad:
     print('ERROR: non-valid resources:')
     for r in bad:
         print(f'  {r["status"]} {r.get("apiVersion","")} {r.get("kind","")}/{r.get("name","?")}')
     sys.exit(1)
-print(f'kubeconform: {len(records)} resources validated')
+valid = [r for r in records if r.get('status') == 'statusValid']
+print(f'kubeconform: {len(valid)} resources validated')
 PYEOF
   fi
 fi

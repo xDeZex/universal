@@ -1,13 +1,13 @@
 # GitOps deploy loop: CI commits Kustomize tag bumps, ArgoCD syncs
 
-The backend runs on a single Raspberry Pi 4B (4GB) under k3s, and we want every deploy to be auditable and revertable from git alone. We decided: GitHub Actions builds linux/arm64 images tagged with the git SHA, pushes them to GHCR, then commits the new tag into `deploy/`'s `kustomization.yaml` on `main` (the "Deploy commit"); ArgoCD (core install) auto-syncs with self-heal and prune, so a file change in git is the only mechanism that alters the cluster. CI holds no cluster credentials.
+The backend runs on a single Beelink SER5 under k3s, and we want every deploy to be auditable and revertable from git alone. We decided: GitHub Actions builds linux/amd64 images tagged with the git SHA, pushes them to GHCR, then commits the new tag into `deploy/`'s `kustomization.yaml` on `main` (the "Deploy commit"); ArgoCD (core install) auto-syncs with self-heal and prune, so a file change in git is the only mechanism that alters the cluster. CI holds no cluster credentials.
 
 Config lives in this same monorepo rather than a separate config repo (solo project — path filters give the same isolation without two-repo overhead).
 
 ## Consequences
 
-- `main` will be protected via a GitHub ruleset (tests gate PRs), with a bypass for the deploy workflow's identity — Deploy commits push directly to `main` without re-running the Flutter gate. Not yet configured; this is Phase 0 work. An auto-merged PR per deploy was rejected: it would queue a one-line `deploy/` change behind minutes of unrelated Flutter CI.
-- Both CI workflows will need path filters (Flutter: `lib/`, `test/`, `android/`, `pubspec.*`; backend: `services/`, `deploy/`) so Deploy commits don't trigger APK releases and backend pushes don't run Flutter tests. The current `ci.yml` has none yet, and the backend workflow doesn't exist — also Phase 0 work.
+- `main` is protected via a GitHub ruleset (tests gate PRs). Deploy commits push directly to `main` using a fine-grained PAT (`contents: write` only, stored as a repo secret) belonging to the repo owner's own account, which already holds the ruleset's admin bypass (`bypass_actors: RepositoryRole, bypass_mode: always`) — no separate bot bypass actor was added. An auto-merged PR per deploy was rejected: it would queue a one-line `deploy/` change behind minutes of unrelated Flutter CI.
+- `ci.yml`'s `filter` job (via `dorny/paths-filter`) gates `test-hello`, `build-push-hello`/`deploy-hello`, and `lint-deploy` on PRs, so a Flutter-only PR doesn't run them. On pushes to `main`, `test-hello` and `lint-deploy` intentionally always run regardless of path (a cheap safety net); only `build-push-hello`/`deploy-hello` stay gated even on push, since building/deploying an image is not cheap or idempotent. The Flutter side (`test`, `build-and-release`) has no path filter at all yet — every push to `main`, including a Deploy commit, still triggers a full Flutter test run and a new GitHub Release. Still open, not required for this change's scope.
 
 ## Considered options
 
