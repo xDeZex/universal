@@ -5,6 +5,6 @@
 
 ## 2. Change is deployed and verified live (depends on task group 1 being merged and synced)
 
-- [ ] 2.1 After merge, ArgoCD reports the `hello` Application synced and healthy with the updated Ingress
-- [ ] 2.2 Via `ssh miniser`, the `letsencrypt-prod` `ClusterIssuer` reports `Ready: True` and the cert-manager `Certificate` for `xdezex.duckdns.org` reports `Ready: True`, with the `xdezex-duckdns-org-tls` Secret present in the `services` namespace
-- [ ] 2.3 `https://xdezex.duckdns.org/hello` serves a valid certificate when checked from mobile data (issue #47's "done when")
+- [x] 2.1 After merge, ArgoCD reports the `hello` Application synced and healthy with the updated Ingress
+- [x] 2.2 Via `ssh miniser`, the `letsencrypt-prod` `ClusterIssuer` reports `Ready: True` and the cert-manager `Certificate` for `xdezex.duckdns.org` reports `Ready: True`, with the `xdezex-duckdns-org-tls` Secret present in the `services` namespace
+- [x] 2.3 `https://xdezex.duckdns.org/hello` serves a valid certificate when checked from mobile data (issue #47's "done when")
