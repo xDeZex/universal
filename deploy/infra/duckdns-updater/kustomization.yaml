@@ -5,3 +5,4 @@ namespace: duckdns-updater
 
 resources:
   - cronjob.yaml
+  - sealedsecret.yaml

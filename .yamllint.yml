@@ -3,6 +3,7 @@ extends: default
 
 ignore: |
   **/argocd-install.yaml
+  **/sealedsecret.yaml
 
 rules:
   document-start: disable

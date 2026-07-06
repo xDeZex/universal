@@ -2,7 +2,7 @@
 
 - [x] 1.1 `deploy/infra/sealed-secrets/` contains vendored raw controller manifests, targeting the `sealed-secrets` namespace
 - [x] 1.2 `deploy/apps/sealed-secrets.yaml` Application syncs those manifests at `sync-wave: "0"`
-- [ ] 1.3 **Deferred — post-merge, live cluster.** After sync, the controller pod in `sealed-secrets` namespace reports healthy
+- [x] 1.3 After sync, the controller pod in `sealed-secrets` namespace reports healthy — confirmed via `kubectl get application sealed-secrets -n argocd`
 - [x] 1.4 No controller resource is placed in the `services` namespace
 
 ## 2. Controller private key is backed up off-cluster
@@ -13,10 +13,10 @@
 
 ## 3. DuckDNS token sealed and committed
 
-- [ ] 3.1 **Deferred — needs live controller.** Fetch the controller's public cert via `kubeseal --fetch-cert`
-- [ ] 3.2 **Deferred — needs real token.** Seal the DuckDNS token with `strict` scope (no `--scope` flag) targeting the `duckdns-updater` namespace
-- [ ] 3.3 **Deferred — depends on 3.1/3.2.** Commit the resulting `SealedSecret` under `deploy/infra/duckdns-updater/`
-- [ ] 3.4 **Deferred — post-merge, live cluster.** After sync, confirm the controller decrypts it into a plain `Secret` in `duckdns-updater`
+- [x] 3.1 Fetch the controller's public cert via `kubeseal --fetch-cert`
+- [x] 3.2 Seal the DuckDNS token with `strict` scope (no `--scope` flag) targeting the `duckdns-updater` namespace
+- [x] 3.3 Commit the resulting `SealedSecret` under `deploy/infra/duckdns-updater/`
+- [ ] 3.4 **Deferred — needs a few minutes post-merge.** After sync, confirm the controller decrypts it into a plain `Secret` in `duckdns-updater`
 
 ## 4. CronJob keeps xdezex.duckdns.org current
 
