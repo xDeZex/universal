@@ -4,6 +4,10 @@ A personal all-in-one Flutter app paired with self-hosted services on a Beelink 
 
 ## Language
 
+**Infra component**:
+A piece of cluster infrastructure installed via its own ArgoCD Application under `deploy/infra/` — third-party, not authored by this project, and not a Service. Covers both long-running controllers (Sealed Secrets) and periodic jobs (the DuckDNS updater CronJob) — the distinguishing trait is "not a Service," not runtime shape.
+_Avoid_: service (lowercase), controller (too narrow for the category)
+
 **Service**:
 An independently deployable Go backend program with its own directory under `services/`, its own container image, and its own manifests. The app is not a Service; it is the client.
 _Avoid_: microservice, server, backend (for a single one)

@@ -14,9 +14,9 @@ if [ -n "$staged_flutter" ]; then
 fi
 
 # YAML/manifest checks on staged deploy/, .github/, or .yamllint.yml files
-staged_infra=$(git diff --cached --name-only | grep -E '^(deploy/|\.github/|\.yamllint\.yml$)')
+staged_lint=$(git diff --cached --name-only | grep -E '^(deploy/|\.github/|\.yamllint\.yml$)')
 staged_deploy=$(git diff --cached --name-only | grep '^deploy/' | grep -vE '\.(md|txt)$')
-if [ -n "$staged_infra" ]; then
+if [ -n "$staged_lint" ]; then
   echo "Infrastructure files staged — running manifest linting..."
 
   for cmd in yamllint kustomize kubeconform; do
@@ -34,7 +34,7 @@ if [ -n "$staged_infra" ]; then
     echo "$f" | grep -q 'argocd-install\.yaml' && continue
     yamllint "$f" || exit 1
   done <<EOF
-$staged_infra
+$staged_lint
 EOF
 
   # kustomize and kubeconform only apply when deploy/ files are staged
@@ -59,7 +59,7 @@ EOF
     fi
 
     : > "$tmp"
-    for dir in deploy/bootstrap deploy/services/hello; do
+    for dir in deploy/bootstrap deploy/services/hello deploy/infra/sealed-secrets deploy/infra/duckdns-updater; do
       [ -d "$dir" ] || continue
       kustomize build "$dir" >> "$tmp" || exit 1
       echo "---" >> "$tmp"
