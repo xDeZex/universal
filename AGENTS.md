@@ -2,7 +2,7 @@
 
 ## Project
 
-A personal all-in-one Flutter app (checklist today, gym tracking planned) plus a backend playground: Go services on a Raspberry Pi 4B (k3s + ArgoCD GitOps), built to learn microservices, event-driven architecture, observability, and CI/CD. See README.md for the roadmap and architecture.
+A personal all-in-one Flutter app (checklist today, gym tracking planned) plus a backend playground: Go services on a Beelink SER5 (k3s + ArgoCD GitOps), built to learn microservices, event-driven architecture, observability, and CI/CD. See README.md for the roadmap and architecture.
 
 See `CONTEXT.md` for the full domain vocabulary.
 
@@ -34,4 +34,4 @@ deploy/     # Kubernetes manifests synced by ArgoCD
 
 ## Infrastructure Access
 
-- The k3s host is reachable over SSH via the `miniser` alias (`ssh miniser`), configured in `~/.ssh/config` with key-based auth.
+- The k3s host (Beelink SER5, LAN-only) is reachable over SSH via the `miniser` alias (`ssh miniser`), configured in `~/.ssh/config` with key-based auth.

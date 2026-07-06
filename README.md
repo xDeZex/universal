@@ -5,7 +5,7 @@ A personal all-in-one app, and a playground for learning backend infrastructure.
 Two halves:
 
 - **Flutter app** — checklist today, gym session tracking (sets, reps, weights) coming.
-- **Backend on a Raspberry Pi** — Go services on k3s, deployed via GitOps, built to learn microservices, event-driven architecture, observability, and CI/CD.
+- **Backend on a Beelink SER5** — Go services on k3s, deployed via GitOps, built to learn microservices, event-driven architecture, observability, and CI/CD.
 
 ## Roadmap
 
@@ -13,7 +13,7 @@ Tracked in [issues](../../issues), starting with the [Phase 0 epic](../../issues
 
 | Phase | Goal |
 |-------|------|
-| 0 | Hello world on the Pi: k3s + ArgoCD, `git push` → live on the Pi |
+| 0 | Hello world on the Beelink: k3s + ArgoCD, `git push` → live on the Beelink |
 | 1 | Observability: metrics, logs, dashboards |
 | 2 | Event-driven services: NATS JetStream, workout → stats events |
 | 3 | Flutter gym-tracking UI talking to the backend |
@@ -24,14 +24,14 @@ Tracked in [issues](../../issues), starting with the [Phase 0 epic](../../issues
 Flutter app (phone)
       │
       ▼
-Raspberry Pi 4B (DietPi, arm64, 4GB)
+Beelink SER5 (Ubuntu, x86_64)
 └── k3s
     ├── Traefik (ingress, port-forwarded)
     ├── ArgoCD (core) ── watches deploy/ on main
     └── services (Go, images on GHCR)
 ```
 
-Target CI/CD loop (Phase 0, in progress): push to `main` → GitHub Actions builds a linux/arm64 image to GHCR → image tag bumped in `deploy/` → ArgoCD syncs the cluster.
+Target CI/CD loop (Phase 0, in progress): push to `main` → GitHub Actions builds a linux/amd64 image to GHCR → image tag bumped in `deploy/` → ArgoCD syncs the cluster.
 
 ## Repo layout
 
