@@ -3,7 +3,15 @@ kind: Ingress
 metadata:
   name: hello
   namespace: services
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
+  tls:
+    # Shared across every Ingress on this host (ADR-0007) — do not fork into a
+    # per-service secretName; other Services will reuse this same certificate.
+    - hosts:
+        - xdezex.duckdns.org
+      secretName: xdezex-duckdns-org-tls
   rules:
     - host: xdezex.duckdns.org
       http:
