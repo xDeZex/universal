@@ -16,6 +16,7 @@ jobs:
       deploy: ${{ steps.changes.outputs.deploy }}
       services: ${{ steps.changes.outputs.services }}
       hello: ${{ steps.changes.outputs.hello }}
+      app: ${{ steps.changes.outputs.app }}
     steps:
     - uses: actions/checkout@v4
     - uses: dorny/paths-filter@d1c1ffe0248fe513906c8e24db8ea791d46f8590  # v3
@@ -30,8 +31,13 @@ jobs:
             - 'services/**'
           hello:
             - 'services/hello/**'
+          app:
+            - 'app/**'
+            - '.github/workflows/ci.yml'
 
   test:
+    needs: filter
+    if: needs.filter.outputs.app == 'true' || github.event_name == 'push'
     runs-on: ubuntu-latest
 
     steps:
