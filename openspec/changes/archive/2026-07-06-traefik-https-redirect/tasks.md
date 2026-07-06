@@ -6,7 +6,7 @@
 
 ## 2. HTTP requests on the web entrypoint are redirected to HTTPS
 
-- [x] 2.1 `helmchartconfig.yaml`'s `valuesContent` configures `ports.web.redirections.entryPoint` with `to: websecure`, `scheme: https`, `permanent: true`
-- [ ] 2.2 After sync, `ssh miniser` + `curl -I http://xdezex.duckdns.org/hello` returns a redirect to `https://xdezex.duckdns.org/hello`
-- [ ] 2.3 `curl -I https://xdezex.duckdns.org/hello` still succeeds after the redirect is live (existing TLS path unaffected)
-- [ ] 2.4 `letsencrypt-prod`'s `Certificate` for `xdezex.duckdns.org` still reports `Ready: True` after sync (ACME/HTTP-01 path not broken by the redirect)
+- [x] 2.1 `helmchartconfig.yaml`'s `valuesContent` configures `ports.web.http.redirections.entryPoint` with `to: websecure`, `scheme: https`, `permanent: true` (corrected from an initial `ports.web.redirections.entryPoint`, which Helm silently ignored — see #59)
+- [x] 2.2 After sync, `ssh miniser` + `curl -I http://xdezex.duckdns.org/hello` returns a redirect to `https://xdezex.duckdns.org/hello`
+- [x] 2.3 `curl -I https://xdezex.duckdns.org/hello` still succeeds after the redirect is live (existing TLS path unaffected)
+- [x] 2.4 `letsencrypt-prod`'s `Certificate` for `xdezex.duckdns.org` still reports `Ready: True` after sync (ACME/HTTP-01 path not broken by the redirect)
