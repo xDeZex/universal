@@ -7,6 +7,6 @@
 
 ## 2. Controller is healthy and CRDs are registered
 
-- [ ] 2.1 Commit and let ArgoCD sync; confirm the `cert-manager` Application reaches `Synced`/`Healthy`
-- [ ] 2.2 Confirm controller, webhook, and cainjector Pods are Running in the `cert-manager` namespace
-- [ ] 2.3 Confirm `certificates.cert-manager.io`, `issuers.cert-manager.io`, and `clusterissuers.cert-manager.io` CRDs are registered (`kubectl get crd | grep cert-manager.io`)
+- [x] 2.1 Commit and let ArgoCD sync; confirm the `cert-manager` Application reaches `Synced`/`Healthy` (verified on miniser after PR #49 merged)
+- [x] 2.2 Confirm controller, webhook, and cainjector Pods are Running in the `cert-manager` namespace
+- [x] 2.3 Confirm `certificates.cert-manager.io`, `issuers.cert-manager.io`, and `clusterissuers.cert-manager.io` CRDs are registered (`kubectl get crd | grep cert-manager.io`)
