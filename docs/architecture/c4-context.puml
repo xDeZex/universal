@@ -5,10 +5,10 @@ title System Context: Universal
 
 Person(oliver, "Oliver", "Developer and sole user. Writes code, uses the app, views dashboards.")
 
-System(universal, "Universal", "Flutter checklist and gym tracker with self-hosted Go services on a Raspberry Pi 4B.")
+System(universal, "Universal", "Flutter checklist and gym tracker with self-hosted Go services on a Beelink SER5.")
 
 System_Ext(github, "GitHub + GHCR", "Source control, GitHub Actions CI, and container image registry.")
-System_Ext(duckdns, "DuckDNS", "Dynamic DNS — keeps a hostname pointed at the Pi's public IP.")
+System_Ext(duckdns, "DuckDNS", "Dynamic DNS — keeps a hostname pointed at the Beelink's public IP.")
 
 Rel(oliver, github, "Pushes code, reviews PRs", "HTTPS/git")
 Rel(oliver, universal, "Uses app and monitors dashboards", "Android / HTTPS")

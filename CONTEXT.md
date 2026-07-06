@@ -1,6 +1,6 @@
 # Universal
 
-A personal all-in-one Flutter app paired with self-hosted services on a Raspberry Pi. The backend exists primarily as a learning vehicle for microservices, event-driven architecture, observability, and CI/CD.
+A personal all-in-one Flutter app paired with self-hosted services on a Beelink SER5. The backend exists primarily as a learning vehicle for microservices, event-driven architecture, observability, and CI/CD.
 
 ## Language
 
@@ -9,7 +9,7 @@ An independently deployable Go backend program with its own directory under `ser
 _Avoid_: microservice, server, backend (for a single one)
 
 **Deploy commit**:
-A CI-authored commit to `main` that changes which image version the cluster should run. A Deploy commit is the deploy — nothing else changes what runs on the Pi.
+A CI-authored commit to `main` that changes which image version the cluster should run. A Deploy commit is the deploy — nothing else changes what runs on the Beelink.
 _Avoid_: release, push to prod
 
 **Phase**:

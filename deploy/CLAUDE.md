@@ -1,6 +1,6 @@
 # Kubernetes / ArgoCD Guidelines
 
-Manifests in `deploy/` are synced by ArgoCD (GitOps). Changes here affect the live cluster on the Raspberry Pi 4B.
+Manifests in `deploy/` are synced by ArgoCD (GitOps). Changes here affect the live cluster on the Beelink SER5.
 
 ## Structure
 
