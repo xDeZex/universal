@@ -49,5 +49,5 @@ func TestRootGET_ReturnsIdentity(t *testing.T) {
 	var body map[string]string
 	require.NoError(t, json.Unmarshal(raw, &body), "body is not valid JSON")
 	assert.Equal(t, "hello", body["service"])
-	assert.NotEmpty(t, body["version"])
+	assert.Equal(t, "dev", body["version"], "default build-time version must be \"dev\"")
 }

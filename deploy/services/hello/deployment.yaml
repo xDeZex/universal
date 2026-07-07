@@ -18,6 +18,9 @@ spec:
       containers:
         - name: hello
           image: ghcr.io/xdezex/universal/hello:dev
+          envFrom:
+            - configMapRef:
+                name: hello-otel-config
           ports:
             - containerPort: 8080
           livenessProbe:

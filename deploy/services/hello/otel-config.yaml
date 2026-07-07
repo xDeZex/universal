@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hello-otel-config
+  namespace: services
+data:
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector-opentelemetry-collector.observability.svc.cluster.local:4318
+  OTEL_SERVICE_NAME: hello

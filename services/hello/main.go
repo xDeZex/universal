@@ -1,9 +1,18 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"github.com/ollibolli/universal/services/hello/internal/telemetry"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 var version = "dev"
@@ -36,14 +45,40 @@ func healthzHandler(w http.ResponseWriter, r *http.Request) {
 
 func newMux() *http.ServeMux {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", rootHandler)
+	mux.Handle("/", otelhttp.NewHandler(http.HandlerFunc(rootHandler), "root"))
 	mux.HandleFunc("/healthz", healthzHandler)
 	return mux
 }
 
 func main() {
-	log.Println("listening on :8080")
-	if err := http.ListenAndServe(":8080", newMux()); err != nil {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	shutdown, err := telemetry.Setup(ctx, version)
+	if err != nil {
 		log.Fatal(err)
+	}
+
+	srv := &http.Server{Addr: ":8080", Handler: newMux()}
+	go func() {
+		log.Println("listening on :8080")
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Fatal(err)
+		}
+	}()
+
+	<-ctx.Done()
+	stop()
+
+	srvShutdownCtx, srvCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer srvCancel()
+	if err := srv.Shutdown(srvShutdownCtx); err != nil {
+		log.Println("server shutdown:", err)
+	}
+
+	telemetryShutdownCtx, telemetryCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer telemetryCancel()
+	if err := shutdown(telemetryShutdownCtx); err != nil {
+		log.Println("telemetry shutdown:", err)
 	}
 }
