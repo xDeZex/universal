@@ -9,7 +9,7 @@ A piece of cluster infrastructure installed via its own ArgoCD Application under
 _Avoid_: service (lowercase), controller (too narrow for the category), observability component (reserved for the shared-namespace stack)
 
 **Observability component**:
-A piece of the observability stack (otel-collector, the metrics backend, Grafana, Loki, later a traces backend) installed via its own ArgoCD Application under `deploy/observability/` — third-party and not a Service, like an Infra component, but sharing the single `observability` namespace with its siblings instead of getting one of its own (see ADR-0008: none of them holds privilege whose blast radius needs bounding, unlike Sealed Secrets).
+A piece of the observability stack (otel-collector, the metrics backend, Grafana, Loki, later a traces backend) — third-party and not a Service, like an Infra component, but sharing the single `observability` namespace with its siblings instead of getting one of its own (see ADR-0008: none of them holds privilege whose blast radius needs bounding, unlike Sealed Secrets). Its Application file lives under `deploy/apps/` like every workload's (see Root app); any local manifests it needs (rather than a pure remote Helm chart) would live under `deploy/observability/`, mirroring how an Infra component's local manifests live under `deploy/infra/`.
 _Avoid_: infra component (reserved for per-component namespace isolation)
 
 **Observability namespace**:
