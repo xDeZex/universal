@@ -25,5 +25,5 @@
 
 ## 5. Post-deploy verification (requires the live sync — do last)
 
-- [ ] 5.1 After ArgoCD syncs, `ssh miniser` + `kubectl -n services get pods` shows the `hello` pod `Running` and `Ready` (unaffected by the new env/config)
-- [ ] 5.2 `kubectl -n observability logs` on the collector pod shows OTLP metric payloads from `service.name=hello` via the `debug` exporter within one export interval
+- [x] 5.1 After ArgoCD syncs, `ssh miniser` + `kubectl -n services get pods` shows the `hello` pod `Running` and `Ready` (unaffected by the new env/config)
+- [x] 5.2 `kubectl -n observability logs` on the collector pod shows OTLP metric payloads from `service.name=hello` via the `debug` exporter within one export interval
