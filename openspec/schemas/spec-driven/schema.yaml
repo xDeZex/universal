@@ -1,6 +1,6 @@
 name: spec-driven
 version: 1
-description: Customized spec-driven workflow with strict TDD (RED→GREEN→COMMIT→REVIEW per task, adversarial fixtures, multi-category scenarios) — proposal → specs → [design] → tasks
+description: Customized spec-driven workflow with strict TDD (RED→GREEN→COMMIT per task, REVIEW per group and full branch, adversarial fixtures, multi-category scenarios) — proposal → specs → [design] → tasks
 artifacts:
   - id: proposal
     generates: proposal.md
@@ -25,20 +25,16 @@ artifacts:
       - **Impact**: Affected code, APIs, dependencies, or systems.
 
 
-      IMPORTANT: The Capabilities section is critical. It creates the contract
-      between
+      IMPORTANT: The Capabilities section creates the contract between proposal and
 
-      proposal and specs phases. Research existing specs before filling this in.
+      specs phases. Research existing specs before filling this in. Each capability
 
-      Each capability listed here will need a corresponding spec file.
+      listed here will need a corresponding spec file.
 
 
       Keep it concise (1-2 pages). Focus on the "why" not the "how" -
 
       implementation details belong in design.md.
-
-
-      This is the foundation - specs, design, and tasks all build on this.
     requires: []
   - id: specs
     generates: specs/**/*.md
@@ -127,6 +123,13 @@ artifacts:
       - **THEN** system downloads a CSV file with all user data
 
 
+      #### Scenario: Export with no data
+
+      - **WHEN** user clicks "Export" button with an empty account
+
+      - **THEN** system shows an error instead of downloading an empty file
+
+
       ## REMOVED Requirements
 
 
@@ -182,9 +185,6 @@ artifacts:
       Focus on architecture and approach, not line-by-line implementation.
 
       Reference the proposal for motivation and specs for requirements.
-
-
-      Good design docs explain the "why" behind technical decisions.
     requires:
       - proposal
       - specs
@@ -245,17 +245,23 @@ apply:
     - tasks
   tracks: tasks.md
   instruction: |
+    Every commit below is a `[temporary]` checkpoint — run `git commit -m` directly with
+    the message shown, verbatim, regardless of any other commit convention.
+
     Before implementing, check if any planning artifacts (proposal, specs, design, tasks)
     have uncommitted changes (`git status`). If so, commit them in one commit with message
     `plan [temporary]: <change-name>`. This preserves the plan as a restore point if the
     apply needs to be reset. If all artifacts are already committed, skip this step.
 
-    Read context files, then implement each task using strict TDD — one behavior at a time,
-    working through the numbered groups (`## N.` headings) in tasks.md in order.
+    Read context files, then work through the numbered groups (`## N.` headings) in
+    tasks.md in order, one task at a time.
 
-    For each task:
+    For each task, regardless of whether it produces testable code or non-code work
+    (docs, config, spec/schema edits) — the task always ends the same way: mark it
+    complete, then COMMIT. Only the middle of the cycle differs:
 
-    1. **RED** — Write a failing test that specifies the behavior.
+    1. **RED** — Write a failing test that specifies the behavior. Skip this and GREEN
+      for non-code work; implement it directly and go straight to marking it complete.
 
       Before writing the test, run the full suite and confirm it is fully clean. If
       any tests fail, stop and surface them to the user before proceeding.
