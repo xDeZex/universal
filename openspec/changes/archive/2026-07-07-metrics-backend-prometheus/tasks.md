@@ -21,7 +21,7 @@
 
 ## 4. Post-deploy verification (requires the live sync — do last)
 
-- [ ] 4.1 After ArgoCD syncs, `ssh miniser` + `kubectl -n observability get storageclass observability-retain` shows the class present with `RECLAIMPOLICY Retain`
-- [ ] 4.2 `kubectl -n observability get pods` shows the Prometheus pod `Running` and `Ready`, with its PVC `Bound`
-- [ ] 4.3 `kubectl -n observability logs` on the collector pod shows no errors from the `prometheusremotewrite` exporter
-- [ ] 4.4 Querying Prometheus's API (e.g. `up` or a `hello`-tagged metric) returns a data point with `service.name="hello"`, confirming the pipeline end to end
+- [x] 4.1 After ArgoCD syncs, `ssh miniser` + `kubectl -n observability get storageclass observability-retain` shows the class present with `RECLAIMPOLICY Retain`
+- [x] 4.2 `kubectl -n observability get pods` shows the Prometheus pod `Running` and `Ready`, with its PVC `Bound`
+- [x] 4.3 `kubectl -n observability logs` on the collector pod shows no errors from the `prometheusremotewrite` exporter
+- [x] 4.4 Querying Prometheus's API (e.g. `up` or a `hello`-tagged metric) returns a data point with `service.name="hello"`, confirming the pipeline end to end
