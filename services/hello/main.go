@@ -45,7 +45,16 @@ func healthzHandler(w http.ResponseWriter, r *http.Request) {
 
 func newMux() *http.ServeMux {
 	mux := http.NewServeMux()
-	mux.Handle("/", otelhttp.NewHandler(http.HandlerFunc(rootHandler), "root"))
+	mux.Handle("/", otelhttp.NewHandler(
+		http.HandlerFunc(rootHandler),
+		"root",
+		// otelhttp's default span name formatter ignores the operation name
+		// and derives "{method} {route}" instead; use the operation verbatim
+		// so the span is tagged "root" as required.
+		otelhttp.WithSpanNameFormatter(func(operation string, r *http.Request) string {
+			return operation
+		}),
+	))
 	mux.HandleFunc("/healthz", healthzHandler)
 	return mux
 }
@@ -55,6 +64,11 @@ func main() {
 	defer stop()
 
 	shutdown, err := telemetry.Setup(ctx, version)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	tracesShutdown, err := telemetry.SetupTraces(ctx, version)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -80,5 +94,11 @@ func main() {
 	defer telemetryCancel()
 	if err := shutdown(telemetryShutdownCtx); err != nil {
 		log.Println("telemetry shutdown:", err)
+	}
+
+	tracesShutdownCtx, tracesCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer tracesCancel()
+	if err := tracesShutdown(tracesShutdownCtx); err != nil {
+		log.Println("traces shutdown:", err)
 	}
 }

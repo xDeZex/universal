@@ -40,11 +40,13 @@ spec:
             debug: {}
             prometheusremotewrite:
               endpoint: http://prometheus-server.observability.svc.cluster.local/api/v1/write
+            otlphttp:
+              endpoint: http://tempo.observability.svc.cluster.local:4318
           service:
             pipelines:
               traces:
                 receivers: [otlp]
-                exporters: [debug]
+                exporters: [otlphttp]
               metrics:
                 receivers: [otlp]
                 exporters: [prometheusremotewrite]
