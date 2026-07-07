@@ -1,0 +1,75 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: grafana
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    - repoURL: https://grafana-community.github.io/helm-charts
+      chart: grafana
+      targetRevision: 12.7.2
+      helm:
+        values: |
+          admin:
+            existingSecret: grafana-admin-credentials
+
+          persistence:
+            enabled: false
+
+          sidecar:
+            resources:
+              requests:
+                cpu: 50m
+                memory: 50Mi
+              limits:
+                cpu: 100m
+                memory: 100Mi
+            datasources:
+              enabled: true
+
+          ingress:
+            enabled: true
+            annotations:
+              cert-manager.io/cluster-issuer: letsencrypt-prod
+            path: /grafana
+            pathType: Prefix
+            hosts:
+              - xdezex.duckdns.org
+            tls:
+              - hosts:
+                  - xdezex.duckdns.org
+                secretName: xdezex-duckdns-org-tls
+
+          grafana.ini:
+            server:
+              root_url: https://xdezex.duckdns.org/grafana
+              serve_from_sub_path: true
+            auth.anonymous:
+              enabled: false
+            users:
+              allow_sign_up: false
+
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+    - repoURL: https://github.com/xDeZex/universal
+      targetRevision: main
+      path: deploy/observability-config/grafana-credentials
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: observability
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
