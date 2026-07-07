@@ -1,0 +1,74 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-hello
+  namespace: observability
+  labels:
+    grafana_dashboard: "1"
+data:
+  hello.json: |
+    {
+      "uid": "hello-service",
+      "title": "hello",
+      "timezone": "browser",
+      "schemaVersion": 39,
+      "version": 1,
+      "refresh": "30s",
+      "time": {
+        "from": "now-1h",
+        "to": "now"
+      },
+      "panels": [
+        {
+          "id": 1,
+          "title": "Request rate by status code",
+          "type": "timeseries",
+          "datasource": "Prometheus",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": "Prometheus",
+              "expr": "sum(rate(http_server_request_duration_seconds_count{job=\"hello\"}[5m])) by (http_response_status_code)",
+              "legendFormat": "{{http_response_status_code}}"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "title": "Latency p50/p95",
+          "type": "timeseries",
+          "datasource": "Prometheus",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": "Prometheus",
+              "expr": "histogram_quantile(0.50, sum(rate(http_server_request_duration_seconds_bucket{job=\"hello\"}[5m])) by (le))",
+              "legendFormat": "p50"
+            },
+            {
+              "refId": "B",
+              "datasource": "Prometheus",
+              "expr": "histogram_quantile(0.95, sum(rate(http_server_request_duration_seconds_bucket{job=\"hello\"}[5m])) by (le))",
+              "legendFormat": "p95"
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "title": "Non-2xx rate",
+          "type": "timeseries",
+          "datasource": "Prometheus",
+          "gridPos": { "h": 8, "w": 24, "x": 0, "y": 8 },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": "Prometheus",
+              "expr": "increase(http_server_request_duration_seconds_count{job=\"hello\",http_response_status_code!~\"2..\"}[5m])",
+              "legendFormat": "non-2xx (5m increase)"
+            }
+          ]
+        }
+      ]
+    }
