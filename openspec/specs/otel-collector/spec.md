@@ -60,19 +60,38 @@ The collector's metrics pipeline SHALL export exclusively to a `prometheusremote
 - **WHEN** the `prometheusremotewrite` exporter's configuration is inspected
 - **THEN** its endpoint SHALL match the Prometheus Observability component's in-cluster Service DNS name and remote-write path
 
-### Requirement: Traces and logs pipelines remain debug-only pending their backends
+### Requirement: Logs pipeline remains debug-only, an intentionally unused stub
 
-The collector's traces and logs pipelines SHALL continue to export exclusively to the `debug` exporter, unchanged, until #66 (logs) and #67 (traces) wire real backends.
+The collector's `logs` pipeline SHALL continue to export exclusively to the `debug` exporter. This is permanent, not pending a future backend: ADR-0011 routes log collection through Alloy directly to Loki, bypassing the collector entirely, so this pipeline stays an unused stub by design.
 
-#### Scenario: Happy path — traces/logs payload logged to debug output
+#### Scenario: Happy path — logs payload logged to debug output
 
-- **WHEN** an OTLP traces or logs payload is received on either receiver endpoint
+- **WHEN** an OTLP logs payload is received on either receiver endpoint
 - **THEN** its contents appear in the collector pod's own container logs via the `debug` exporter
 
-#### Scenario: Error/rejection — no backend exporter configured for traces or logs
+#### Scenario: Error/rejection — no backend exporter configured for logs
 
-- **WHEN** the traces or logs pipeline's exporter configuration is reviewed
-- **THEN** neither SHALL reference any exporter other than `debug`
+- **WHEN** the logs pipeline's exporter configuration is reviewed
+- **THEN** it SHALL NOT reference any exporter other than `debug`
+
+### Requirement: Traces pipeline exports to Tempo
+
+The collector's `traces` pipeline SHALL export exclusively to an `otlphttp` exporter pointed at the Tempo Observability component's OTLP http endpoint. No other exporter SHALL be referenced by the traces pipeline.
+
+#### Scenario: Happy path — traces payload forwarded to Tempo
+
+- **WHEN** an OTLP traces payload is received on either receiver endpoint
+- **THEN** it is forwarded to Tempo via the `otlphttp` exporter and becomes queryable there
+
+#### Scenario: Error/rejection — no other traces exporter configured
+
+- **WHEN** the traces pipeline's exporter configuration is reviewed
+- **THEN** it SHALL NOT reference `debug` or any exporter other than `otlphttp`
+
+#### Scenario: Contract — endpoint matches Tempo's Service
+
+- **WHEN** the `otlphttp` exporter's traces endpoint is inspected
+- **THEN** it SHALL match the Tempo Observability component's in-cluster Service DNS name and OTLP http port
 
 ### Requirement: Collector resource requests/limits are set against the phase RAM budget
 

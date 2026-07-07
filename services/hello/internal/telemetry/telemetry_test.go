@@ -41,3 +41,39 @@ func TestSetup_SucceedsAndReturnsWorkingShutdown(t *testing.T) {
 	defer cancel()
 	_ = shutdown(ctx) // export failure (collector unreachable) is expected; must not hang or panic
 }
+
+func TestSetupTraces_SucceedsAndReturnsWorkingShutdown(t *testing.T) {
+	prev := otel.GetTracerProvider()
+	t.Cleanup(func() { otel.SetTracerProvider(prev) })
+
+	t.Setenv("OTEL_SERVICE_NAME", "hello-test")
+	// A closed local port fails fast (connection refused) instead of hanging
+	// on an unreachable default endpoint, keeping the test bounded.
+	t.Setenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://127.0.0.1:1")
+
+	shutdown, err := SetupTraces(context.Background(), "test-version")
+	require.NoError(t, err)
+	require.NotNil(t, shutdown)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	_ = shutdown(ctx) // export failure (collector unreachable) is expected; must not hang or panic
+}
+
+func TestSetupTraces_RegistersGlobalTracerProvider(t *testing.T) {
+	prev := otel.GetTracerProvider()
+	t.Cleanup(func() { otel.SetTracerProvider(prev) })
+
+	t.Setenv("OTEL_SERVICE_NAME", "hello-test")
+	t.Setenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://127.0.0.1:1")
+
+	shutdown, err := SetupTraces(context.Background(), "test-version")
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+		_ = shutdown(ctx)
+	})
+
+	assert.NotEqual(t, prev, otel.GetTracerProvider(), "SetupTraces must register a new global TracerProvider")
+}
