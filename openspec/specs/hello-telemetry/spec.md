@@ -43,7 +43,7 @@ The service SHALL export metrics using `otlpmetrichttp` on a `PeriodicReader`, t
 #### Scenario: Happy path — metrics reach the collector
 
 - **WHEN** the `PeriodicReader` triggers an export
-- **THEN** the SDK POSTs OTLP-encoded metrics to `http://otel-collector-opentelemetry-collector.observability.svc.cluster.local:4318/v1/metrics`, and the collector's debug exporter logs the payload
+- **THEN** the SDK POSTs OTLP-encoded metrics to `http://otel-collector-opentelemetry-collector.observability.svc.cluster.local:4318/v1/metrics`, and the collector forwards it per its own pipeline configuration (see `otel-collector` capability), rather than a hardcoded downstream exporter
 
 #### Scenario: Error/rejection — collector unreachable
 
