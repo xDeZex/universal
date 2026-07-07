@@ -15,7 +15,7 @@ Grafana SHALL be installed via a dedicated ArgoCD Application (`deploy/apps/graf
 #### Scenario: Error/rejection — no bundled unrelated components
 
 - **WHEN** the Application's Helm values are reviewed
-- **THEN** they SHALL NOT enable any bundled sidecar or dependency beyond the datasource-provisioning sidecar this change requires
+- **THEN** they SHALL NOT enable any bundled sidecar or dependency beyond the datasource-provisioning and dashboard-provisioning sidecars this project's changes require
 
 #### Scenario: Contract — Helm chart sourced directly, values forwarded correctly
 

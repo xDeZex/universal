@@ -24,6 +24,19 @@ spec:
         prometheus-pushgateway:
           enabled: false
 
+        serverFiles:
+          alerting_rules.yml:
+            groups:
+              - name: hello
+                rules:
+                  - alert: HelloNon2xxResponses
+                    expr: increase(http_server_request_duration_seconds_count{job="hello",http_response_status_code!~"2.."}[5m]) > 0
+                    for: 0m
+                    labels:
+                      severity: warning
+                    annotations:
+                      summary: hello is returning non-2xx responses
+
         server:
           retention: 7d
           extraArgs:

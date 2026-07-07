@@ -4,8 +4,8 @@ For the observability epic's metrics backend (#62), we chose the upstream `prome
 
 ## Considered options
 
-- **`kube-prometheus-stack`** — rejected: bundles Alertmanager, node-exporter, kube-state-metrics, and its own Grafana, none of which are wanted yet. #65's alerting need can be met later by adding Alertmanager (or an equivalent) as its own component when alerting actually lands, rather than accepting the whole bundle now for one piece of it.
+- **`kube-prometheus-stack`** — rejected: bundles Alertmanager, node-exporter, kube-state-metrics, and its own Grafana, none of which are wanted yet. #65's alerting need turned out not to require Alertmanager at all — see Consequences.
 
 ## Consequences
 
-- #65 (first dashboard + alert) will need to add Alertmanager as a separate component when it lands, since the bare chart doesn't provide one.
+- #65's alert fires as a native Prometheus rule with no Alertmanager: the rule evaluates and transitions to pending/firing directly in Prometheus, which is sufficient for a rule with no routing/notification requirement. Alertmanager (or an equivalent) is only needed if a future alert needs to notify somewhere.
