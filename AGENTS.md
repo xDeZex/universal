@@ -35,3 +35,4 @@ deploy/     # Kubernetes manifests synced by ArgoCD
 ## Infrastructure Access
 
 - The k3s host (Beelink SER5, LAN-only) is reachable over SSH via the `miniser` alias (`ssh miniser`), configured in `~/.ssh/config` with key-based auth.
+- On the host, use the user kubeconfig rather than the root-owned `/etc/rancher/k3s/k3s.yaml`: `kubectl --kubeconfig=/home/oliver/.kube/config ...`, e.g. `ssh miniser "kubectl --kubeconfig=/home/oliver/.kube/config -n services get pods"`.
