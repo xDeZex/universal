@@ -38,6 +38,8 @@ spec:
                   endpoint: 0.0.0.0:4318
           exporters:
             debug: {}
+            prometheusremotewrite:
+              endpoint: http://prometheus-server.observability.svc.cluster.local/api/v1/write
           service:
             pipelines:
               traces:
@@ -45,7 +47,7 @@ spec:
                 exporters: [debug]
               metrics:
                 receivers: [otlp]
-                exporters: [debug]
+                exporters: [prometheusremotewrite]
               logs:
                 receivers: [otlp]
                 exporters: [debug]

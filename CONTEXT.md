@@ -9,16 +9,20 @@ A piece of cluster infrastructure installed via its own ArgoCD Application under
 _Avoid_: service (lowercase), controller (too narrow for the category), observability component (reserved for the shared-namespace stack)
 
 **Observability component**:
-A piece of the observability stack (otel-collector, the metrics backend, Grafana, Loki, later a traces backend) — third-party and not a Service, like an Infra component, but sharing the single `observability` namespace with its siblings instead of getting one of its own (see ADR-0008: none of them holds privilege whose blast radius needs bounding, unlike Sealed Secrets). Its Application file lives under `deploy/apps/` like every workload's (see Root app); any local manifests it needs (rather than a pure remote Helm chart) would live under `deploy/observability/`, mirroring how an Infra component's local manifests live under `deploy/infra/`.
-_Avoid_: infra component (reserved for per-component namespace isolation)
+A piece of the observability stack (otel-collector, Prometheus, Grafana, Loki, later a traces backend) — third-party and not a Service, like an Infra component, but sharing the single `observability` namespace with its siblings instead of getting one of its own (see ADR-0008: none of them holds privilege whose blast radius needs bounding, unlike Sealed Secrets). Its Application file lives under `deploy/apps/` like every workload's (see Root app); any local manifests it needs (rather than a pure remote Helm chart) would live under `deploy/observability/`, mirroring how an Infra component's local manifests live under `deploy/infra/`. Configuring one already installed, without installing anything new, is Observability config instead.
+_Avoid_: infra component (reserved for per-component namespace isolation), observability config (reserved for authored config, no new install)
 
 **Observability namespace**:
 The single Kubernetes namespace (`observability`) every Observability component runs in. One shared namespace across all of them, not one per component — mirrors the Services namespace's reasoning: no component here holds privilege whose blast radius needs bounding, and they're mutually interdependent by design (see ADR-0008).
 _Avoid_: infra namespace, per-component namespace
 
 **Infra config**:
-A manifest we author that configures an existing Infra component or a platform-provided controller (e.g. k3s's bundled Traefik) — no new software is installed. Lives under `deploy/infra-config/`, a sibling of `deploy/infra/`, each still with its own ArgoCD Application under `deploy/apps/`. Distinguishes "we wrote this YAML" from "we installed this third-party program."
-_Avoid_: infra component (reserved for installed third-party software), config, patch
+A manifest we author that configures an existing Infra component or a platform-provided controller (e.g. k3s's bundled Traefik) with cluster-wide, general-purpose applicability — no new software is installed. Lives under `deploy/infra-config/`, a sibling of `deploy/infra/`, each still with its own ArgoCD Application under `deploy/apps/`. Distinguishes "we wrote this YAML" from "we installed this third-party program." Authored config narrowly scoped to the observability stack, rather than the whole cluster, is Observability config instead — even when it happens to configure the same kind of platform-provided controller.
+_Avoid_: infra component (reserved for installed third-party software), config, patch, observability config (reserved for config scoped to the observability stack)
+
+**Observability config**:
+A manifest we author that configures a platform-provided controller or an already-installed Observability component, scoped to the observability stack rather than the whole cluster — no new software is installed. Mirrors Infra config's shape (authored YAML, not an install) but lives under `deploy/observability-config/`, a sibling of `deploy/observability/`, keeping the observability stack self-contained and independent of the production app's own infra. Each still gets its own ArgoCD Application under `deploy/apps/`.
+_Avoid_: infra config (reserved for cluster-wide, general-purpose authored config), observability component (reserved for installed third-party software)
 
 **Service**:
 An independently deployable Go backend program with its own directory under `services/`, its own container image, and its own manifests. The app is not a Service; it is the client.
