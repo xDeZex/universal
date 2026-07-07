@@ -30,8 +30,8 @@
 
 ## 5. Post-deploy verification (requires the live sync — do last)
 
-- [ ] 5.1 After ArgoCD syncs, `ssh miniser` + `kubectl -n observability get pods` shows the Loki pod `Running`/`Ready` with its PVC `Bound`, and an Alloy pod `Running`/`Ready` on the node
-- [ ] 5.2 `kubectl -n observability logs` on the Alloy pod shows no errors pushing to Loki
-- [ ] 5.3 In Grafana, the Loki datasource is present and its connection test succeeds
-- [ ] 5.4 In Grafana Explore (Loki datasource), a LogQL query for `{namespace="services", pod=~"hello.*"}` returns recent log lines from `hello`
-- [ ] 5.5 A LogQL query for `{namespace="argocd"}` (or another non-`services` namespace) also returns log lines, confirming all-namespace scope works end to end
+- [x] 5.1 After ArgoCD syncs, `ssh miniser` + `kubectl -n observability get pods` shows the Loki pod `Running`/`Ready` with its PVC `Bound`, and an Alloy pod `Running`/`Ready` on the node
+- [x] 5.2 `kubectl -n observability logs` on the Alloy pod shows no errors pushing to Loki
+- [x] 5.3 In Grafana, the Loki datasource is present and its connection test succeeds
+- [x] 5.4 In Grafana Explore (Loki datasource), a LogQL query for `{namespace="services", pod=~"hello.*"}` returns recent log lines from `hello`
+- [x] 5.5 A LogQL query for `{namespace="argocd"}` (or another non-`services` namespace) also returns log lines, confirming all-namespace scope works end to end
