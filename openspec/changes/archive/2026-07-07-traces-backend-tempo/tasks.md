@@ -35,8 +35,8 @@
 
 ## 6. Post-deploy verification (requires the live sync — do last)
 
-- [ ] 6.1 After ArgoCD syncs, `ssh miniser` + `kubectl -n observability get pods` shows the Tempo pod `Running`/`Ready` with its PVC `Bound`
-- [ ] 6.2 `kubectl -n observability logs` on the otel-collector pod shows no errors exporting to Tempo
-- [ ] 6.3 In Grafana, the Tempo datasource is present and its connection test succeeds
-- [ ] 6.4 A `GET` request to `hello`'s `/` endpoint, followed by a Grafana Explore (Tempo datasource) search, returns a trace for that request
-- [ ] 6.5 The returned trace's span is tagged operation `"root"` and carries `service.name=hello`, `service.version` matching hello's deployed image version
+- [x] 6.1 After ArgoCD syncs, `ssh miniser` + `kubectl -n observability get pods` shows the Tempo pod `Running`/`Ready` with its PVC `Bound`
+- [x] 6.2 `kubectl -n observability logs` on the otel-collector pod shows no errors exporting to Tempo
+- [x] 6.3 In Grafana, the Tempo datasource is present and its connection test succeeds
+- [x] 6.4 A `GET` request to `hello`'s `/` endpoint, followed by a Grafana Explore (Tempo datasource) search, returns a trace for that request
+- [x] 6.5 The returned trace's span is tagged operation `"root"` and carries `service.name=hello`, `service.version` matching hello's deployed image version
