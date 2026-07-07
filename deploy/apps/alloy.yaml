@@ -77,8 +77,15 @@ spec:
                 }
               }
 
+              // discovery.relabel's __path__ values are glob patterns (contain "*"),
+              // which loki.source.file does not expand — local.file_match resolves
+              // them against the filesystem into concrete, existing file paths.
+              local.file_match "pod_logs" {
+                path_targets = discovery.relabel.pod_logs.output
+              }
+
               loki.source.file "pod_logs" {
-                targets    = discovery.relabel.pod_logs.output
+                targets    = local.file_match.pod_logs.targets
                 forward_to = [loki.write.loki.receiver]
               }
 
