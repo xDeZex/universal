@@ -1,0 +1,98 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: alloy
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://grafana.github.io/helm-charts
+    chart: alloy
+    targetRevision: 1.10.0
+    helm:
+      values: |
+        controller:
+          type: daemonset
+
+        alloy:
+          mounts:
+            # Mounts the host's /var/log (which includes /var/log/pods) into
+            # the container read-only, for tailing kubelet's pod log files.
+            varlog: true
+
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+
+          configMap:
+            content: |
+              // Discover pods cluster-wide via the Kubernetes API. No namespace
+              // selector is set, so every namespace is eligible for discovery.
+              discovery.kubernetes "pod" {
+                role = "pod"
+                selectors {
+                  role  = "pod"
+                  field = "spec.nodeName=" + coalesce(sys.env("HOSTNAME"), constants.hostname)
+                }
+              }
+
+              // Label each discovered pod's log stream with namespace/pod/container,
+              // and derive the hostPath log file glob from the pod's UID and
+              // container name, matching kubelet's /var/log/pods layout.
+              discovery.relabel "pod_logs" {
+                targets = discovery.kubernetes.pod.targets
+
+                rule {
+                  source_labels = ["__meta_kubernetes_namespace"]
+                  action        = "replace"
+                  target_label  = "namespace"
+                }
+
+                rule {
+                  source_labels = ["__meta_kubernetes_pod_name"]
+                  action        = "replace"
+                  target_label  = "pod"
+                }
+
+                rule {
+                  source_labels = ["__meta_kubernetes_pod_container_name"]
+                  action        = "replace"
+                  target_label  = "container"
+                }
+
+                rule {
+                  source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
+                  action        = "replace"
+                  target_label  = "__path__"
+                  separator     = "/"
+                  replacement   = "/var/log/pods/*$1/*.log"
+                }
+              }
+
+              loki.source.file "pod_logs" {
+                targets    = discovery.relabel.pod_logs.output
+                forward_to = [loki.write.loki.receiver]
+              }
+
+              loki.write "loki" {
+                endpoint {
+                  url = "http://loki.observability.svc.cluster.local:3100/loki/api/v1/push"
+                }
+              }
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: observability
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
