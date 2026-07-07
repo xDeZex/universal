@@ -5,6 +5,7 @@ resources:
 - deployment.yaml
 - service.yaml
 - ingress.yaml
+- otel-config.yaml
 
 images:
 - name: ghcr.io/xdezex/universal/hello
