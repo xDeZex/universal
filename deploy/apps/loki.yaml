@@ -1,0 +1,92 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: loki
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://grafana.github.io/helm-charts
+    chart: loki
+    targetRevision: 7.0.0
+    helm:
+      values: |
+        deploymentMode: SingleBinary
+
+        loki:
+          # No gateway/auth proxy in front of Loki (single-tenant homelab setup),
+          # so requests reach the singleBinary directly without an X-Scope-OrgID header.
+          auth_enabled: false
+
+          commonConfig:
+            # Only one singleBinary replica exists; a replication factor above 1
+            # can never reach write quorum against a single ingester.
+            replication_factor: 1
+
+          schemaConfig:
+            configs:
+              - from: "2024-01-01"
+                store: tsdb
+                object_store: filesystem
+                schema: v13
+                index:
+                  prefix: loki_index_
+                  period: 24h
+
+          storage:
+            type: filesystem
+
+          limits_config:
+            retention_period: 72h
+
+          compactor:
+            retention_enabled: true
+            delete_request_store: filesystem
+
+        singleBinary:
+          replicas: 1
+          persistence:
+            storageClass: observability-retain
+            size: 5Gi
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+
+        # SingleBinary mode only; disable the SimpleScalable/distributed targets.
+        write:
+          replicas: 0
+        read:
+          replicas: 0
+        backend:
+          replicas: 0
+
+        # No gateway/proxy in front of Loki's push API.
+        gateway:
+          enabled: false
+
+        # Trim chart extras not needed for a single-node homelab deployment.
+        test:
+          enabled: false
+        lokiCanary:
+          enabled: false
+        chunksCache:
+          enabled: false
+        resultsCache:
+          enabled: false
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: observability
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
