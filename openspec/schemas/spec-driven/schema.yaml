@@ -291,20 +291,24 @@ apply:
     4. **COMMIT** — Commit all changes for this cycle (implementation, tests, and the
        updated task checkbox) in one commit, with message `task X.Y [temporary]: <short description>`.
 
+    **REVIEW** means: hand the range to the `code-review` skill and let its subagent
+    read the diff — its findings are the review, not a starting point for your own.
+
     **After the last task in a group (`## N.`) is complete**:
 
-    **REVIEW GROUP** — Find the group's first `task N.1 [temporary]` commit in `git log`
-    and diff its parent against HEAD (`git diff <parent>..HEAD`) — this spans every commit
-    made for the group. Fix appropriate findings in a single
-    `review finding (group N) [temporary]: <short description>` commit. Does not loop and
-    does not trigger another review. If there are no findings, proceed to the next group.
+    **REVIEW GROUP** — Find the group's first `task N.1 [temporary]` commit in `git log`;
+    its parent is the start of this batch. REVIEW with incremental scope over
+    `<parent>..HEAD` — this spans every commit made for the group. Fix appropriate
+    findings in a single `review finding (group N) [temporary]: <short description>`
+    commit. Does not loop and does not trigger another review. If there are no findings,
+    proceed to the next group.
 
     **After all tasks are complete**:
 
-    1. Review the full branch diff (`git diff origin/main`).
-       Loop: review → fix (`review finding (full) [temporary]: <short description>`)
-       → review again until no inline-fixable findings remain. Filed-only findings
-       (GitHub issues) do not keep the loop running.
+    1. REVIEW with full scope (the branch diff against `origin/main`).
+       Loop: fix (`review finding (full) [temporary]: <short description>`) → REVIEW
+       again until no inline-fixable findings remain. Filed-only findings (GitHub
+       issues) do not keep the loop running.
 
     2. Run `/opsx:archive` to archive the change, then commit the archived artifacts
        in a new `archive [temporary]: <change-name>` commit.
