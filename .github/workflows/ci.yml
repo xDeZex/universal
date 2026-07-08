@@ -281,6 +281,10 @@ jobs:
     - name: Rename APK
       run: mv app/build/app/outputs/flutter-apk/app-release.apk app/build/app/outputs/flutter-apk/Universal.apk
 
+    - name: Compute APK checksum
+      working-directory: app/build/app/outputs/flutter-apk
+      run: sha256sum Universal.apk > Universal.apk.sha256
+
     - name: Upload APK artifact
       uses: actions/upload-artifact@v4
       with:

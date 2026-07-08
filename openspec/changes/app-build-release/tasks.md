@@ -6,7 +6,7 @@
 
 ## 2. App build publishes a SHA-256 checksum alongside the APK
 
-- [ ] 2.1 New step added after the "Rename APK" step that runs `sha256sum` against `Universal.apk` and writes the result to `Universal.apk.sha256`
+- [x] 2.1 New step added after the "Rename APK" step that runs `sha256sum` against `Universal.apk` and writes the result to `Universal.apk.sha256`
 - [ ] 2.2 `softprops/action-gh-release` step's `files` input includes both `app/build/app/outputs/flutter-apk/Universal.apk` and the new `.sha256` file
 
 ## 3. Documentation
