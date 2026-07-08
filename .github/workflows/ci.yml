@@ -37,7 +37,7 @@ jobs:
 
   test:
     needs: filter
-    if: needs.filter.outputs.app == 'true' || github.event_name == 'push'
+    if: needs.filter.outputs.app == 'true'
     runs-on: ubuntu-latest
 
     steps:
@@ -231,9 +231,10 @@ jobs:
         git push
 
   build-and-release:
-    needs: [test, lint-deploy]
+    needs: [filter, test, lint-deploy]
     if: |
       github.event_name == 'push' &&
+      needs.filter.outputs.app == 'true' &&
       needs.test.result == 'success' &&
       (needs.lint-deploy.result == 'success' || needs.lint-deploy.result == 'skipped')
     runs-on: ubuntu-latest
@@ -280,6 +281,10 @@ jobs:
     - name: Rename APK
       run: mv app/build/app/outputs/flutter-apk/app-release.apk app/build/app/outputs/flutter-apk/Universal.apk
 
+    - name: Compute APK checksum
+      working-directory: app/build/app/outputs/flutter-apk
+      run: sha256sum Universal.apk > Universal.apk.sha256
+
     - name: Upload APK artifact
       uses: actions/upload-artifact@v4
       with:
@@ -307,7 +312,9 @@ jobs:
     - name: Create release
       uses: softprops/action-gh-release@26994186c0ac3ef5cae75ac16aa32e8153525f77
       with:
-        files: app/build/app/outputs/flutter-apk/Universal.apk
+        files: |
+          app/build/app/outputs/flutter-apk/Universal.apk
+          app/build/app/outputs/flutter-apk/Universal.apk.sha256
         tag_name: "build-${{ steps.commit.outputs.timestamp }}-${{ steps.commit.outputs.sha }}"
         name: "Build ${{ steps.commit.outputs.timestamp }}"
         body_path: release_body.md

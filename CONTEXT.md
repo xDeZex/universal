@@ -38,6 +38,10 @@ _Avoid_: default namespace, per-service namespace
 A CI-authored commit to `main` that changes which image version the cluster should run. A Deploy commit is the deploy — nothing else changes what runs on the Beelink.
 _Avoid_: release, push to prod
 
+**App build**:
+A GitHub Release CI publishes containing a signed APK artifact, triggered by a push to `main` touching `app/**`. Unrelated to a Deploy commit — nothing about the Beelink cluster changes when an App build is published; it exists purely so a device can download and install the app.
+_Avoid_: release (ambiguous with Deploy commit's rejected alias), deploy
+
 **External host**:
 The single DNS name (`xdezex.duckdns.org`) every Service is reachable under, routed by path per Service rather than one host per Service. TLS for this host is shared across every Service's Ingress (see ADR-0007), not issued per-Service.
 _Avoid_: per-service domain, subdomain-per-service
