@@ -4,6 +4,8 @@ A personal all-in-one Flutter app paired with self-hosted services on a Beelink 
 
 ## Language
 
+### Platform
+
 **Infra component**:
 A piece of cluster infrastructure installed via its own ArgoCD Application under `deploy/infra/`, each in its own namespace — third-party, not authored by this project, and not a Service. Covers both long-running controllers (Sealed Secrets) and periodic jobs (the DuckDNS updater CronJob) — the distinguishing trait is "not a Service," not runtime shape. Configuring one you've already installed, without installing anything new, is Infra config instead. An Observability component is also third-party and not a Service, but isolation doesn't apply to it — see that entry.
 _Avoid_: service (lowercase), controller (too narrow for the category), observability component (reserved for the shared-namespace stack)
@@ -59,9 +61,48 @@ _Avoid_: /health, /ping, /status
 `GET /` on every Service — returns JSON `{"service":"<name>","version":"<git-sha>"}`. Version is the short git commit SHA baked in at build time via `ldflags`.
 _Avoid_: returning plain text, hardcoded version strings
 
+### Gym
+
+**Workout**:
+One visit to the gym, start to finish — the top-level thing a user logs. Carries a start timestamp and an end timestamp (date and time of day). When a Schedule is due, the app pre-creates a Workout with Exercise Entries and Sets pre-filled from the Routine's Planned Exercises, which the user then logs against (editing values as actually performed).
+_Avoid_: session, workout session (session is overloaded — HTTP/auth sessions, this CLI's own sessions)
+
+**Exercise**:
+A reusable movement (e.g. "Bench Press"), created the first time a user types its name freeform and offered for reuse in later Workouts afterward. Not a predefined catalog — the user grows the list themselves.
+_Avoid_: movement, lift
+
+**Exercise Entry**:
+One Exercise performed within a specific Workout — groups together the Sets logged for that Exercise in that Workout. A Workout has many Exercise Entries; an Exercise Entry references exactly one Exercise.
+_Avoid_: exercise (reserved for the reusable movement definition), workout exercise
+
+**Set**:
+One performance of an Exercise Entry's Exercise at a given weight for a given rep count (e.g. "3 reps @ 50kg"), carrying its own logged-at timestamp (enables per-Exercise stats over time, independent of the Workout). `reps` is a plain attribute of a Set, not its own tracked entity. An Exercise Entry has many Sets, logged in order.
+_Avoid_: rep (a rep is not tracked individually — it's a count on a Set)
+
+**Routine**:
+A named, reusable template (e.g. "Push Day") prescribing which Exercises to do and their target Sets/reps/weights — distinct from a Workout, which is the actual logged occurrence.
+_Avoid_: plan (kept as the general idea of planning, not a concrete noun), program (reserved for an ordered sequence of Routines over a time period), template
+
+**Program**:
+An ordered sequence of Routines repeated over a specified time period (e.g. Push/Pull/Legs rotated across an 8-week block). Owns the Schedule that assigns Routines to occurrences — a Routine is never scheduled standalone.
+_Avoid_: routine (a Program is composed of Routines, not the other way around), plan
+
+**Schedule**:
+The recurrence rule on a Program that determines when each Routine comes up next — either weekday-based (e.g. "Push on Mondays") or cadence-based (e.g. "every 3rd day," rolling regardless of weekday).
+_Avoid_: recurrence (kept as the general concept; Schedule is the concrete noun for a Program's rule)
+
+**Planned Exercise**:
+The planned counterpart to an Exercise Entry — an Exercise prescribed within a Routine along with its target sets/reps/weights, before any Workout logs it.
+_Avoid_: exercise entry (reserved for the logged occurrence within an actual Workout)
+
 ## Example dialogue
 
 > **Dev:** The hello Service is built — how do I deploy it?
 > **Expert:** You don't, directly. CI makes a Deploy commit and ArgoCD brings the Beelink in line with it. If it's not in git, it's not deployed.
 > **Dev:** Can I add a Grafana dashboard while I'm at it?
 > **Expert:** That's Phase 1. Phase 0 ends when the loop works, not when the cluster is fancy.
+
+> **Dev:** I want today's push session to show up pre-filled.
+> **Expert:** That's the Schedule on your Program firing — it pre-creates a Workout from the due Routine's Planned Exercises. You log against it, editing Sets as you actually perform them.
+> **Dev:** Can I track my one-rep max as a stat?
+> **Expert:** We punted on PRs — averages and trends are still open questions for stats-svc, not part of the core logging vocabulary yet.
