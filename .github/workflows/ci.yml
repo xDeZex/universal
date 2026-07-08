@@ -231,9 +231,10 @@ jobs:
         git push
 
   build-and-release:
-    needs: [test, lint-deploy]
+    needs: [filter, test, lint-deploy]
     if: |
       github.event_name == 'push' &&
+      needs.filter.outputs.app == 'true' &&
       needs.test.result == 'success' &&
       (needs.lint-deploy.result == 'success' || needs.lint-deploy.result == 'skipped')
     runs-on: ubuntu-latest
