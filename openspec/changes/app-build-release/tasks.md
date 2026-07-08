@@ -2,7 +2,7 @@
 
 - [x] 1.1 `test` job's `if` condition changed to `needs.filter.outputs.app == 'true'` (drop the `|| github.event_name == 'push'` clause)
 - [x] 1.2 `build-and-release` job's `if` condition includes an explicit `needs.filter.outputs.app == 'true'` check, alongside its existing `needs.test.result == 'success'` check
-- [ ] 1.3 Manually trace the updated `ci.yml` conditions against the PR-triggered ruleset checks (`test`, `test-hello`) to confirm required-status-check gating on `main` is unaffected
+- [x] 1.3 Manually trace the updated `ci.yml` conditions against the PR-triggered ruleset checks (`test`, `test-hello`) to confirm required-status-check gating on `main` is unaffected
 
 ## 2. App build publishes a SHA-256 checksum alongside the APK
 
