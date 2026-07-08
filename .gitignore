@@ -48,6 +48,7 @@ app.*.map.json
 .claude/skills/
 .claude/commands/
 .agents/
+.github/skills/
 skills-lock.json
 
 # Local symlink to AGENTS.md for tools that look for CLAUDE.md
