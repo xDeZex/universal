@@ -1,9 +1,5 @@
-# app-build-pipeline Specification
+## MODIFIED Requirements
 
-## Purpose
-TBD - created by syncing change app-build-release. Update Purpose after archive.
-
-## Requirements
 ### Requirement: App build only triggers for `app/**` changes
 
 CI SHALL run the `test` and `build-universal` jobs only when the triggering event touches `app/**` (or the `ci.yml` workflow file itself), for both `pull_request` and `push` events. A push to `main` that does not touch `app/**` SHALL NOT trigger `build-universal`, and therefore SHALL NOT trigger `release-universal`, which requires `build-universal` to have succeeded.
@@ -65,6 +61,8 @@ When CI publishes an App build, it SHALL compute a SHA-256 checksum of the signe
 
 - **WHEN** CI passes the Build Tag via `--dart-define`
 - **THEN** it uses the same key name that `UpdateService` reads via `String.fromEnvironment` in the app
+
+## ADDED Requirements
 
 ### Requirement: App build validation runs on pull requests and is a required status check
 

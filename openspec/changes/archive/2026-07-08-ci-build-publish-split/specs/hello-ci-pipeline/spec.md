@@ -1,20 +1,4 @@
-## ADDED Requirements
-
-### Requirement: PRs touching `services/**` run Go tests as a required check
-
-CI SHALL run `go test ./...` and `go vet ./...` against `services/hello` whenever a pull request or push touches `services/**`, and this check SHALL be a required status check on `main`'s branch ruleset.
-
-#### Scenario: Happy path — tests pass
-
-- **WHEN** a pull request modifies a file under `services/hello`, and its tests pass
-- **THEN** the `test-hello` job succeeds and the PR is mergeable (assuming other checks pass)
-
-#### Scenario: Error/rejection — tests fail
-
-- **WHEN** a pull request modifies a file under `services/hello` and introduces a failing test
-- **THEN** the `test-hello` job fails, and the branch ruleset blocks the PR from merging
-
----
+## MODIFIED Requirements
 
 ### Requirement: Image build and push to GHCR on merge to main
 
@@ -35,8 +19,6 @@ On push to `main` touching `services/hello/**`, CI SHALL build a `linux/amd64` i
 - **WHEN** the image is built
 - **THEN** the GHCR tag and the `-ldflags`-baked `version` string are the same short SHA — both sourced from `build-hello`'s `sha` output — so `GET /` on the running container reports exactly the tag that was deployed
 
----
-
 ### Requirement: Deploy commit bumps the running image tag
 
 After `push-hello` succeeds, CI SHALL commit an update to `deploy/services/hello/kustomization.yaml`'s image tag to the new SHA (consumed from `push-hello`'s `sha` output) and push it directly to `main`, authored as `github-actions[bot]`, using a repository secret PAT scoped to `contents: write` only.
@@ -56,7 +38,7 @@ After `push-hello` succeeds, CI SHALL commit an update to `deploy/services/hello
 - **WHEN** CI pushes the deploy commit to `main`
 - **THEN** it authenticates using the repository secret PAT (not the default `GITHUB_TOKEN`), since `main`'s ruleset blocks direct pushes except from an account holding the ruleset's bypass
 
----
+## ADDED Requirements
 
 ### Requirement: Image build validation runs on pull requests and is a required status check
 
