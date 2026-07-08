@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../models/checklist.dart';
 import '../services/storage_service.dart';
+import '../services/update_service.dart';
 import '../widgets/checklist_tile.dart';
 import 'checklist_screen.dart';
+import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final List<Checklist>? initialChecklists;
@@ -164,11 +167,30 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _openSettings() {
+    Navigator.push<void>(
+      context,
+      MaterialPageRoute(builder: (context) => const SettingsScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final showUpdateBadge =
+        context.watch<UpdateService>().status == UpdateStatus.updateAvailable;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Checklists'),
+        actions: [
+          IconButton(
+            icon: Badge(
+              isLabelVisible: showUpdateBadge,
+              child: const Icon(Icons.settings),
+            ),
+            onPressed: _openSettings,
+          ),
+        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
