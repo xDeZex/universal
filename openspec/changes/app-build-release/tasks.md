@@ -15,6 +15,6 @@
 
 ## 4. Verification
 
-- [ ] 4.1 `.github/workflows/ci.yml` passes YAML validation (e.g. `yamllint` or a GitHub Actions workflow linter, if available)
+- [x] 4.1 `.github/workflows/ci.yml` passes YAML validation (e.g. `yamllint` or a GitHub Actions workflow linter, if available)
 - [ ] 4.2 Push a commit touching only `app/**` to a test branch/PR and confirm `test` runs; confirm on a simulated/manual review that `build-and-release`'s conditions would evaluate true after merge to `main`
 - [ ] 4.3 Confirm via code review (no live push needed) that a commit touching only `services/**` or `deploy/**` would leave both `test` and `build-and-release` skipped
