@@ -37,7 +37,7 @@ jobs:
 
   test:
     needs: filter
-    if: needs.filter.outputs.app == 'true' || github.event_name == 'push'
+    if: needs.filter.outputs.app == 'true'
     runs-on: ubuntu-latest
 
     steps:
