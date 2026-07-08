@@ -42,6 +42,14 @@ _Avoid_: release, push to prod
 A GitHub Release CI publishes containing a signed APK artifact, triggered by a push to `main` touching `app/**`. Unrelated to a Deploy commit — nothing about the Beelink cluster changes when an App build is published; it exists purely so a device can download and install the app.
 _Avoid_: release (ambiguous with Deploy commit's rejected alias), deploy
 
+**Build Tag**:
+The GitHub Release `tag_name` (e.g. `build-<timestamp>-<sha>`) identifying a specific App build, baked into the APK at CI build time so a running app knows which App build it is. Compared against GitHub's latest release tag to detect whether a newer App build exists.
+_Avoid_: release tag, build identifier, version (no numeric versioning scheme exists)
+
+**Update Check**:
+The app's comparison, run on launch and again every time the Settings screen opens (no throttling), of its own Build Tag against GitHub's latest release Build Tag to decide whether a newer App build exists. Produces one of: checking, up to date, update available, or error.
+_Avoid_: version check, build check
+
 **External host**:
 The single DNS name (`xdezex.duckdns.org`) every Service is reachable under, routed by path per Service rather than one host per Service. TLS for this host is shared across every Service's Ingress (see ADR-0007), not issued per-Service.
 _Avoid_: per-service domain, subdomain-per-service
@@ -110,3 +118,8 @@ _Avoid_: exercise entry (reserved for the logged occurrence within an actual Wor
 > **Expert:** That's the Schedule on your Program firing — it pre-creates a Workout from the due Routine's Planned Exercises. You log against it, editing Sets as you actually perform them.
 > **Dev:** Can I track my one-rep max as a stat?
 > **Expert:** We punted on PRs — averages and trends are still open questions for stats-svc, not part of the core logging vocabulary yet.
+
+> **Dev:** How does the app know it's out of date?
+> **Expert:** Every App build carries a Build Tag baked in at CI time. The Update Check compares that against GitHub's latest release Build Tag — if they differ, an update's available.
+> **Dev:** So it knows which one is newer?
+> **Expert:** No — just "same" or "different." There's no ordering, only equality; see ADR-0013.

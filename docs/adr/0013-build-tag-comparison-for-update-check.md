@@ -1,0 +1,3 @@
+# Build Tag string comparison for the Update Check
+
+The app's release pipeline tags GitHub Releases as `build-<timestamp>-<sha>`, not a numeric version. Rather than adding a numeric build-number scheme (and `package_info_plus`) just to support update checking, CI bakes the release's own `tag_name` into the APK at build time (Build Tag), and the app's Update Check compares it against GitHub's latest release tag with plain string equality. Simpler, but means Build Tags carry no ordering — the app can only tell "different" from "same," not "older" vs "newer" (acceptable since `main` only ever moves forward and CI always tags its own HEAD).

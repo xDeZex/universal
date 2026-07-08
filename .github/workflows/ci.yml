@@ -274,9 +274,16 @@ jobs:
       working-directory: app
       run: flutter pub get
 
+    - name: Get commit info
+      id: commit
+      run: |
+        echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+        echo "message=$(git log --format=%B -n 1 HEAD | head -1)" >> $GITHUB_OUTPUT
+        echo "timestamp=$(date +'%Y%m%d_%H%M%S')" >> $GITHUB_OUTPUT
+
     - name: Build APK
       working-directory: app
-      run: flutter build apk --release
+      run: flutter build apk --release --dart-define=BUILD_TAG=build-${{ steps.commit.outputs.timestamp }}-${{ steps.commit.outputs.sha }}
 
     - name: Rename APK
       run: mv app/build/app/outputs/flutter-apk/app-release.apk app/build/app/outputs/flutter-apk/Universal.apk
@@ -291,13 +298,6 @@ jobs:
         name: Universal-apk
         path: app/build/app/outputs/flutter-apk/Universal.apk
         retention-days: 30
-
-    - name: Get commit info
-      id: commit
-      run: |
-        echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
-        echo "message=$(git log --format=%B -n 1 HEAD | head -1)" >> $GITHUB_OUTPUT
-        echo "timestamp=$(date +'%Y%m%d_%H%M%S')" >> $GITHUB_OUTPUT
 
     - name: Write release body
       env:
