@@ -11,7 +11,7 @@
 
 ## 3. Documentation
 
-- [ ] 3.1 `CONTEXT.md` includes the "App build" term, distinguishing it from "Deploy commit" (already done during exploration — verify it's present on this branch)
+- [x] 3.1 `CONTEXT.md` includes the "App build" term, distinguishing it from "Deploy commit" (already done during exploration — verify it's present on this branch)
 
 ## 4. Verification
 
