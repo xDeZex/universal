@@ -312,7 +312,9 @@ jobs:
     - name: Create release
       uses: softprops/action-gh-release@26994186c0ac3ef5cae75ac16aa32e8153525f77
       with:
-        files: app/build/app/outputs/flutter-apk/Universal.apk
+        files: |
+          app/build/app/outputs/flutter-apk/Universal.apk
+          app/build/app/outputs/flutter-apk/Universal.apk.sha256
         tag_name: "build-${{ steps.commit.outputs.timestamp }}-${{ steps.commit.outputs.sha }}"
         name: "Build ${{ steps.commit.outputs.timestamp }}"
         body_path: release_body.md
