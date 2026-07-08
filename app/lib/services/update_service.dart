@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:ota_update/ota_update.dart';
 
-/// The GitHub Releases API endpoint checked for the latest App build.
+/// The GitHub Releases API endpoint checked for the latest App release.
 const String _releasesUrl =
     'https://api.github.com/repos/xDeZex/universal/releases/latest';
 
@@ -18,7 +18,7 @@ typedef OtaExecutor = Stream<OtaEvent> Function(
 enum UpdateStatus { checking, upToDate, updateAvailable, error }
 
 /// Compares the running app's Build Tag against GitHub's latest release
-/// Build Tag to detect whether a newer App build exists.
+/// Build Tag to detect whether a newer App release exists.
 class UpdateService extends ChangeNotifier {
   UpdateService({
     http.Client? httpClient,
