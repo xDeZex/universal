@@ -1,0 +1,82 @@
+name: CI Deploy
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'deploy/**'
+      - '!deploy/services/hello/**'
+      - '.yamllint.yml'
+      - '.github/workflows/ci-deploy.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'deploy/**'
+      - '!deploy/services/hello/**'
+      - '.yamllint.yml'
+      - '.github/workflows/ci-deploy.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  lint-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install yamllint
+      run: pip install yamllint==1.38.0
+
+    - name: Install kustomize
+      uses: ./.github/actions/setup-kustomize
+
+    - name: Install kubeconform
+      run: |
+        curl -sLo kubeconform.tar.gz \
+          https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz
+        echo "95f14e87aa28c09d5941f11bd024c1d02fdc0303ccaa23f61cef67bc92619d73  kubeconform.tar.gz" | sha256sum --check
+        tar -xzf kubeconform.tar.gz
+        sudo mv kubeconform /usr/local/bin/kubeconform
+        kubeconform -v
+
+    - name: Lint YAML (yamllint)
+      run: yamllint deploy/ .yamllint.yml .github/
+
+    - name: Validate Kubernetes schemas (kubeconform)
+      run: |
+        set -eo pipefail
+        > /tmp/manifests.yaml
+        for dir in deploy/bootstrap deploy/infra/sealed-secrets deploy/infra/duckdns-updater; do
+          kustomize build "$dir" > /tmp/build.yaml
+          [ -s /tmp/build.yaml ] || { echo "ERROR: kustomize produced empty output for $dir"; exit 1; }
+          cat /tmp/build.yaml >> /tmp/manifests.yaml
+          echo "---" >> /tmp/manifests.yaml
+        done
+        for f in deploy/apps/*.yaml; do
+          [ -e "$f" ] || continue
+          cat "$f" >> /tmp/manifests.yaml
+          echo "---" >> /tmp/manifests.yaml
+        done
+        kubeconform \
+          -strict \
+          -skip CustomResourceDefinition \
+          -output json \
+          -verbose \
+          -schema-location default \
+          -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/1de95b7e9cb737ba46b14fa5a033fee2e47d90a3/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
+          /tmp/manifests.yaml > /tmp/kubeconform.json
+        python3 -c "
+        import sys, json
+        with open('/tmp/kubeconform.json') as f:
+            records = json.load(f).get('resources', [])
+        bad = [r for r in records if r.get('status') not in ('statusValid', 'statusSkipped')]
+        if bad:
+            print('ERROR: non-valid resources:')
+            for r in bad: print(f'  {r[\"status\"]} {r.get(\"apiVersion\",\"\")} {r.get(\"kind\",\"\")}/{r.get(\"name\",\"?\")}')
+            sys.exit(1)
+        valid = [r for r in records if r.get('status') == 'statusValid']
+        print(f'kubeconform: {len(valid)} resources validated')
+        "

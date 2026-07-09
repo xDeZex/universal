@@ -27,8 +27,12 @@ A manifest we author that configures a platform-provided controller or an alread
 _Avoid_: infra config (reserved for cluster-wide, general-purpose authored config), observability component (reserved for installed third-party software)
 
 **Service**:
-An independently deployable Go backend program with its own directory under `services/`, its own container image, and its own manifests. The app is not a Service; it is the client.
+An independently deployable Go backend program with its own directory under `services/`, its own container image, and its own manifests. Universal is not a Service; it is the client.
 _Avoid_: microservice, server, backend (for a single one)
+
+**Universal**:
+The Flutter client in this repo — this project's namesake and the personal all-in-one app (checklist today, gym tracking planned) that talks to the Services. Its directory, CI workflow, and release artifacts are all named after it.
+_Avoid_: app, the app (generic and inconsistent with the CI job/artifact names, which already say "Universal")
 
 **Services namespace**:
 The single Kubernetes namespace (`services`) every Service runs in. One shared namespace across all Services, not one per Service — the cluster is single-node, single-operator, so per-Service isolation doesn't pay for itself yet; revisit if that changes.
@@ -38,16 +42,16 @@ _Avoid_: default namespace, per-service namespace
 A CI-authored commit to `main` that changes which image version the cluster should run. A Deploy commit is the deploy — nothing else changes what runs on the Beelink.
 _Avoid_: release, push to prod
 
-**App release**:
+**Universal release**:
 A tagged GitHub Release, created by CI, carrying the built `Universal.apk` as a downloadable asset. Distinct from a Deploy commit — nothing in the cluster changes; it's a distributable artifact for manual install on a device.
-_Avoid_: release (ambiguous with Deploy commit), build artifact, App build
+_Avoid_: release (ambiguous with Deploy commit), build artifact, App release, App build
 
 **Build Tag**:
-The GitHub Release `tag_name` (e.g. `build-<timestamp>-<sha>`) identifying a specific App release, baked into the APK at CI build time so a running app knows which App release it is. Compared against GitHub's latest release tag to detect whether a newer App release exists.
+The GitHub Release `tag_name` (e.g. `build-<timestamp>-<sha>`) identifying a specific Universal release, baked into the APK at CI build time so a running Universal instance knows which Universal release it is. Compared against GitHub's latest release tag to detect whether a newer Universal release exists.
 _Avoid_: release tag, build identifier, version (no numeric versioning scheme exists)
 
 **Update Check**:
-The app's comparison, run on launch and again every time the Settings screen opens (no throttling), of its own Build Tag against GitHub's latest release Build Tag to decide whether a newer App release exists. Produces one of: checking, up to date, update available, or error.
+Universal's comparison, run on launch and again every time the Settings screen opens (no throttling), of its own Build Tag against GitHub's latest release Build Tag to decide whether a newer Universal release exists. Produces one of: checking, up to date, update available, or error.
 _Avoid_: version check, build check
 
 **External host**:
@@ -120,6 +124,6 @@ _Avoid_: exercise entry (reserved for the logged occurrence within an actual Wor
 > **Expert:** We punted on PRs — averages and trends are still open questions for stats-svc, not part of the core logging vocabulary yet.
 
 > **Dev:** How does the app know it's out of date?
-> **Expert:** Every App release carries a Build Tag baked in at CI time. The Update Check compares that against GitHub's latest release Build Tag — if they differ, an update's available.
+> **Expert:** Every Universal release carries a Build Tag baked in at CI time. The Update Check compares that against GitHub's latest release Build Tag — if they differ, an update's available.
 > **Dev:** So it knows which one is newer?
 > **Expert:** No — just "same" or "different." There's no ordering, only equality; see ADR-0013.

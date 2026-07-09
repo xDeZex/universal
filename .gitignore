@@ -31,7 +31,7 @@ migrate_working_dir/
 .flutter-plugins-dependencies
 .pub-cache/
 .pub/
-/app/build/
+/universal/build/
 
 # Symbolication related
 app.*.symbols
@@ -40,9 +40,9 @@ app.*.symbols
 app.*.map.json
 
 # Android Studio will place build artifacts here
-/app/android/app/debug
-/app/android/app/profile
-/app/android/app/release
+/universal/android/app/debug
+/universal/android/app/profile
+/universal/android/app/release
 
 # Vendored agent skills (installed locally)
 .claude/skills/
