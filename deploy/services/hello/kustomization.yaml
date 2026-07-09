@@ -10,4 +10,4 @@ resources:
 images:
 - name: ghcr.io/xdezex/universal/hello
   newName: ghcr.io/xdezex/universal/hello
-  newTag: 0a8df9a
+  newTag: 0e552cc
