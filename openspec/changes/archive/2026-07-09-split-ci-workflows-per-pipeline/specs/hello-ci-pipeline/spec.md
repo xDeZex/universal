@@ -1,24 +1,4 @@
-# hello-ci-pipeline Specification
-
-## Purpose
-Define the dedicated CI workflow for testing, building, validating, and deploying the `hello` service independently from the Universal app and shared deploy manifest pipelines.
-
-## Requirements
-### Requirement: PRs touching `services/**` run Go tests as a required check
-
-CI SHALL run `go test ./...` and `go vet ./...` against `services/hello` whenever a pull request or push touches `services/**`, and this check SHALL be a required status check on `main`'s branch ruleset.
-
-#### Scenario: Happy path — tests pass
-
-- **WHEN** a pull request modifies a file under `services/hello`, and its tests pass
-- **THEN** the `test-hello` job succeeds and the PR is mergeable (assuming other checks pass)
-
-#### Scenario: Error/rejection — tests fail
-
-- **WHEN** a pull request modifies a file under `services/hello` and introduces a failing test
-- **THEN** the `test-hello` job fails, and the branch ruleset blocks the PR from merging
-
----
+## MODIFIED Requirements
 
 ### Requirement: Image build and push to GHCR on merge to main
 
@@ -38,8 +18,6 @@ On push to `main` touching `services/hello/**`, CI SHALL build a `linux/amd64` i
 
 - **WHEN** the image is built
 - **THEN** the GHCR tag and the `-ldflags`-baked `version` string are the same short SHA — both sourced from `build-hello`'s `sha` output — so `GET /` on the running container reports exactly the tag that was deployed
-
----
 
 ### Requirement: Deploy commit bumps the running image tag
 
@@ -65,8 +43,6 @@ After both `push-hello` and `validate-hello-manifests` succeed, CI SHALL commit 
 - **WHEN** CI pushes the deploy commit to `main`
 - **THEN** it authenticates using the repository secret PAT (not the default `GITHUB_TOKEN`), since `main`'s ruleset blocks direct pushes except from an account holding the ruleset's bypass
 
----
-
 ### Requirement: Image build validation runs on pull requests and is a required status check
 
 `ci-hello.yml` SHALL use a native `paths` trigger (`on.push.paths` / `on.pull_request.paths`) scoped to `services/hello/**`, `deploy/services/hello/**`, and the workflow file itself, rather than a shared `dorny/paths-filter` job. Including `deploy/services/hello/**` ensures a commit that only edits that directory's manifests — including `deploy-hello`'s own automated tag-bump commit — still re-runs `validate-hello-manifests`, closing a coverage gap that would otherwise exist versus the pre-split `lint-deploy` job (which validated `deploy/services/hello` on any `deploy/**` change). CI SHALL run `build-hello` (a `docker build` with `push: false`) on pull requests and pushes touching `services/hello/**`, in parallel with `test-hello` and `validate-hello-manifests` rather than staged behind them. `build-hello` SHALL be a required status check on `main`'s branch ruleset. `build-hello` SHALL compute the short git SHA once and expose it as a job output for `push-hello` and `deploy-hello` to consume.
@@ -86,7 +62,7 @@ After both `push-hello` and `validate-hello-manifests` succeed, CI SHALL commit 
 - **WHEN** `push-hello` runs after a successful `build-hello` on push to `main`
 - **THEN** it builds using `cache-from: type=gha`, restoring the layers `build-hello` already populated via `cache-to: type=gha,mode=max`, rather than rebuilding every layer from scratch
 
----
+## ADDED Requirements
 
 ### Requirement: Hello's own deploy manifests are validated independently of the shared deploy lint
 

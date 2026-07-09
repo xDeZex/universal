@@ -25,7 +25,7 @@ To poll a PR's CI status, use `gh pr checks <number> --watch` rather than sleepi
 ## Architecture
 
 ```
-app/        # Flutter app — see app/CLAUDE.md
+universal/  # Flutter app — see universal/CLAUDE.md
 services/   # Go backend services, one dir per service
 deploy/     # Kubernetes manifests synced by ArgoCD
 ```

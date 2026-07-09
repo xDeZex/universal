@@ -6,11 +6,11 @@ if [ "$branch" = "main" ]; then
 fi
 
 # Flutter checks on staged Dart or Flutter config files
-staged_flutter=$(git diff --cached --name-only | grep -E '^app/.*(\.dart$|pubspec\.(yaml|lock)$|analysis_options\.yaml$)')
+staged_flutter=$(git diff --cached --name-only | grep -E '^universal/.*(\.dart$|pubspec\.(yaml|lock)$|analysis_options\.yaml$)')
 if [ -n "$staged_flutter" ]; then
   echo "Flutter files staged — running tests and analysis..."
-  (cd app && flutter test --concurrency=4 --reporter=compact) || exit 1
-  (cd app && flutter analyze) || exit 1
+  (cd universal && flutter test --concurrency=4 --reporter=compact) || exit 1
+  (cd universal && flutter analyze) || exit 1
 fi
 
 # YAML/manifest checks on staged deploy/, .github/, or .yamllint.yml files
