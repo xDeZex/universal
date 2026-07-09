@@ -1,0 +1,35 @@
+@startuml
+!include <C4/C4_Container.puml>
+
+title Container diagram for Universal repo CI/CD automation
+
+Person(developer, "Developer", "Writes code and pushes to the repo.")
+
+System_Boundary(automation, "Repo CI/CD Automation") {
+    Container(precommit, "pre-commit hook", "Shell script (.githooks/pre-commit)", "Blocks commits to main; runs Flutter tests/analyze and YAML/manifest lint locally before commit.")
+    Container(ciUniversal, "CI Universal", "GitHub Actions workflow", "Tests, builds and releases the Flutter app on changes under universal/**.")
+    Container(ciHello, "CI Hello", "GitHub Actions workflow", "Tests, builds, pushes and deploys the Go hello service.")
+    Container(ciDeploy, "CI Deploy", "GitHub Actions workflow", "Lints and validates non-hello Kubernetes manifests on changes under deploy/**.")
+}
+
+System_Ext(ghcr, "GHCR", "Container registry hosting the hello image.")
+System_Ext(ghReleases, "GitHub Releases", "Hosts downloadable Universal APK builds.")
+System_Ext(argocd, "ArgoCD", "GitOps controller on the Beelink k3s cluster.")
+
+Rel(developer, precommit, "Commits code", "git commit")
+Rel(developer, ciUniversal, "Pushes/opens PR touching universal/**", "git push")
+Rel(developer, ciHello, "Pushes/opens PR touching services/hello/** or deploy/services/hello/**", "git push")
+Rel(developer, ciDeploy, "Pushes/opens PR touching deploy/** (excl. hello)", "git push")
+
+Rel(ciUniversal, ghReleases, "Publishes tagged APK release", "push to main only")
+Rel(ciHello, ghcr, "Pushes image", "push to main only")
+Rel(ciHello, argocd, "Bumps image tag, commits to deploy/", "push to main only")
+Rel(argocd, ciHello, "Detects commit, syncs cluster", "GitOps poll")
+
+Lay_D(ciUniversal, ghReleases)
+Lay_D(ciHello, ghcr)
+Lay_D(ciHello, argocd)
+Lay_R(ghcr, argocd)
+
+LAYOUT_WITH_LEGEND()
+@enduml
