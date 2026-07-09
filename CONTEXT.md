@@ -42,6 +42,10 @@ _Avoid_: default namespace, per-service namespace
 A CI-authored commit to `main` that changes which image version the cluster should run. A Deploy commit is the deploy — nothing else changes what runs on the Beelink.
 _Avoid_: release, push to prod
 
+**Trigger loop**:
+A workflow bug where a push it creates matches its own trigger's path filter, causing it to re-run itself indefinitely — distinct from the intentional GitOps deploy loop (ADR-0001), which is CI committing and ArgoCD syncing. A Deploy commit is a prime suspect: it pushes to a path (`deploy/services/hello/**`) that the same workflow listens on.
+_Avoid_: deploy loop (reserved for ADR-0001's intentional CI→ArgoCD cycle), infinite loop
+
 **Universal release**:
 A tagged GitHub Release, created by CI, carrying the built `Universal.apk` as a downloadable asset. Distinct from a Deploy commit — nothing in the cluster changes; it's a distributable artifact for manual install on a device.
 _Avoid_: release (ambiguous with Deploy commit), build artifact, App release, App build
