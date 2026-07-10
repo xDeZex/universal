@@ -3,22 +3,34 @@ name: CI Hello
 on:
   push:
     branches: [ main ]
-    paths:
-      - 'services/hello/**'
-      - 'deploy/services/hello/**'
-      - '.github/workflows/ci-hello.yml'
   pull_request:
     branches: [ main ]
-    paths:
-      - 'services/hello/**'
-      - 'deploy/services/hello/**'
-      - '.github/workflows/ci-hello.yml'
 
 permissions:
   contents: read
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      hello: ${{ steps.filter.outputs.hello }}
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Check for hello changes
+      uses: dorny/paths-filter@v3
+      id: filter
+      with:
+        filters: |
+          hello:
+            - 'services/hello/**'
+            - 'deploy/services/hello/**'
+            - '.github/workflows/ci-hello.yml'
+
   test-hello:
+    needs: changes
+    if: needs.changes.outputs.hello == 'true'
     runs-on: ubuntu-latest
 
     steps:
@@ -39,6 +51,8 @@ jobs:
       run: go vet ./...
 
   build-hello:
+    needs: changes
+    if: needs.changes.outputs.hello == 'true'
     runs-on: ubuntu-latest
     outputs:
       sha: ${{ steps.commit.outputs.sha }}
@@ -66,6 +80,8 @@ jobs:
           VERSION=${{ steps.commit.outputs.sha }}
 
   validate-hello-manifests:
+    needs: changes
+    if: needs.changes.outputs.hello == 'true'
     runs-on: ubuntu-latest
 
     steps:
