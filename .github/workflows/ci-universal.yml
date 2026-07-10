@@ -3,20 +3,35 @@ name: CI Universal
 on:
   push:
     branches: [ main ]
-    paths:
-      - 'universal/**'
-      - '.github/workflows/ci-universal.yml'
   pull_request:
     branches: [ main ]
-    paths:
-      - 'universal/**'
-      - '.github/workflows/ci-universal.yml'
 
 permissions:
   contents: read
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      universal: ${{ steps.filter.outputs.universal }}
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Check for universal changes
+      uses: dorny/paths-filter@v3
+      id: filter
+      with:
+        filters: |
+          universal:
+            - 'universal/**'
+            - '.github/workflows/ci-universal.yml'
+
   test-universal:
+    needs: changes
+    if: needs.changes.outputs.universal == 'true'
     runs-on: ubuntu-latest
 
     steps:
@@ -56,6 +71,8 @@ jobs:
       run: flutter analyze
 
   build-universal:
+    needs: changes
+    if: needs.changes.outputs.universal == 'true'
     runs-on: ubuntu-latest
     outputs:
       sha: ${{ steps.commit.outputs.sha }}

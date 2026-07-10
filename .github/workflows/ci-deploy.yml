@@ -3,24 +3,57 @@ name: CI Deploy
 on:
   push:
     branches: [ main ]
-    paths:
-      - 'deploy/**'
-      - '!deploy/services/hello/**'
-      - '.yamllint.yml'
-      - '.github/workflows/ci-deploy.yml'
   pull_request:
     branches: [ main ]
-    paths:
-      - 'deploy/**'
-      - '!deploy/services/hello/**'
-      - '.yamllint.yml'
-      - '.github/workflows/ci-deploy.yml'
 
 permissions:
   contents: read
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      deploy: ${{ steps.combine.outputs.deploy }}
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    # Own filter step with 'every' quantifier: a changed file only counts
+    # toward 'deploy_excl_hello' if it matches 'deploy/**' AND does not match
+    # 'deploy/services/hello/**' (owned by ci-hello.yml's own validation).
+    - name: Check for deploy changes (excluding hello)
+      uses: dorny/paths-filter@v3
+      id: deploy-core
+      with:
+        predicate-quantifier: every
+        filters: |
+          deploy_excl_hello:
+            - 'deploy/**'
+            - '!deploy/services/hello/**'
+
+    - name: Check for deploy meta changes
+      uses: dorny/paths-filter@v3
+      id: deploy-meta
+      with:
+        filters: |
+          meta:
+            - '.yamllint.yml'
+            - '.github/workflows/ci-deploy.yml'
+
+    - name: Combine deploy filters
+      id: combine
+      run: |
+        if [[ "${{ steps.deploy-core.outputs.deploy_excl_hello }}" == "true" || "${{ steps.deploy-meta.outputs.meta }}" == "true" ]]; then
+          echo "deploy=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "deploy=false" >> "$GITHUB_OUTPUT"
+        fi
+
   lint-deploy:
+    needs: changes
+    if: needs.changes.outputs.deploy == 'true'
     runs-on: ubuntu-latest
 
     steps:
