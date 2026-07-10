@@ -88,11 +88,11 @@ One visit to the gym, start to finish — the top-level thing a user logs. Carri
 _Avoid_: session, workout session (session is overloaded — HTTP/auth sessions, this CLI's own sessions)
 
 **Exercise**:
-A reusable movement (e.g. "Bench Press"), created the first time a user types its name freeform and offered for reuse in later Workouts afterward. Not a predefined catalog — the user grows the list themselves.
+A reusable movement (e.g. "Bench Press"), created the first time a user types its name freeform and offered for reuse in later Workouts afterward. Names are unique within the user's list (case-insensitive) — typing a name that matches an existing Exercise reuses it rather than creating a duplicate, and renaming an Exercise to a name that collides with another existing Exercise is rejected rather than merging the two. Identified by a stable id, not by name — the name can be corrected later (e.g. fixing a typo) without orphaning references from existing Exercise Entries. Not a predefined catalog — the user grows the list themselves.
 _Avoid_: movement, lift
 
 **Exercise Entry**:
-One Exercise performed within a specific Workout — groups together the Sets logged for that Exercise in that Workout. A Workout has many Exercise Entries; an Exercise Entry references exactly one Exercise.
+One Exercise performed within a specific Workout — groups together the Sets logged for that Exercise in that Workout. A Workout has many Exercise Entries; an Exercise Entry references exactly one Exercise by id, so renaming the Exercise later doesn't orphan the reference.
 _Avoid_: exercise (reserved for the reusable movement definition), workout exercise
 
 **Set**:
@@ -112,7 +112,7 @@ The recurrence rule on a Program that determines when each Routine comes up next
 _Avoid_: recurrence (kept as the general concept; Schedule is the concrete noun for a Program's rule)
 
 **Planned Exercise**:
-The planned counterpart to an Exercise Entry — an Exercise prescribed within a Routine along with its target sets/reps/weights, before any Workout logs it.
+The planned counterpart to an Exercise Entry — an Exercise prescribed within a Routine along with its target sets/reps/weights, before any Workout logs it. References the Exercise by id, so renaming the Exercise later doesn't orphan the reference.
 _Avoid_: exercise entry (reserved for the logged occurrence within an actual Workout)
 
 ## Example dialogue
