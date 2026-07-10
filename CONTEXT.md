@@ -84,11 +84,15 @@ _Avoid_: returning plain text, hardcoded version strings
 ### Gym
 
 **Workout**:
-One visit to the gym, start to finish — the top-level thing a user logs. Carries a start timestamp and an end timestamp (date and time of day). When a Schedule is due, the app pre-creates a Workout with Exercise Entries and Sets pre-filled from the Routine's Planned Exercises, which the user then logs against (editing values as actually performed).
+One visit to the gym, start to finish — the top-level thing a user logs. Carries a start timestamp (set when the user starts it) and an end timestamp (set when the user finishes it, equal to its last logged Set's timestamp — not the moment Finish is pressed, see ADR-0016). In progress from creation until finished — no separate status field, just `endTime == null`; finishing requires at least one logged Set, since there'd otherwise be nothing to derive an end timestamp from (an empty in-progress Workout can only be abandoned via Discard). Only one Workout can be in progress at a time. When a Schedule is due, the app pre-creates a Workout with Exercise Entries and Sets pre-filled from the Routine's Planned Exercises, which the user then logs against (editing values as actually performed).
 _Avoid_: session, workout session (session is overloaded — HTTP/auth sessions, this CLI's own sessions)
 
+**Discard** (a Workout):
+Deleting an in-progress Workout in its entirety, along with any Exercise Entries/Sets logged so far. Distinct from deleting an individual Set or Exercise Entry, which leaves the rest of the Workout intact — Discard only applies to the whole, in-progress Workout, as the escape hatch for one Finish can't close (empty or unwanted).
+_Avoid_: delete (reserved for removing an individual Set or Exercise Entry), cancel
+
 **Exercise**:
-A reusable movement (e.g. "Bench Press"), created the first time a user types its name freeform and offered for reuse in later Workouts afterward. Names are unique within the user's list (case-insensitive) — typing a name that matches an existing Exercise reuses it rather than creating a duplicate, and renaming an Exercise to a name that collides with another existing Exercise is rejected rather than merging the two. Identified by a stable id, not by name — the name can be corrected later (e.g. fixing a typo) without orphaning references from existing Exercise Entries. Not a predefined catalog — the user grows the list themselves.
+A reusable movement (e.g. "Bench Press"), created the first time a user types its name freeform and offered for reuse in later Workouts afterward. Names are unique within the user's list (case-insensitive) — typing a name that matches an existing Exercise reuses it rather than creating a duplicate, and renaming an Exercise to a name that collides with another existing Exercise is rejected rather than merging the two. Identified by a stable id, not by name — the name can be corrected later (e.g. fixing a typo) without orphaning references from existing Exercise Entries. Not a predefined catalog — the user grows the list themselves. Deletion is deliberately not supported yet — once created, an Exercise persists indefinitely; only its name can change. Revisit if a real need for removing one shows up.
 _Avoid_: movement, lift
 
 **Exercise Entry**:
@@ -96,7 +100,7 @@ One Exercise performed within a specific Workout — groups together the Sets lo
 _Avoid_: exercise (reserved for the reusable movement definition), workout exercise
 
 **Set**:
-One performance of an Exercise Entry's Exercise at a given weight for a given rep count (e.g. "3 reps @ 50kg"), carrying its own logged-at timestamp (enables per-Exercise stats over time, independent of the Workout). `reps` is a plain attribute of a Set, not its own tracked entity. An Exercise Entry has many Sets, logged in order.
+One performance of an Exercise Entry's Exercise at a given weight for a given rep count (e.g. "3 reps @ 50kg"), carrying its own logged-at timestamp (enables per-Exercise stats over time, independent of the Workout). `reps` is a plain attribute of a Set, not its own tracked entity. An Exercise Entry has many Sets, logged in order. Weight and reps can be corrected after logging; the logged-at timestamp is fixed at creation and never user-editable, so it stays a reliable record of when the Set actually happened (see ADR-0016, which derives a Workout's endTime from it).
 _Avoid_: rep (a rep is not tracked individually — it's a count on a Set)
 
 **Routine**:
