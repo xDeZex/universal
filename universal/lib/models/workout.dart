@@ -1,20 +1,30 @@
+enum WeightUnit { kg, lbs }
+
 class ExerciseSet {
   final String id;
   final num weight;
+  final WeightUnit unit;
   final int reps;
   final DateTime loggedAt;
 
   const ExerciseSet({
     required this.id,
     required this.weight,
+    required this.unit,
     required this.reps,
     required this.loggedAt,
   });
 
-  ExerciseSet copyWith({num? weight, int? reps, DateTime? loggedAt}) {
+  ExerciseSet copyWith({
+    num? weight,
+    WeightUnit? unit,
+    int? reps,
+    DateTime? loggedAt,
+  }) {
     return ExerciseSet(
       id: id,
       weight: weight ?? this.weight,
+      unit: unit ?? this.unit,
       reps: reps ?? this.reps,
       loggedAt: loggedAt ?? this.loggedAt,
     );
@@ -24,6 +34,7 @@ class ExerciseSet {
     return {
       'id': id,
       'weight': weight,
+      'unit': unit.name,
       'reps': reps,
       'loggedAt': loggedAt.toIso8601String(),
     };
@@ -33,6 +44,7 @@ class ExerciseSet {
     return ExerciseSet(
       id: json['id'] as String,
       weight: json['weight'] as num,
+      unit: WeightUnit.values.byName(json['unit'] as String),
       reps: json['reps'] as int,
       loggedAt: DateTime.parse(json['loggedAt'] as String),
     );
@@ -95,6 +107,7 @@ class Workout {
   Workout addSet({
     required String entryId,
     required num weight,
+    required WeightUnit unit,
     required int reps,
   }) {
     if (!exerciseEntries.any((entry) => entry.id == entryId)) {
@@ -104,6 +117,7 @@ class Workout {
     final newSet = ExerciseSet(
       id: DateTime.now().microsecondsSinceEpoch.toString(),
       weight: weight,
+      unit: unit,
       reps: reps,
       loggedAt: DateTime.now(),
     );

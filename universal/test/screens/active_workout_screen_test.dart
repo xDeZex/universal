@@ -133,7 +133,136 @@ void main() {
         expect(savedWorkout, isNotNull);
         expect(savedWorkout!.exerciseEntries[0].sets.length, 1);
         expect(savedWorkout!.exerciseEntries[0].sets[0].weight, 60);
+        expect(savedWorkout!.exerciseEntries[0].sets[0].unit, WeightUnit.kg);
         expect(savedWorkout!.exerciseEntries[0].sets[0].reps, 5);
+      },
+    );
+
+    testWidgets(
+      'a freshly added Exercise Entry shows a kg/lbs unit toggle next to the '
+      'weight and reps fields',
+      (tester) async {
+        final entry = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 1, 1),
+          exerciseEntries: [entry],
+        );
+
+        await _pumpActiveWorkoutScreen(
+          tester,
+          workout: workout,
+          exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
+        );
+
+        expect(find.byKey(const ValueKey('unit-kg-entry-1')), findsOneWidget);
+        expect(find.byKey(const ValueKey('unit-lbs-entry-1')), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'selecting lbs before submitting a Set includes lbs on the created Set',
+      (tester) async {
+        Workout? savedWorkout;
+        final entry = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 1, 1),
+          exerciseEntries: [entry],
+        );
+
+        await _pumpActiveWorkoutScreen(
+          tester,
+          workout: workout,
+          exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
+          onWorkoutChanged: (w) => savedWorkout = w,
+        );
+
+        await tester.tap(find.byKey(const ValueKey('unit-lbs-entry-1')));
+        await tester.pumpAndSettle();
+        await tester.enterText(
+          find.byKey(const ValueKey('weight-entry-1')),
+          '135',
+        );
+        await tester.enterText(find.byKey(const ValueKey('reps-entry-1')), '8');
+        await tester.tap(find.byKey(const ValueKey('add-set-entry-1')));
+        await tester.pumpAndSettle();
+
+        expect(savedWorkout, isNotNull);
+        expect(savedWorkout!.exerciseEntries[0].sets[0].unit, WeightUnit.lbs);
+      },
+    );
+
+    testWidgets(
+      'the unit toggle stays on lbs for the next Set after logging one with '
+      'lbs on the same Exercise Entry',
+      (tester) async {
+        Workout? savedWorkout;
+        final entry = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 1, 1),
+          exerciseEntries: [entry],
+        );
+
+        await _pumpActiveWorkoutScreen(
+          tester,
+          workout: workout,
+          exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
+          onWorkoutChanged: (w) => savedWorkout = w,
+        );
+
+        await tester.tap(find.byKey(const ValueKey('unit-lbs-entry-1')));
+        await tester.pumpAndSettle();
+        await tester.enterText(
+          find.byKey(const ValueKey('weight-entry-1')),
+          '135',
+        );
+        await tester.enterText(find.byKey(const ValueKey('reps-entry-1')), '8');
+        await tester.tap(find.byKey(const ValueKey('add-set-entry-1')));
+        await tester.pumpAndSettle();
+
+        await tester.enterText(
+          find.byKey(const ValueKey('weight-entry-1')),
+          '140',
+        );
+        await tester.enterText(find.byKey(const ValueKey('reps-entry-1')), '6');
+        await tester.tap(find.byKey(const ValueKey('add-set-entry-1')));
+        await tester.pumpAndSettle();
+
+        expect(savedWorkout, isNotNull);
+        expect(savedWorkout!.exerciseEntries[0].sets.length, 2);
+        expect(savedWorkout!.exerciseEntries[0].sets[1].unit, WeightUnit.lbs);
+      },
+    );
+
+    testWidgets(
+      'a logged Set is displayed as "<reps> reps at <weight> <unit>"',
+      (tester) async {
+        final entry = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 1, 1),
+          exerciseEntries: [entry],
+        );
+
+        await _pumpActiveWorkoutScreen(
+          tester,
+          workout: workout,
+          exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
+        );
+
+        await tester.tap(find.byKey(const ValueKey('unit-lbs-entry-1')));
+        await tester.pumpAndSettle();
+        await tester.enterText(
+          find.byKey(const ValueKey('weight-entry-1')),
+          '135',
+        );
+        await tester.enterText(find.byKey(const ValueKey('reps-entry-1')), '8');
+        await tester.tap(find.byKey(const ValueKey('add-set-entry-1')));
+        await tester.pumpAndSettle();
+
+        expect(find.text('8 reps at 135 lbs'), findsOneWidget);
       },
     );
 
