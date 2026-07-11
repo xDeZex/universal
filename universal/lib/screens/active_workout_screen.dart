@@ -81,79 +81,84 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
     widget.onWorkoutChanged(_workout);
   }
 
-  String _exerciseName(String exerciseId) {
-    final exercise = _exercises.firstWhere(
-      (e) => e.id == exerciseId,
-      orElse: () => Exercise(id: exerciseId, name: 'Unknown Exercise'),
-    );
-    return exercise.name;
-  }
-
   bool get _hasLoggedSets =>
       _workout.exerciseEntries.any((entry) => entry.sets.isNotEmpty);
+
+  bool get _isReadOnly => !_workout.isInProgress;
+
+  String _appBarTitle(BuildContext context) {
+    if (!_isReadOnly) return 'Active Workout';
+    return MaterialLocalizations.of(context).formatShortDate(_workout.endTime!);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Active Workout')),
+      appBar: AppBar(title: Text(_appBarTitle(context))),
       body: SafeArea(
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _nameController,
-                      decoration: const InputDecoration(
-                        hintText: 'Exercise name',
+            if (!_isReadOnly)
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _nameController,
+                        decoration: const InputDecoration(
+                          hintText: 'Exercise name',
+                        ),
+                        onSubmitted: (_) => _addExerciseEntry(),
                       ),
-                      onSubmitted: (_) => _addExerciseEntry(),
                     ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.add),
-                    onPressed: _addExerciseEntry,
-                  ),
-                ],
+                    IconButton(
+                      icon: const Icon(Icons.add),
+                      onPressed: _addExerciseEntry,
+                    ),
+                  ],
+                ),
               ),
-            ),
             Expanded(
               child: ListView(
                 children: _workout.exerciseEntries.map((entry) {
                   return _ExerciseEntryTile(
                     key: ValueKey(entry.id),
                     entry: entry,
-                    exerciseName: _exerciseName(entry.exerciseId),
+                    exerciseName: Exercise.nameFor(
+                      entry.exerciseId,
+                      _exercises,
+                    ),
+                    readOnly: _isReadOnly,
                     onAddSet: (weight, unit, reps) =>
                         _addSet(entry.id, weight, unit, reps),
                   );
                 }).toList(),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextButton(
-                      key: const ValueKey('discard-workout'),
-                      onPressed: _discard,
-                      child: const Text('Discard'),
+            if (!_isReadOnly)
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        key: const ValueKey('discard-workout'),
+                        onPressed: _discard,
+                        child: const Text('Discard'),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: ElevatedButton(
-                      key: const ValueKey('finish-workout'),
-                      onPressed: _hasLoggedSets ? _finish : null,
-                      child: const Text('Finish'),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: ElevatedButton(
+                        key: const ValueKey('finish-workout'),
+                        onPressed: _hasLoggedSets ? _finish : null,
+                        child: const Text('Finish'),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
           ],
         ),
       ),
@@ -180,12 +185,14 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
 class _ExerciseEntryTile extends StatefulWidget {
   final ExerciseEntry entry;
   final String exerciseName;
+  final bool readOnly;
   final void Function(num weight, WeightUnit unit, int reps) onAddSet;
 
   const _ExerciseEntryTile({
     super.key,
     required this.entry,
     required this.exerciseName,
+    required this.readOnly,
     required this.onAddSet,
   });
 
@@ -216,6 +223,12 @@ class _ExerciseEntryTileState extends State<_ExerciseEntryTile> {
     _repsController.clear();
   }
 
+  String _setLabel(ExerciseSet set) {
+    final base = '${set.reps} reps at ${set.weight} ${set.unit.name}';
+    if (!widget.readOnly) return base;
+    return '$base — ${TimeOfDay.fromDateTime(set.loggedAt).format(context)}';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -229,56 +242,55 @@ class _ExerciseEntryTileState extends State<_ExerciseEntryTile> {
           ),
         ),
         for (final set in widget.entry.sets)
-          ListTile(
-            title: Text('${set.reps} reps at ${set.weight} ${set.unit.name}'),
-          ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  key: ValueKey('weight-${widget.entry.id}'),
-                  controller: _weightController,
-                  decoration: const InputDecoration(hintText: 'Weight'),
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
+          ListTile(title: Text(_setLabel(set))),
+        if (!widget.readOnly)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    key: ValueKey('weight-${widget.entry.id}'),
+                    controller: _weightController,
+                    decoration: const InputDecoration(hintText: 'Weight'),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              ChoiceChip(
-                key: ValueKey('unit-kg-${widget.entry.id}'),
-                label: const Text('kg'),
-                selected: _selectedUnit == WeightUnit.kg,
-                onSelected: (_) =>
-                    setState(() => _selectedUnit = WeightUnit.kg),
-              ),
-              const SizedBox(width: 8),
-              ChoiceChip(
-                key: ValueKey('unit-lbs-${widget.entry.id}'),
-                label: const Text('lbs'),
-                selected: _selectedUnit == WeightUnit.lbs,
-                onSelected: (_) =>
-                    setState(() => _selectedUnit = WeightUnit.lbs),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: TextField(
-                  key: ValueKey('reps-${widget.entry.id}'),
-                  controller: _repsController,
-                  decoration: const InputDecoration(hintText: 'Reps'),
-                  keyboardType: TextInputType.number,
+                const SizedBox(width: 8),
+                ChoiceChip(
+                  key: ValueKey('unit-kg-${widget.entry.id}'),
+                  label: const Text('kg'),
+                  selected: _selectedUnit == WeightUnit.kg,
+                  onSelected: (_) =>
+                      setState(() => _selectedUnit = WeightUnit.kg),
                 ),
-              ),
-              IconButton(
-                key: ValueKey('add-set-${widget.entry.id}'),
-                icon: const Icon(Icons.add),
-                onPressed: _submit,
-              ),
-            ],
+                const SizedBox(width: 8),
+                ChoiceChip(
+                  key: ValueKey('unit-lbs-${widget.entry.id}'),
+                  label: const Text('lbs'),
+                  selected: _selectedUnit == WeightUnit.lbs,
+                  onSelected: (_) =>
+                      setState(() => _selectedUnit = WeightUnit.lbs),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    key: ValueKey('reps-${widget.entry.id}'),
+                    controller: _repsController,
+                    decoration: const InputDecoration(hintText: 'Reps'),
+                    keyboardType: TextInputType.number,
+                  ),
+                ),
+                IconButton(
+                  key: ValueKey('add-set-${widget.entry.id}'),
+                  icon: const Icon(Icons.add),
+                  onPressed: _submit,
+                ),
+              ],
+            ),
           ),
-        ),
       ],
     );
   }

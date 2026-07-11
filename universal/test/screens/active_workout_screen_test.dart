@@ -267,6 +267,40 @@ void main() {
     );
 
     testWidgets(
+      'a logged Set on a finished Workout is displayed as "<reps> reps at '
+      '<weight> <unit> — <loggedAt time>"',
+      (tester) async {
+        final entry = ExerciseEntry(
+          id: 'entry-1',
+          exerciseId: 'exercise-1',
+          sets: [
+            ExerciseSet(
+              id: 'set-1',
+              weight: 50,
+              unit: WeightUnit.kg,
+              reps: 8,
+              loggedAt: DateTime(2026, 1, 1, 18, 42),
+            ),
+          ],
+        );
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 1, 1, 18, 0),
+          endTime: DateTime(2026, 1, 1, 18, 42),
+          exerciseEntries: [entry],
+        );
+
+        await _pumpActiveWorkoutScreen(
+          tester,
+          workout: workout,
+          exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
+        );
+
+        expect(find.text('8 reps at 50 kg — 6:42 PM'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
       'submitting a non-numeric weight is rejected with no Set added',
       (tester) async {
         var workoutSaveCount = 0;
@@ -422,6 +456,136 @@ void main() {
 
         expect(discardBottom.dy, lessThanOrEqualTo(maxAllowedY));
         expect(finishBottom.dy, lessThanOrEqualTo(maxAllowedY));
+      },
+    );
+
+    testWidgets(
+      'a finished Workout hides the add-Exercise-Entry field, add-Set '
+      'controls, and Discard/Finish buttons',
+      (tester) async {
+        final entry1 = ExerciseEntry(
+          id: 'entry-1',
+          exerciseId: 'exercise-1',
+          sets: [
+            ExerciseSet(
+              id: 'set-1',
+              weight: 60,
+              unit: WeightUnit.kg,
+              reps: 5,
+              loggedAt: DateTime(2026, 1, 1, 10, 30),
+            ),
+          ],
+        );
+        final entry2 = ExerciseEntry(
+          id: 'entry-2',
+          exerciseId: 'exercise-2',
+          sets: [
+            ExerciseSet(
+              id: 'set-2',
+              weight: 40,
+              unit: WeightUnit.kg,
+              reps: 8,
+              loggedAt: DateTime(2026, 1, 1, 10, 20),
+            ),
+          ],
+        );
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 1, 1, 10, 0),
+          endTime: DateTime(2026, 1, 1, 10, 30),
+          exerciseEntries: [entry1, entry2],
+        );
+
+        await _pumpActiveWorkoutScreen(
+          tester,
+          workout: workout,
+          exercises: [
+            Exercise(id: 'exercise-1', name: 'Bench Press'),
+            Exercise(id: 'exercise-2', name: 'Squat'),
+          ],
+        );
+
+        expect(find.byType(TextField), findsNothing);
+        expect(find.byType(ChoiceChip), findsNothing);
+        expect(find.byKey(const ValueKey('add-set-entry-1')), findsNothing);
+        expect(find.byKey(const ValueKey('add-set-entry-2')), findsNothing);
+        expect(
+          find.byKey(const ValueKey('discard-workout')),
+          findsNothing,
+        );
+        expect(find.byKey(const ValueKey('finish-workout')), findsNothing);
+
+        expect(find.text('Bench Press'), findsOneWidget);
+        expect(find.text('5 reps at 60 kg — 10:30 AM'), findsOneWidget);
+        expect(find.text('Squat'), findsOneWidget);
+        expect(find.text('8 reps at 40 kg — 10:20 AM'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'an in-progress Workout still shows the add-Exercise-Entry field, '
+      'add-Set controls, and Discard/Finish buttons',
+      (tester) async {
+        final entry = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 1, 1, 10, 0),
+          exerciseEntries: [entry],
+        );
+
+        await _pumpActiveWorkoutScreen(
+          tester,
+          workout: workout,
+          exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
+        );
+
+        expect(find.byType(TextField), findsNWidgets(3));
+        expect(find.byKey(const ValueKey('add-set-entry-1')), findsOneWidget);
+        expect(
+          find.byKey(const ValueKey('discard-workout')),
+          findsOneWidget,
+        );
+        expect(find.byKey(const ValueKey('finish-workout')), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'a finished Workout shows its end date as the AppBar title instead '
+      'of "Active Workout"',
+      (tester) async {
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 3, 5, 9, 0),
+          endTime: DateTime(2026, 3, 5, 9, 30),
+        );
+
+        await _pumpActiveWorkoutScreen(
+          tester,
+          workout: workout,
+          exercises: const [],
+        );
+
+        expect(find.text('Active Workout'), findsNothing);
+        expect(find.text('Mar 5, 2026'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'an in-progress Workout still shows "Active Workout" as the AppBar '
+      'title',
+      (tester) async {
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 3, 5, 9, 0),
+        );
+
+        await _pumpActiveWorkoutScreen(
+          tester,
+          workout: workout,
+          exercises: const [],
+        );
+
+        expect(find.text('Active Workout'), findsOneWidget);
       },
     );
   });

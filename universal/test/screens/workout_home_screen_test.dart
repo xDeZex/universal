@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:universal/models/exercise.dart';
 import 'package:universal/models/workout.dart';
 import 'package:universal/screens/active_workout_screen.dart';
+import 'package:universal/screens/past_workouts_screen.dart';
 import 'package:universal/screens/workout_home_screen.dart';
 import 'package:universal/services/storage_service.dart';
 
@@ -337,6 +338,69 @@ void main() {
           stored.firstWhere((w) => w.id == 'workout-finished').isInProgress,
           isFalse,
         );
+      },
+    );
+
+    testWidgets(
+      'shows a Past Workouts action below Start Workout even with no '
+      'finished Workouts',
+      (tester) async {
+        await _pumpWorkoutHomeScreen(
+          tester,
+          initialWorkouts: [],
+          initialExercises: [],
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Past Workouts'), findsOneWidget);
+
+        final startPosition = tester.getCenter(find.text('Start Workout'));
+        final pastWorkoutsPosition = tester.getCenter(
+          find.text('Past Workouts'),
+        );
+        expect(pastWorkoutsPosition.dy, greaterThan(startPosition.dy));
+      },
+    );
+
+    testWidgets(
+      'shows a Past Workouts action below Continue Workout when a Workout '
+      'is in progress',
+      (tester) async {
+        await _pumpWorkoutHomeScreen(
+          tester,
+          initialWorkouts: [
+            Workout(id: 'workout-1', startTime: DateTime(2026, 1, 1)),
+          ],
+          initialExercises: [],
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Past Workouts'), findsOneWidget);
+
+        final continuePosition = tester.getCenter(
+          find.text('Continue Workout'),
+        );
+        final pastWorkoutsPosition = tester.getCenter(
+          find.text('Past Workouts'),
+        );
+        expect(pastWorkoutsPosition.dy, greaterThan(continuePosition.dy));
+      },
+    );
+
+    testWidgets(
+      'tapping Past Workouts navigates to the Past Workouts list screen',
+      (tester) async {
+        await _pumpWorkoutHomeScreen(
+          tester,
+          initialWorkouts: [],
+          initialExercises: [],
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Past Workouts'));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(PastWorkoutsScreen), findsOneWidget);
       },
     );
   });

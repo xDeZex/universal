@@ -89,5 +89,20 @@ void main() {
 
       expect(resolved, isNull);
     });
+
+    test('nameFor returns the matching Exercise name', () {
+      final existing = [
+        Exercise(id: 'ex-1', name: 'Bench Press'),
+        Exercise(id: 'ex-2', name: 'Squat'),
+      ];
+
+      expect(Exercise.nameFor('ex-2', existing), 'Squat');
+    });
+
+    test('nameFor falls back to "Unknown Exercise" when no id matches', () {
+      final existing = [Exercise(id: 'ex-1', name: 'Bench Press')];
+
+      expect(Exercise.nameFor('missing', existing), 'Unknown Exercise');
+    });
   });
 }

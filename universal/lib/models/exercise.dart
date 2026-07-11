@@ -22,6 +22,14 @@ class Exercise {
     );
   }
 
+  static String nameFor(String exerciseId, List<Exercise> exercises) {
+    final exercise = exercises.firstWhere(
+      (e) => e.id == exerciseId,
+      orElse: () => Exercise(id: exerciseId, name: 'Unknown Exercise'),
+    );
+    return exercise.name;
+  }
+
   static Exercise? resolve(String name, List<Exercise> existing) {
     final trimmed = name.trim();
     if (trimmed.isEmpty) {
