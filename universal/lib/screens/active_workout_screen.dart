@@ -69,9 +69,14 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
     _nameController.clear();
   }
 
-  void _addSet(String entryId, num weight, int reps) {
+  void _addSet(String entryId, num weight, WeightUnit unit, int reps) {
     setState(() {
-      _workout = _workout.addSet(entryId: entryId, weight: weight, reps: reps);
+      _workout = _workout.addSet(
+        entryId: entryId,
+        weight: weight,
+        unit: unit,
+        reps: reps,
+      );
     });
     widget.onWorkoutChanged(_workout);
   }
@@ -120,7 +125,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                   key: ValueKey(entry.id),
                   entry: entry,
                   exerciseName: _exerciseName(entry.exerciseId),
-                  onAddSet: (weight, reps) => _addSet(entry.id, weight, reps),
+                  onAddSet: (weight, unit, reps) =>
+                      _addSet(entry.id, weight, unit, reps),
                 );
               }).toList(),
             ),
@@ -172,7 +178,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
 class _ExerciseEntryTile extends StatefulWidget {
   final ExerciseEntry entry;
   final String exerciseName;
-  final void Function(num weight, int reps) onAddSet;
+  final void Function(num weight, WeightUnit unit, int reps) onAddSet;
 
   const _ExerciseEntryTile({
     super.key,
@@ -188,6 +194,7 @@ class _ExerciseEntryTile extends StatefulWidget {
 class _ExerciseEntryTileState extends State<_ExerciseEntryTile> {
   final TextEditingController _weightController = TextEditingController();
   final TextEditingController _repsController = TextEditingController();
+  WeightUnit _selectedUnit = WeightUnit.kg;
 
   @override
   void dispose() {
@@ -202,7 +209,7 @@ class _ExerciseEntryTileState extends State<_ExerciseEntryTile> {
 
     if (weight == null || reps == null || reps <= 0) return;
 
-    widget.onAddSet(weight, reps);
+    widget.onAddSet(weight, _selectedUnit, reps);
     _weightController.clear();
     _repsController.clear();
   }
@@ -220,7 +227,9 @@ class _ExerciseEntryTileState extends State<_ExerciseEntryTile> {
           ),
         ),
         for (final set in widget.entry.sets)
-          ListTile(title: Text('${set.weight} x ${set.reps}')),
+          ListTile(
+            title: Text('${set.reps} reps at ${set.weight} ${set.unit.name}'),
+          ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
@@ -234,6 +243,22 @@ class _ExerciseEntryTileState extends State<_ExerciseEntryTile> {
                     decimal: true,
                   ),
                 ),
+              ),
+              const SizedBox(width: 8),
+              ChoiceChip(
+                key: ValueKey('unit-kg-${widget.entry.id}'),
+                label: const Text('kg'),
+                selected: _selectedUnit == WeightUnit.kg,
+                onSelected: (_) =>
+                    setState(() => _selectedUnit = WeightUnit.kg),
+              ),
+              const SizedBox(width: 8),
+              ChoiceChip(
+                key: ValueKey('unit-lbs-${widget.entry.id}'),
+                label: const Text('lbs'),
+                selected: _selectedUnit == WeightUnit.lbs,
+                onSelected: (_) =>
+                    setState(() => _selectedUnit = WeightUnit.lbs),
               ),
               const SizedBox(width: 8),
               Expanded(

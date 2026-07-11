@@ -98,6 +98,7 @@ void main() {
                 ExerciseSet(
                   id: 'set-1',
                   weight: 60,
+                  unit: WeightUnit.kg,
                   reps: 5,
                   loggedAt: DateTime(2026, 1, 1, 8, 30),
                 ),
@@ -117,6 +118,7 @@ void main() {
       expect(loaded[0].exerciseEntries.length, 1);
       expect(loaded[0].exerciseEntries[0].sets.length, 1);
       expect(loaded[0].exerciseEntries[0].sets[0].weight, 60);
+      expect(loaded[0].exerciseEntries[0].sets[0].unit, WeightUnit.kg);
       expect(loaded[1].id, 'workout-2');
       expect(loaded[1].exerciseEntries, isEmpty);
     });

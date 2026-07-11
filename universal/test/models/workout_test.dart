@@ -3,12 +3,19 @@ import 'package:universal/models/workout.dart';
 
 void main() {
   group('ExerciseSet', () {
-    test('creates with id, weight, reps, and loggedAt', () {
+    test('creates with id, weight, unit, reps, and loggedAt', () {
       final loggedAt = DateTime(2026, 7, 10, 12, 0);
-      final set = ExerciseSet(id: 'set-1', weight: 60, reps: 8, loggedAt: loggedAt);
+      final set = ExerciseSet(
+        id: 'set-1',
+        weight: 60,
+        unit: WeightUnit.lbs,
+        reps: 8,
+        loggedAt: loggedAt,
+      );
 
       expect(set.id, 'set-1');
       expect(set.weight, 60);
+      expect(set.unit, WeightUnit.lbs);
       expect(set.reps, 8);
       expect(set.loggedAt, loggedAt);
     });
@@ -17,14 +24,16 @@ void main() {
       final set = ExerciseSet(
         id: 'set-1',
         weight: 60,
+        unit: WeightUnit.kg,
         reps: 8,
         loggedAt: DateTime(2026, 7, 10, 12, 0),
       );
 
-      final updated = set.copyWith(weight: 65, reps: 6);
+      final updated = set.copyWith(weight: 65, unit: WeightUnit.lbs, reps: 6);
 
       expect(updated.id, 'set-1');
       expect(updated.weight, 65);
+      expect(updated.unit, WeightUnit.lbs);
       expect(updated.reps, 6);
       expect(updated.loggedAt, set.loggedAt);
     });
@@ -33,6 +42,7 @@ void main() {
       final set = ExerciseSet(
         id: 'set-1',
         weight: 60,
+        unit: WeightUnit.lbs,
         reps: 8,
         loggedAt: DateTime(2026, 7, 10, 12, 0),
       );
@@ -41,6 +51,7 @@ void main() {
 
       expect(copy.id, set.id);
       expect(copy.weight, set.weight);
+      expect(copy.unit, set.unit);
       expect(copy.reps, set.reps);
       expect(copy.loggedAt, set.loggedAt);
     });
@@ -49,6 +60,7 @@ void main() {
       final set = ExerciseSet(
         id: 'set-1',
         weight: 60,
+        unit: WeightUnit.lbs,
         reps: 8,
         loggedAt: DateTime(2026, 7, 10, 12, 0),
       );
@@ -57,6 +69,7 @@ void main() {
 
       expect(restored.id, 'set-1');
       expect(restored.weight, 60);
+      expect(restored.unit, WeightUnit.lbs);
       expect(restored.reps, 8);
       expect(restored.loggedAt, set.loggedAt);
     });
@@ -64,6 +77,7 @@ void main() {
     test('fromJson throws when id key is missing', () {
       final json = {
         'weight': 60,
+        'unit': 'kg',
         'reps': 8,
         'loggedAt': DateTime(2026, 7, 10, 12, 0).toIso8601String(),
       };
@@ -74,6 +88,18 @@ void main() {
     test('fromJson throws when weight key is missing', () {
       final json = {
         'id': 'set-1',
+        'unit': 'kg',
+        'reps': 8,
+        'loggedAt': DateTime(2026, 7, 10, 12, 0).toIso8601String(),
+      };
+
+      expect(() => ExerciseSet.fromJson(json), throwsA(anything));
+    });
+
+    test('fromJson throws when unit key is missing', () {
+      final json = {
+        'id': 'set-1',
+        'weight': 60,
         'reps': 8,
         'loggedAt': DateTime(2026, 7, 10, 12, 0).toIso8601String(),
       };
@@ -85,6 +111,7 @@ void main() {
       final json = {
         'id': 'set-1',
         'weight': 60,
+        'unit': 'kg',
         'loggedAt': DateTime(2026, 7, 10, 12, 0).toIso8601String(),
       };
 
@@ -92,7 +119,7 @@ void main() {
     });
 
     test('fromJson throws when loggedAt key is missing', () {
-      final json = {'id': 'set-1', 'weight': 60, 'reps': 8};
+      final json = {'id': 'set-1', 'weight': 60, 'unit': 'kg', 'reps': 8};
 
       expect(() => ExerciseSet.fromJson(json), throwsA(anything));
     });
@@ -112,6 +139,7 @@ void main() {
       final set = ExerciseSet(
         id: 'set-1',
         weight: 60,
+        unit: WeightUnit.kg,
         reps: 8,
         loggedAt: DateTime(2026, 7, 10, 12, 0),
       );
@@ -131,6 +159,7 @@ void main() {
           ExerciseSet(
             id: 'set-1',
             weight: 60,
+            unit: WeightUnit.kg,
             reps: 8,
             loggedAt: DateTime(2026, 7, 10, 12, 0),
           ),
@@ -152,6 +181,7 @@ void main() {
           ExerciseSet(
             id: 'set-1',
             weight: 60,
+            unit: WeightUnit.kg,
             reps: 8,
             loggedAt: DateTime(2026, 7, 10, 12, 0),
           ),
@@ -165,6 +195,7 @@ void main() {
       expect(restored.sets.length, 1);
       expect(restored.sets[0].id, 'set-1');
       expect(restored.sets[0].weight, 60);
+      expect(restored.sets[0].unit, WeightUnit.kg);
       expect(restored.sets[0].reps, 8);
       expect(restored.sets[0].loggedAt, entry.sets[0].loggedAt);
     });
@@ -260,7 +291,12 @@ void main() {
       );
 
       final before = DateTime.now();
-      final updated = workout.addSet(entryId: 'entry-1', weight: 60, reps: 8);
+      final updated = workout.addSet(
+        entryId: 'entry-1',
+        weight: 60,
+        unit: WeightUnit.lbs,
+        reps: 8,
+      );
       final after = DateTime.now();
 
       final entry1 = updated.exerciseEntries
@@ -270,6 +306,7 @@ void main() {
 
       expect(entry1.sets.length, 1);
       expect(entry1.sets[0].weight, 60);
+      expect(entry1.sets[0].unit, WeightUnit.lbs);
       expect(entry1.sets[0].reps, 8);
       expect(
         entry1.sets[0].loggedAt.isAfter(before) ||
@@ -292,7 +329,12 @@ void main() {
       );
 
       expect(
-        () => workout.addSet(entryId: 'does-not-exist', weight: 60, reps: 8),
+        () => workout.addSet(
+          entryId: 'does-not-exist',
+          weight: 60,
+          unit: WeightUnit.kg,
+          reps: 8,
+        ),
         throwsA(anything),
       );
     });
@@ -312,15 +354,33 @@ void main() {
             id: 'entry-1',
             exerciseId: 'ex-1',
             sets: [
-              ExerciseSet(id: 'set-1', weight: 60, reps: 8, loggedAt: earliest),
-              ExerciseSet(id: 'set-2', weight: 65, reps: 6, loggedAt: latest),
+              ExerciseSet(
+                id: 'set-1',
+                weight: 60,
+                unit: WeightUnit.kg,
+                reps: 8,
+                loggedAt: earliest,
+              ),
+              ExerciseSet(
+                id: 'set-2',
+                weight: 65,
+                unit: WeightUnit.kg,
+                reps: 6,
+                loggedAt: latest,
+              ),
             ],
           ),
           ExerciseEntry(
             id: 'entry-2',
             exerciseId: 'ex-2',
             sets: [
-              ExerciseSet(id: 'set-3', weight: 20, reps: 10, loggedAt: middle),
+              ExerciseSet(
+                id: 'set-3',
+                weight: 20,
+                unit: WeightUnit.kg,
+                reps: 10,
+                loggedAt: middle,
+              ),
             ],
           ),
         ],
@@ -362,6 +422,7 @@ void main() {
               ExerciseSet(
                 id: 'set-1',
                 weight: 60,
+                unit: WeightUnit.kg,
                 reps: 8,
                 loggedAt: DateTime(2026, 7, 10, 10, 30),
               ),
@@ -380,6 +441,7 @@ void main() {
       expect(restored.exerciseEntries[0].exerciseId, 'ex-1');
       expect(restored.exerciseEntries[0].sets.length, 1);
       expect(restored.exerciseEntries[0].sets[0].id, 'set-1');
+      expect(restored.exerciseEntries[0].sets[0].unit, WeightUnit.kg);
     });
 
     test('fromJson throws when id key is missing', () {

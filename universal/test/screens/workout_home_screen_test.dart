@@ -200,6 +200,7 @@ void main() {
         storedWorkouts = await StorageService().loadWorkouts();
         expect(storedWorkouts[0].exerciseEntries[0].sets.length, 1);
         expect(storedWorkouts[0].exerciseEntries[0].sets[0].weight, 60);
+        expect(storedWorkouts[0].exerciseEntries[0].sets[0].unit, WeightUnit.kg);
         expect(storedWorkouts[0].exerciseEntries[0].sets[0].reps, 5);
       },
     );
@@ -216,6 +217,7 @@ void main() {
             ExerciseSet(
               id: 'set-1',
               weight: 60,
+              unit: WeightUnit.kg,
               reps: 5,
               loggedAt: loggedSetTime,
             ),
@@ -261,6 +263,7 @@ void main() {
             ExerciseSet(
               id: 'set-1',
               weight: 60,
+              unit: WeightUnit.kg,
               reps: 5,
               loggedAt: DateTime(2026, 1, 1, 10, 30),
             ),
