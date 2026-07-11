@@ -382,5 +382,47 @@ void main() {
         expect(discardButton.onPressed, isNotNull);
       },
     );
+
+    testWidgets(
+      'the Discard and Finish buttons stay clear of the bottom system inset '
+      '(e.g. a gesture/button navigation bar)',
+      (tester) async {
+        const bottomInset = 48.0;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: MediaQuery(
+              data: const MediaQueryData(
+                padding: EdgeInsets.only(bottom: bottomInset),
+              ),
+              child: ActiveWorkoutScreen(
+                workout: Workout(
+                  id: 'workout-1',
+                  startTime: DateTime(2026, 1, 1),
+                ),
+                exercises: const [],
+                onWorkoutChanged: (_) {},
+                onExercisesChanged: (_) {},
+                onWorkoutDiscarded: (_) {},
+              ),
+            ),
+          ),
+        );
+
+        final screenHeight =
+            tester.view.physicalSize.height / tester.view.devicePixelRatio;
+        final maxAllowedY = screenHeight - bottomInset;
+
+        final discardBottom = tester.getBottomLeft(
+          find.byKey(const ValueKey('discard-workout')),
+        );
+        final finishBottom = tester.getBottomLeft(
+          find.byKey(const ValueKey('finish-workout')),
+        );
+
+        expect(discardBottom.dy, lessThanOrEqualTo(maxAllowedY));
+        expect(finishBottom.dy, lessThanOrEqualTo(maxAllowedY));
+      },
+    );
   });
 }
