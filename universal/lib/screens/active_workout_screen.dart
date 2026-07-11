@@ -96,64 +96,66 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Active Workout')),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _nameController,
-                    decoration: const InputDecoration(
-                      hintText: 'Exercise name',
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _nameController,
+                      decoration: const InputDecoration(
+                        hintText: 'Exercise name',
+                      ),
+                      onSubmitted: (_) => _addExerciseEntry(),
                     ),
-                    onSubmitted: (_) => _addExerciseEntry(),
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.add),
-                  onPressed: _addExerciseEntry,
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: ListView(
-              children: _workout.exerciseEntries.map((entry) {
-                return _ExerciseEntryTile(
-                  key: ValueKey(entry.id),
-                  entry: entry,
-                  exerciseName: _exerciseName(entry.exerciseId),
-                  onAddSet: (weight, unit, reps) =>
-                      _addSet(entry.id, weight, unit, reps),
-                );
-              }).toList(),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextButton(
-                    key: const ValueKey('discard-workout'),
-                    onPressed: _discard,
-                    child: const Text('Discard'),
+                  IconButton(
+                    icon: const Icon(Icons.add),
+                    onPressed: _addExerciseEntry,
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: ElevatedButton(
-                    key: const ValueKey('finish-workout'),
-                    onPressed: _hasLoggedSets ? _finish : null,
-                    child: const Text('Finish'),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+            Expanded(
+              child: ListView(
+                children: _workout.exerciseEntries.map((entry) {
+                  return _ExerciseEntryTile(
+                    key: ValueKey(entry.id),
+                    entry: entry,
+                    exerciseName: _exerciseName(entry.exerciseId),
+                    onAddSet: (weight, unit, reps) =>
+                        _addSet(entry.id, weight, unit, reps),
+                  );
+                }).toList(),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      key: const ValueKey('discard-workout'),
+                      onPressed: _discard,
+                      child: const Text('Discard'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ElevatedButton(
+                      key: const ValueKey('finish-workout'),
+                      onPressed: _hasLoggedSets ? _finish : null,
+                      child: const Text('Finish'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
