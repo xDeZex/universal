@@ -48,5 +48,46 @@ void main() {
       expect(copy.id, 'ex-1');
       expect(copy.name, 'Bench Press');
     });
+
+    test('resolve returns the existing Exercise on a case-insensitive exact match', () {
+      final existing = [
+        Exercise(id: 'ex-1', name: 'Bench Press'),
+        Exercise(id: 'ex-2', name: 'Squat'),
+      ];
+
+      final resolved = Exercise.resolve('bench press', existing)!;
+
+      expect(resolved.id, 'ex-1');
+      expect(resolved.name, 'Bench Press');
+    });
+
+    test('resolve constructs a new Exercise when no match exists', () {
+      final existing = [Exercise(id: 'ex-1', name: 'Bench Press')];
+
+      final resolved = Exercise.resolve('Deadlift', existing)!;
+
+      expect(resolved.name, 'Deadlift');
+      expect(resolved.id, isNot(equals('ex-1')));
+      expect(
+        existing.any((e) => e.id == resolved.id),
+        isFalse,
+      );
+    });
+
+    test('resolve returns null and creates nothing for an empty name', () {
+      final existing = [Exercise(id: 'ex-1', name: 'Bench Press')];
+
+      final resolved = Exercise.resolve('', existing);
+
+      expect(resolved, isNull);
+    });
+
+    test('resolve returns null and creates nothing for a whitespace-only name', () {
+      final existing = [Exercise(id: 'ex-1', name: 'Bench Press')];
+
+      final resolved = Exercise.resolve('   ', existing);
+
+      expect(resolved, isNull);
+    });
   });
 }

@@ -12,6 +12,10 @@ Never `git push` unless explicitly told to.
 
 Before running `/opsx:explore`, `/opsx:propose`, or `/opsx:apply` — or starting any other fresh implementation — create a new branch (`git checkout -b <name>`), then run `git fetch origin && git rebase origin/main` to ensure it is up to date with main. For continuing work on an existing branch, just rebase. Never explore, propose, or apply on `main`.
 
+### Research
+
+Investigate questions against primary sources — prefer official docs, specs, and first-party APIs over source code — don't use any secondary write-ups of them. Follow every claim back to the source that owns it.
+
 ### Commit and review workflow
 
 OpenSpec apply commits are marked `[temporary]` in their message. These are expected to be squashed before a PR.

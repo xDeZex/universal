@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -23,7 +24,13 @@ void main() {
     await tester.pumpWidget(UniversalApp(updateService: updateService));
     await tester.pumpAndSettle();
 
-    expect(find.text('Checklists'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(AppBar),
+        matching: find.text('Checklists'),
+      ),
+      findsOneWidget,
+    );
     expect(find.text('No checklists yet'), findsOneWidget);
   });
 }

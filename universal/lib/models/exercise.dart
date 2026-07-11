@@ -21,4 +21,24 @@ class Exercise {
       name: json['name'] as String,
     );
   }
+
+  static Exercise? resolve(String name, List<Exercise> existing) {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) {
+      return null;
+    }
+
+    final lowerName = trimmed.toLowerCase();
+
+    for (final exercise in existing) {
+      if (exercise.name.toLowerCase() == lowerName) {
+        return exercise;
+      }
+    }
+
+    return Exercise(
+      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      name: trimmed,
+    );
+  }
 }
