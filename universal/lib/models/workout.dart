@@ -111,7 +111,11 @@ class Workout {
     required int reps,
   }) {
     if (!exerciseEntries.any((entry) => entry.id == entryId)) {
-      throw ArgumentError.value(entryId, 'entryId', 'No Exercise Entry with this id');
+      throw ArgumentError.value(
+        entryId,
+        'entryId',
+        'No Exercise Entry with this id',
+      );
     }
 
     final newSet = ExerciseSet(
@@ -133,6 +137,90 @@ class Workout {
     );
   }
 
+  Workout editSet({
+    required String entryId,
+    required String setId,
+    required num weight,
+    required WeightUnit unit,
+    required int reps,
+  }) {
+    final entry = exerciseEntries.firstWhere(
+      (entry) => entry.id == entryId,
+      orElse: () => throw ArgumentError.value(
+        entryId,
+        'entryId',
+        'No Exercise Entry with this id',
+      ),
+    );
+    if (!entry.sets.any((set) => set.id == setId)) {
+      throw ArgumentError.value(setId, 'setId', 'No Set with this id');
+    }
+
+    return copyWith(
+      exerciseEntries: exerciseEntries
+          .map(
+            (e) => e.id == entryId
+                ? e.copyWith(
+                    sets: e.sets
+                        .map(
+                          (set) => set.id == setId
+                              ? set.copyWith(
+                                  weight: weight,
+                                  unit: unit,
+                                  reps: reps,
+                                )
+                              : set,
+                        )
+                        .toList(),
+                  )
+                : e,
+          )
+          .toList(),
+    );
+  }
+
+  Workout deleteSet({required String entryId, required String setId}) {
+    final entry = exerciseEntries.firstWhere(
+      (entry) => entry.id == entryId,
+      orElse: () => throw ArgumentError.value(
+        entryId,
+        'entryId',
+        'No Exercise Entry with this id',
+      ),
+    );
+    if (!entry.sets.any((set) => set.id == setId)) {
+      throw ArgumentError.value(setId, 'setId', 'No Set with this id');
+    }
+
+    return copyWith(
+      exerciseEntries: exerciseEntries
+          .map(
+            (entry) => entry.id == entryId
+                ? entry.copyWith(
+                    sets: entry.sets.where((set) => set.id != setId).toList(),
+                  )
+                : entry,
+          )
+          .toList(),
+    );
+  }
+
+  Workout deleteExerciseEntry({required String entryId}) {
+    if (!exerciseEntries.any((entry) => entry.id == entryId)) {
+      throw ArgumentError.value(
+        entryId,
+        'entryId',
+        'No Exercise Entry with this id',
+      );
+    }
+
+    return copyWith(
+      exerciseEntries: exerciseEntries
+          .where((entry) => entry.id != entryId)
+          .toList(),
+    );
+  }
+
   Workout? finish() {
     final allSets = exerciseEntries.expand((entry) => entry.sets);
     if (allSets.isEmpty) {
@@ -146,10 +234,7 @@ class Workout {
     return copyWith(endTime: mostRecent.loggedAt);
   }
 
-  Workout copyWith({
-    DateTime? endTime,
-    List<ExerciseEntry>? exerciseEntries,
-  }) {
+  Workout copyWith({DateTime? endTime, List<ExerciseEntry>? exerciseEntries}) {
     return Workout(
       id: id,
       startTime: startTime,

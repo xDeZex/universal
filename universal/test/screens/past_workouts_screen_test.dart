@@ -9,10 +9,19 @@ Future<void> _pumpPastWorkoutsScreen(
   WidgetTester tester, {
   required List<Workout> workouts,
   required List<Exercise> exercises,
+  void Function(Workout)? onWorkoutChanged,
+  void Function(List<Exercise>)? onExercisesChanged,
+  void Function(String)? onWorkoutDiscarded,
 }) async {
   await tester.pumpWidget(
     MaterialApp(
-      home: PastWorkoutsScreen(workouts: workouts, exercises: exercises),
+      home: PastWorkoutsScreen(
+        workouts: workouts,
+        exercises: exercises,
+        onWorkoutChanged: onWorkoutChanged ?? (_) {},
+        onExercisesChanged: onExercisesChanged ?? (_) {},
+        onWorkoutDiscarded: onWorkoutDiscarded ?? (_) {},
+      ),
     ),
   );
 }
@@ -268,6 +277,55 @@ void main() {
         expect(find.byType(TextField), findsNothing);
         expect(find.byKey(const ValueKey('discard-workout')), findsNothing);
         expect(find.byKey(const ValueKey('finish-workout')), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'editing a Set from a Past Workout\'s detail view invokes the real '
+      'onWorkoutChanged callback passed to PastWorkoutsScreen, not a no-op',
+      (tester) async {
+        Workout? savedWorkout;
+        final entry = ExerciseEntry(
+          id: 'entry-1',
+          exerciseId: 'exercise-1',
+          sets: [
+            ExerciseSet(
+              id: 'set-1',
+              weight: 60,
+              unit: WeightUnit.kg,
+              reps: 5,
+              loggedAt: DateTime(2026, 1, 1, 9, 20),
+            ),
+          ],
+        );
+        final workout = Workout(
+          id: 'w-finished',
+          startTime: DateTime(2026, 1, 1, 9, 0),
+          endTime: DateTime(2026, 1, 1, 9, 30),
+          exerciseEntries: [entry],
+        );
+
+        await _pumpPastWorkoutsScreen(
+          tester,
+          workouts: [workout],
+          exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
+          onWorkoutChanged: (w) => savedWorkout = w,
+        );
+
+        await tester.tap(find.byKey(const ValueKey('past-workout-w-finished')));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byKey(const ValueKey('set-set-1')));
+        await tester.pumpAndSettle();
+        await tester.enterText(
+          find.byKey(const ValueKey('edit-weight-set-1')),
+          '99',
+        );
+        await tester.tap(find.byKey(const ValueKey('edit-submit-set-1')));
+        await tester.pumpAndSettle();
+
+        expect(savedWorkout, isNotNull);
+        expect(savedWorkout!.exerciseEntries[0].sets[0].weight, 99);
       },
     );
 

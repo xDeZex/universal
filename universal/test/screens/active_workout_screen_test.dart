@@ -588,5 +588,779 @@ void main() {
         expect(find.text('Active Workout'), findsOneWidget);
       },
     );
+
+    testWidgets(
+      'tapping a logged Set opens an edit dialog pre-filled with its '
+      'current weight, unit, and reps',
+      (tester) async {
+        final entry = ExerciseEntry(
+          id: 'entry-1',
+          exerciseId: 'exercise-1',
+          sets: [
+            ExerciseSet(
+              id: 'set-1',
+              weight: 60,
+              unit: WeightUnit.kg,
+              reps: 8,
+              loggedAt: DateTime(2026, 1, 1, 10, 0),
+            ),
+          ],
+        );
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 1, 1, 9, 0),
+          exerciseEntries: [entry],
+        );
+
+        await _pumpActiveWorkoutScreen(
+          tester,
+          workout: workout,
+          exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
+        );
+
+        await tester.tap(find.byKey(const ValueKey('set-set-1')));
+        await tester.pumpAndSettle();
+
+        final weightField = tester.widget<TextField>(
+          find.byKey(const ValueKey('edit-weight-set-1')),
+        );
+        final repsField = tester.widget<TextField>(
+          find.byKey(const ValueKey('edit-reps-set-1')),
+        );
+        final kgChip = tester.widget<ChoiceChip>(
+          find.byKey(const ValueKey('edit-unit-kg-set-1')),
+        );
+
+        expect(weightField.controller!.text, '60');
+        expect(repsField.controller!.text, '8');
+        expect(kgChip.selected, isTrue);
+      },
+    );
+
+    testWidgets(
+      'submitting valid new values from the edit dialog updates the Set '
+      'and leaves loggedAt unchanged',
+      (tester) async {
+        Workout? savedWorkout;
+        final loggedAt = DateTime(2026, 1, 1, 10, 0);
+        final entry = ExerciseEntry(
+          id: 'entry-1',
+          exerciseId: 'exercise-1',
+          sets: [
+            ExerciseSet(
+              id: 'set-1',
+              weight: 60,
+              unit: WeightUnit.kg,
+              reps: 8,
+              loggedAt: loggedAt,
+            ),
+          ],
+        );
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 1, 1, 9, 0),
+          exerciseEntries: [entry],
+        );
+
+        await _pumpActiveWorkoutScreen(
+          tester,
+          workout: workout,
+          exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
+          onWorkoutChanged: (w) => savedWorkout = w,
+        );
+
+        await tester.tap(find.byKey(const ValueKey('set-set-1')));
+        await tester.pumpAndSettle();
+
+        await tester.enterText(
+          find.byKey(const ValueKey('edit-weight-set-1')),
+          '65',
+        );
+        await tester.enterText(
+          find.byKey(const ValueKey('edit-reps-set-1')),
+          '6',
+        );
+        await tester.tap(find.byKey(const ValueKey('edit-unit-lbs-set-1')));
+        await tester.tap(find.byKey(const ValueKey('edit-submit-set-1')));
+        await tester.pumpAndSettle();
+
+        expect(savedWorkout, isNotNull);
+        final updatedSet = savedWorkout!.exerciseEntries[0].sets[0];
+        expect(updatedSet.weight, 65);
+        expect(updatedSet.unit, WeightUnit.lbs);
+        expect(updatedSet.reps, 6);
+        expect(updatedSet.loggedAt, loggedAt);
+      },
+    );
+
+    testWidgets(
+      'submitting a non-numeric weight from the edit dialog is rejected, '
+      'leaving the Set unchanged',
+      (tester) async {
+        var workoutSaveCount = 0;
+        final entry = ExerciseEntry(
+          id: 'entry-1',
+          exerciseId: 'exercise-1',
+          sets: [
+            ExerciseSet(
+              id: 'set-1',
+              weight: 60,
+              unit: WeightUnit.kg,
+              reps: 8,
+              loggedAt: DateTime(2026, 1, 1, 10, 0),
+            ),
+          ],
+        );
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 1, 1, 9, 0),
+          exerciseEntries: [entry],
+        );
+
+        await _pumpActiveWorkoutScreen(
+          tester,
+          workout: workout,
+          exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
+          onWorkoutChanged: (_) => workoutSaveCount++,
+        );
+
+        await tester.tap(find.byKey(const ValueKey('set-set-1')));
+        await tester.pumpAndSettle();
+
+        await tester.enterText(
+          find.byKey(const ValueKey('edit-weight-set-1')),
+          'not-a-number',
+        );
+        await tester.tap(find.byKey(const ValueKey('edit-submit-set-1')));
+        await tester.pumpAndSettle();
+
+        expect(workoutSaveCount, 0);
+        expect(find.byKey(const ValueKey('edit-weight-set-1')), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'submitting a non-positive-integer reps count from the edit dialog is '
+      'rejected, leaving the Set unchanged',
+      (tester) async {
+        var workoutSaveCount = 0;
+        final entry = ExerciseEntry(
+          id: 'entry-1',
+          exerciseId: 'exercise-1',
+          sets: [
+            ExerciseSet(
+              id: 'set-1',
+              weight: 60,
+              unit: WeightUnit.kg,
+              reps: 8,
+              loggedAt: DateTime(2026, 1, 1, 10, 0),
+            ),
+          ],
+        );
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 1, 1, 9, 0),
+          exerciseEntries: [entry],
+        );
+
+        await _pumpActiveWorkoutScreen(
+          tester,
+          workout: workout,
+          exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
+          onWorkoutChanged: (_) => workoutSaveCount++,
+        );
+
+        await tester.tap(find.byKey(const ValueKey('set-set-1')));
+        await tester.pumpAndSettle();
+
+        await tester.enterText(
+          find.byKey(const ValueKey('edit-reps-set-1')),
+          '0',
+        );
+        await tester.tap(find.byKey(const ValueKey('edit-submit-set-1')));
+        await tester.pumpAndSettle();
+
+        expect(workoutSaveCount, 0);
+        expect(find.byKey(const ValueKey('edit-reps-set-1')), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'submitting a zero or negative weight from the edit dialog is '
+      'accepted, same as adding a Set',
+      (tester) async {
+        Workout? savedWorkout;
+        final entry = ExerciseEntry(
+          id: 'entry-1',
+          exerciseId: 'exercise-1',
+          sets: [
+            ExerciseSet(
+              id: 'set-1',
+              weight: 60,
+              unit: WeightUnit.kg,
+              reps: 8,
+              loggedAt: DateTime(2026, 1, 1, 10, 0),
+            ),
+          ],
+        );
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 1, 1, 9, 0),
+          exerciseEntries: [entry],
+        );
+
+        await _pumpActiveWorkoutScreen(
+          tester,
+          workout: workout,
+          exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
+          onWorkoutChanged: (w) => savedWorkout = w,
+        );
+
+        await tester.tap(find.byKey(const ValueKey('set-set-1')));
+        await tester.pumpAndSettle();
+
+        await tester.enterText(
+          find.byKey(const ValueKey('edit-weight-set-1')),
+          '-10',
+        );
+        await tester.tap(find.byKey(const ValueKey('edit-submit-set-1')));
+        await tester.pumpAndSettle();
+
+        expect(savedWorkout, isNotNull);
+        expect(savedWorkout!.exerciseEntries[0].sets[0].weight, -10);
+      },
+    );
+
+    testWidgets(
+      'tapping a logged Set belonging to a Locked Workout opens the same '
+      'edit dialog and behaves identically to an in-progress Workout',
+      (tester) async {
+        Workout? savedWorkout;
+        final loggedAt = DateTime(2026, 1, 1, 10, 0);
+        final entry = ExerciseEntry(
+          id: 'entry-1',
+          exerciseId: 'exercise-1',
+          sets: [
+            ExerciseSet(
+              id: 'set-1',
+              weight: 60,
+              unit: WeightUnit.kg,
+              reps: 8,
+              loggedAt: loggedAt,
+            ),
+          ],
+        );
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 1, 1, 9, 0),
+          endTime: loggedAt,
+          exerciseEntries: [entry],
+        );
+
+        await _pumpActiveWorkoutScreen(
+          tester,
+          workout: workout,
+          exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
+          onWorkoutChanged: (w) => savedWorkout = w,
+        );
+
+        await tester.tap(find.byKey(const ValueKey('set-set-1')));
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const ValueKey('edit-weight-set-1')), findsOneWidget);
+
+        await tester.enterText(
+          find.byKey(const ValueKey('edit-weight-set-1')),
+          '70',
+        );
+        await tester.tap(find.byKey(const ValueKey('edit-submit-set-1')));
+        await tester.pumpAndSettle();
+
+        expect(savedWorkout, isNotNull);
+        expect(savedWorkout!.exerciseEntries[0].sets[0].weight, 70);
+        expect(savedWorkout!.exerciseEntries[0].sets[0].loggedAt, loggedAt);
+      },
+    );
+
+    testWidgets(
+      'cancelling the edit dialog closes it without persisting or changing '
+      'the Set',
+      (tester) async {
+        var workoutSaveCount = 0;
+        final entry = ExerciseEntry(
+          id: 'entry-1',
+          exerciseId: 'exercise-1',
+          sets: [
+            ExerciseSet(
+              id: 'set-1',
+              weight: 60,
+              unit: WeightUnit.kg,
+              reps: 8,
+              loggedAt: DateTime(2026, 1, 1, 10, 0),
+            ),
+          ],
+        );
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 1, 1, 9, 0),
+          exerciseEntries: [entry],
+        );
+
+        await _pumpActiveWorkoutScreen(
+          tester,
+          workout: workout,
+          exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
+          onWorkoutChanged: (_) => workoutSaveCount++,
+        );
+
+        await tester.tap(find.byKey(const ValueKey('set-set-1')));
+        await tester.pumpAndSettle();
+
+        await tester.enterText(
+          find.byKey(const ValueKey('edit-weight-set-1')),
+          '999',
+        );
+        await tester.tap(find.byKey(const ValueKey('edit-cancel-set-1')));
+        await tester.pumpAndSettle();
+
+        expect(workoutSaveCount, 0);
+        expect(find.byKey(const ValueKey('edit-weight-set-1')), findsNothing);
+        expect(find.text('8 reps at 60 kg'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'the Set edit dialog has a Delete action that opens a confirmation '
+      'dialog',
+      (tester) async {
+        final entry = ExerciseEntry(
+          id: 'entry-1',
+          exerciseId: 'exercise-1',
+          sets: [
+            ExerciseSet(
+              id: 'set-1',
+              weight: 60,
+              unit: WeightUnit.kg,
+              reps: 8,
+              loggedAt: DateTime(2026, 1, 1, 10, 0),
+            ),
+          ],
+        );
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 1, 1, 9, 0),
+          exerciseEntries: [entry],
+        );
+
+        await _pumpActiveWorkoutScreen(
+          tester,
+          workout: workout,
+          exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
+        );
+
+        await tester.tap(find.byKey(const ValueKey('set-set-1')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const ValueKey('edit-delete-set-1')));
+        await tester.pumpAndSettle();
+
+        expect(
+          find.byKey(const ValueKey('confirm-delete-confirm')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const ValueKey('confirm-delete-cancel')),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'confirming the delete-Set confirmation removes the Set from its '
+      'Exercise Entry',
+      (tester) async {
+        Workout? savedWorkout;
+        final entry = ExerciseEntry(
+          id: 'entry-1',
+          exerciseId: 'exercise-1',
+          sets: [
+            ExerciseSet(
+              id: 'set-1',
+              weight: 60,
+              unit: WeightUnit.kg,
+              reps: 8,
+              loggedAt: DateTime(2026, 1, 1, 10, 0),
+            ),
+            ExerciseSet(
+              id: 'set-2',
+              weight: 20,
+              unit: WeightUnit.kg,
+              reps: 10,
+              loggedAt: DateTime(2026, 1, 1, 10, 10),
+            ),
+          ],
+        );
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 1, 1, 9, 0),
+          exerciseEntries: [entry],
+        );
+
+        await _pumpActiveWorkoutScreen(
+          tester,
+          workout: workout,
+          exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
+          onWorkoutChanged: (w) => savedWorkout = w,
+        );
+
+        await tester.tap(find.byKey(const ValueKey('set-set-1')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const ValueKey('edit-delete-set-1')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const ValueKey('confirm-delete-confirm')));
+        await tester.pumpAndSettle();
+
+        expect(savedWorkout, isNotNull);
+        expect(savedWorkout!.exerciseEntries[0].sets.length, 1);
+        expect(savedWorkout!.exerciseEntries[0].sets[0].id, 'set-2');
+      },
+    );
+
+    testWidgets(
+      'cancelling the delete-Set confirmation leaves the Set unchanged',
+      (tester) async {
+        var workoutSaveCount = 0;
+        final entry = ExerciseEntry(
+          id: 'entry-1',
+          exerciseId: 'exercise-1',
+          sets: [
+            ExerciseSet(
+              id: 'set-1',
+              weight: 60,
+              unit: WeightUnit.kg,
+              reps: 8,
+              loggedAt: DateTime(2026, 1, 1, 10, 0),
+            ),
+          ],
+        );
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 1, 1, 9, 0),
+          exerciseEntries: [entry],
+        );
+
+        await _pumpActiveWorkoutScreen(
+          tester,
+          workout: workout,
+          exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
+          onWorkoutChanged: (_) => workoutSaveCount++,
+        );
+
+        await tester.tap(find.byKey(const ValueKey('set-set-1')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const ValueKey('edit-delete-set-1')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const ValueKey('confirm-delete-cancel')));
+        await tester.pumpAndSettle();
+
+        expect(workoutSaveCount, 0);
+      },
+    );
+
+    testWidgets(
+      'deleting the only remaining Set under an Exercise Entry leaves that '
+      'Entry listed with zero Sets, not removed',
+      (tester) async {
+        Workout? savedWorkout;
+        final entry = ExerciseEntry(
+          id: 'entry-1',
+          exerciseId: 'exercise-1',
+          sets: [
+            ExerciseSet(
+              id: 'set-1',
+              weight: 60,
+              unit: WeightUnit.kg,
+              reps: 8,
+              loggedAt: DateTime(2026, 1, 1, 10, 0),
+            ),
+          ],
+        );
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 1, 1, 9, 0),
+          exerciseEntries: [entry],
+        );
+
+        await _pumpActiveWorkoutScreen(
+          tester,
+          workout: workout,
+          exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
+          onWorkoutChanged: (w) => savedWorkout = w,
+        );
+
+        await tester.tap(find.byKey(const ValueKey('set-set-1')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const ValueKey('edit-delete-set-1')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const ValueKey('confirm-delete-confirm')));
+        await tester.pumpAndSettle();
+
+        expect(savedWorkout, isNotNull);
+        expect(savedWorkout!.exerciseEntries.length, 1);
+        expect(savedWorkout!.exerciseEntries[0].id, 'entry-1');
+        expect(savedWorkout!.exerciseEntries[0].sets, isEmpty);
+      },
+    );
+
+    testWidgets(
+      'deleting a Set belonging to a Locked Workout succeeds identically '
+      'to an in-progress Workout',
+      (tester) async {
+        Workout? savedWorkout;
+        final loggedAt = DateTime(2026, 1, 1, 10, 0);
+        final entry = ExerciseEntry(
+          id: 'entry-1',
+          exerciseId: 'exercise-1',
+          sets: [
+            ExerciseSet(
+              id: 'set-1',
+              weight: 60,
+              unit: WeightUnit.kg,
+              reps: 8,
+              loggedAt: loggedAt,
+            ),
+          ],
+        );
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 1, 1, 9, 0),
+          endTime: loggedAt,
+          exerciseEntries: [entry],
+        );
+
+        await _pumpActiveWorkoutScreen(
+          tester,
+          workout: workout,
+          exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
+          onWorkoutChanged: (w) => savedWorkout = w,
+        );
+
+        await tester.tap(find.byKey(const ValueKey('set-set-1')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const ValueKey('edit-delete-set-1')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const ValueKey('confirm-delete-confirm')));
+        await tester.pumpAndSettle();
+
+        expect(savedWorkout, isNotNull);
+        expect(savedWorkout!.exerciseEntries[0].sets, isEmpty);
+      },
+    );
+
+    testWidgets(
+      "each Exercise Entry's name header has a delete icon that opens a "
+      'confirmation dialog',
+      (tester) async {
+        final entry = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 1, 1, 9, 0),
+          exerciseEntries: [entry],
+        );
+
+        await _pumpActiveWorkoutScreen(
+          tester,
+          workout: workout,
+          exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
+        );
+
+        await tester.tap(find.byKey(const ValueKey('delete-entry-entry-1')));
+        await tester.pumpAndSettle();
+
+        expect(
+          find.byKey(const ValueKey('confirm-delete-confirm')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const ValueKey('confirm-delete-cancel')),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'confirming the delete-Exercise-Entry confirmation removes the '
+      'Exercise Entry and all of its Sets, leaving other Entries untouched',
+      (tester) async {
+        Workout? savedWorkout;
+        final entry1 = ExerciseEntry(
+          id: 'entry-1',
+          exerciseId: 'exercise-1',
+          sets: [
+            ExerciseSet(
+              id: 'set-1',
+              weight: 60,
+              unit: WeightUnit.kg,
+              reps: 8,
+              loggedAt: DateTime(2026, 1, 1, 10, 0),
+            ),
+          ],
+        );
+        final entry2 = ExerciseEntry(id: 'entry-2', exerciseId: 'exercise-2');
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 1, 1, 9, 0),
+          exerciseEntries: [entry1, entry2],
+        );
+
+        await _pumpActiveWorkoutScreen(
+          tester,
+          workout: workout,
+          exercises: [
+            Exercise(id: 'exercise-1', name: 'Bench Press'),
+            Exercise(id: 'exercise-2', name: 'Squat'),
+          ],
+          onWorkoutChanged: (w) => savedWorkout = w,
+        );
+
+        await tester.tap(find.byKey(const ValueKey('delete-entry-entry-1')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const ValueKey('confirm-delete-confirm')));
+        await tester.pumpAndSettle();
+
+        expect(savedWorkout, isNotNull);
+        expect(savedWorkout!.exerciseEntries.length, 1);
+        expect(savedWorkout!.exerciseEntries[0].id, 'entry-2');
+      },
+    );
+
+    testWidgets(
+      'cancelling the delete-Exercise-Entry confirmation leaves the '
+      'Exercise Entry and its Sets unchanged',
+      (tester) async {
+        var workoutSaveCount = 0;
+        final entry = ExerciseEntry(
+          id: 'entry-1',
+          exerciseId: 'exercise-1',
+          sets: [
+            ExerciseSet(
+              id: 'set-1',
+              weight: 60,
+              unit: WeightUnit.kg,
+              reps: 8,
+              loggedAt: DateTime(2026, 1, 1, 10, 0),
+            ),
+          ],
+        );
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 1, 1, 9, 0),
+          exerciseEntries: [entry],
+        );
+
+        await _pumpActiveWorkoutScreen(
+          tester,
+          workout: workout,
+          exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
+          onWorkoutChanged: (_) => workoutSaveCount++,
+        );
+
+        await tester.tap(find.byKey(const ValueKey('delete-entry-entry-1')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const ValueKey('confirm-delete-cancel')));
+        await tester.pumpAndSettle();
+
+        expect(workoutSaveCount, 0);
+        expect(find.text('Bench Press'), findsOneWidget);
+        expect(find.text('8 reps at 60 kg'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'deleting an Exercise Entry belonging to a Locked Workout succeeds '
+      'identically to an in-progress Workout',
+      (tester) async {
+        Workout? savedWorkout;
+        final loggedAt = DateTime(2026, 1, 1, 10, 0);
+        final entry = ExerciseEntry(
+          id: 'entry-1',
+          exerciseId: 'exercise-1',
+          sets: [
+            ExerciseSet(
+              id: 'set-1',
+              weight: 60,
+              unit: WeightUnit.kg,
+              reps: 8,
+              loggedAt: loggedAt,
+            ),
+          ],
+        );
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 1, 1, 9, 0),
+          endTime: loggedAt,
+          exerciseEntries: [entry],
+        );
+
+        await _pumpActiveWorkoutScreen(
+          tester,
+          workout: workout,
+          exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
+          onWorkoutChanged: (w) => savedWorkout = w,
+        );
+
+        await tester.tap(find.byKey(const ValueKey('delete-entry-entry-1')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const ValueKey('confirm-delete-confirm')));
+        await tester.pumpAndSettle();
+
+        expect(savedWorkout, isNotNull);
+        expect(savedWorkout!.exerciseEntries, isEmpty);
+      },
+    );
+
+    testWidgets(
+      'deleting every Exercise Entry from a Locked Workout leaves it '
+      'Locked with zero Exercise Entries, with no guard preventing it',
+      (tester) async {
+        Workout? savedWorkout;
+        final loggedAt = DateTime(2026, 1, 1, 10, 0);
+        final entry = ExerciseEntry(
+          id: 'entry-1',
+          exerciseId: 'exercise-1',
+          sets: [
+            ExerciseSet(
+              id: 'set-1',
+              weight: 60,
+              unit: WeightUnit.kg,
+              reps: 8,
+              loggedAt: loggedAt,
+            ),
+          ],
+        );
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 1, 1, 9, 0),
+          endTime: loggedAt,
+          exerciseEntries: [entry],
+        );
+
+        await _pumpActiveWorkoutScreen(
+          tester,
+          workout: workout,
+          exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
+          onWorkoutChanged: (w) => savedWorkout = w,
+        );
+
+        await tester.tap(find.byKey(const ValueKey('delete-entry-entry-1')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const ValueKey('confirm-delete-confirm')));
+        await tester.pumpAndSettle();
+
+        expect(savedWorkout, isNotNull);
+        expect(savedWorkout!.exerciseEntries, isEmpty);
+        expect(savedWorkout!.isInProgress, isFalse);
+        expect(savedWorkout!.endTime, loggedAt);
+      },
+    );
   });
 }
