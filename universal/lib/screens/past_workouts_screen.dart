@@ -7,11 +7,17 @@ import 'active_workout_screen.dart';
 class PastWorkoutsScreen extends StatelessWidget {
   final List<Workout> workouts;
   final List<Exercise> exercises;
+  final void Function(Workout) onWorkoutChanged;
+  final void Function(List<Exercise>) onExercisesChanged;
+  final void Function(String workoutId) onWorkoutDiscarded;
 
   const PastWorkoutsScreen({
     super.key,
     required this.workouts,
     required this.exercises,
+    required this.onWorkoutChanged,
+    required this.onExercisesChanged,
+    required this.onWorkoutDiscarded,
   });
 
   List<Workout> get _finishedWorkouts {
@@ -54,9 +60,9 @@ class PastWorkoutsScreen extends StatelessWidget {
                       builder: (context) => ActiveWorkoutScreen(
                         workout: workout,
                         exercises: exercises,
-                        onWorkoutChanged: (_) {},
-                        onExercisesChanged: (_) {},
-                        onWorkoutDiscarded: (_) {},
+                        onWorkoutChanged: onWorkoutChanged,
+                        onExercisesChanged: onExercisesChanged,
+                        onWorkoutDiscarded: onWorkoutDiscarded,
                       ),
                     ),
                   ),

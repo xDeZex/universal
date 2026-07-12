@@ -78,8 +78,13 @@ class _WorkoutHomeScreenState extends State<WorkoutHomeScreen> {
     Navigator.push<void>(
       context,
       MaterialPageRoute(
-        builder: (context) =>
-            PastWorkoutsScreen(workouts: _workouts, exercises: _exercises),
+        builder: (context) => PastWorkoutsScreen(
+          workouts: _workouts,
+          exercises: _exercises,
+          onWorkoutChanged: _onWorkoutChanged,
+          onExercisesChanged: _onExercisesChanged,
+          onWorkoutDiscarded: _onWorkoutDiscarded,
+        ),
       ),
     );
   }

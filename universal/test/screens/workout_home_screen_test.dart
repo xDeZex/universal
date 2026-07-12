@@ -388,6 +388,73 @@ void main() {
     );
 
     testWidgets(
+      'editing a Set from a Past Workout\'s detail view persists the change '
+      'to storage, and reopening that Workout\'s detail view reflects it',
+      (tester) async {
+        final loggedAt = DateTime(2026, 1, 1, 10, 30);
+        final entry = ExerciseEntry(
+          id: 'entry-1',
+          exerciseId: 'exercise-1',
+          sets: [
+            ExerciseSet(
+              id: 'set-1',
+              weight: 60,
+              unit: WeightUnit.kg,
+              reps: 5,
+              loggedAt: loggedAt,
+            ),
+          ],
+        );
+        final finishedWorkout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 1, 1, 10, 0),
+          endTime: loggedAt,
+          exerciseEntries: [entry],
+        );
+
+        await _pumpWorkoutHomeScreen(
+          tester,
+          initialWorkouts: [finishedWorkout],
+          initialExercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Past Workouts'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const ValueKey('past-workout-workout-1')));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byKey(const ValueKey('set-set-1')));
+        await tester.pumpAndSettle();
+        await tester.enterText(
+          find.byKey(const ValueKey('edit-weight-set-1')),
+          '99',
+        );
+        await tester.tap(find.byKey(const ValueKey('edit-submit-set-1')));
+        await tester.pumpAndSettle();
+
+        final stored = await StorageService().loadWorkouts();
+        expect(stored[0].exerciseEntries[0].sets[0].weight, 99);
+
+        // Reopen the detail view: back out to the Workout home screen, then
+        // navigate to Past Workouts again so it's rebuilt from the current
+        // (post-edit) Workout list, rather than reusing the stale list it
+        // was first pushed with.
+        Navigator.of(
+          tester.element(find.byType(ActiveWorkoutScreen)),
+        ).popUntil((route) => route.isFirst);
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Past Workouts'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const ValueKey('past-workout-workout-1')));
+        await tester.pumpAndSettle();
+
+        expect(find.text('5 reps at 99 kg — 10:30 AM'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
       'tapping Past Workouts navigates to the Past Workouts list screen',
       (tester) async {
         await _pumpWorkoutHomeScreen(
