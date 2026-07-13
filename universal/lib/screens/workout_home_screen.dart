@@ -4,6 +4,7 @@ import '../models/exercise.dart';
 import '../models/workout.dart';
 import '../services/storage_service.dart';
 import 'active_workout_screen.dart';
+import 'manage_exercises_screen.dart';
 import 'past_workouts_screen.dart';
 
 class WorkoutHomeScreen extends StatefulWidget {
@@ -89,6 +90,18 @@ class _WorkoutHomeScreenState extends State<WorkoutHomeScreen> {
     );
   }
 
+  void _openManageExercises() {
+    Navigator.push<void>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ManageExercisesScreen(
+          exercises: _exercises,
+          onExercisesChanged: _onExercisesChanged,
+        ),
+      ),
+    );
+  }
+
   void _openActiveWorkout(Workout workout) {
     Navigator.push<void>(
       context,
@@ -147,9 +160,18 @@ class _WorkoutHomeScreenState extends State<WorkoutHomeScreen> {
                       _hasInProgress ? 'Continue Workout' : 'Start Workout',
                     ),
                   ),
-                  TextButton(
-                    onPressed: _openPastWorkouts,
-                    child: const Text('Past Workouts'),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextButton(
+                        onPressed: _openPastWorkouts,
+                        child: const Text('Past Workouts'),
+                      ),
+                      TextButton(
+                        onPressed: _openManageExercises,
+                        child: const Text('Manage Exercises'),
+                      ),
+                    ],
                   ),
                 ],
               ),

@@ -104,5 +104,58 @@ void main() {
 
       expect(Exercise.nameFor('missing', existing), 'Unknown Exercise');
     });
+
+    test(
+      'validateRename returns null for a valid, non-colliding name',
+      () {
+        final exercise = Exercise(id: 'ex-1', name: 'Bench Press');
+        final existing = [exercise, Exercise(id: 'ex-2', name: 'Squat')];
+
+        expect(
+          exercise.validateRename('Incline Bench Press', existing),
+          isNull,
+        );
+      },
+    );
+
+    test(
+      'validateRename returns blank for an empty or whitespace-only name',
+      () {
+        final exercise = Exercise(id: 'ex-1', name: 'Bench Press');
+        final existing = [exercise];
+
+        expect(
+          exercise.validateRename('   ', existing),
+          ExerciseRenameError.blank,
+        );
+      },
+    );
+
+    test(
+      'validateRename returns null when renaming to its own current name '
+      'or a case-only variant, since it is excluded from its own collision '
+      'check',
+      () {
+        final exercise = Exercise(id: 'ex-1', name: 'Bench Press');
+        final existing = [exercise, Exercise(id: 'ex-2', name: 'Squat')];
+
+        expect(exercise.validateRename('Bench Press', existing), isNull);
+        expect(exercise.validateRename('bench press', existing), isNull);
+      },
+    );
+
+    test(
+      'validateRename returns duplicate for a name colliding with another '
+      'Exercise case-insensitively',
+      () {
+        final exercise = Exercise(id: 'ex-1', name: 'Bench Press');
+        final existing = [exercise, Exercise(id: 'ex-2', name: 'Squat')];
+
+        expect(
+          exercise.validateRename('squat', existing),
+          ExerciseRenameError.duplicate,
+        );
+      },
+    );
   });
 }
