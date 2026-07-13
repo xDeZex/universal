@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:universal/models/exercise.dart';
 import 'package:universal/models/workout.dart';
 import 'package:universal/screens/active_workout_screen.dart';
+import 'package:universal/screens/manage_exercises_screen.dart';
 import 'package:universal/screens/past_workouts_screen.dart';
 import 'package:universal/screens/workout_home_screen.dart';
 import 'package:universal/services/storage_service.dart';
@@ -485,6 +486,75 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.byType(PastWorkoutsScreen), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'shows a Manage Exercises action next to Past Workouts, at the same '
+      'vertical position',
+      (tester) async {
+        await _pumpWorkoutHomeScreen(
+          tester,
+          initialWorkouts: [],
+          initialExercises: [],
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Manage Exercises'), findsOneWidget);
+
+        final pastWorkoutsPosition = tester.getCenter(
+          find.text('Past Workouts'),
+        );
+        final manageExercisesPosition = tester.getCenter(
+          find.text('Manage Exercises'),
+        );
+        expect(manageExercisesPosition.dy, pastWorkoutsPosition.dy);
+        expect(manageExercisesPosition.dx, isNot(pastWorkoutsPosition.dx));
+      },
+    );
+
+    testWidgets(
+      'tapping Manage Exercises opens the Manage Exercises screen showing '
+      'every stored Exercise',
+      (tester) async {
+        await _pumpWorkoutHomeScreen(
+          tester,
+          initialWorkouts: [],
+          initialExercises: [
+            Exercise(id: 'exercise-1', name: 'Bench Press'),
+            Exercise(id: 'exercise-2', name: 'Squat'),
+          ],
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Manage Exercises'));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(ManageExercisesScreen), findsOneWidget);
+        expect(find.text('Bench Press'), findsOneWidget);
+        expect(find.text('Squat'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'Manage Exercises action is available and opens the screen even with '
+      'a Workout in progress',
+      (tester) async {
+        await _pumpWorkoutHomeScreen(
+          tester,
+          initialWorkouts: [
+            Workout(id: 'workout-1', startTime: DateTime(2026, 1, 1)),
+          ],
+          initialExercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Manage Exercises'), findsOneWidget);
+
+        await tester.tap(find.text('Manage Exercises'));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(ManageExercisesScreen), findsOneWidget);
       },
     );
   });

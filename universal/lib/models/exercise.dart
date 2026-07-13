@@ -1,3 +1,5 @@
+enum ExerciseRenameError { blank, duplicate }
+
 class Exercise {
   final String id;
   final String name;
@@ -28,6 +30,22 @@ class Exercise {
       orElse: () => Exercise(id: exerciseId, name: 'Unknown Exercise'),
     );
     return exercise.name;
+  }
+
+  ExerciseRenameError? validateRename(String newName, List<Exercise> existing) {
+    final trimmed = newName.trim();
+    if (trimmed.isEmpty) {
+      return ExerciseRenameError.blank;
+    }
+
+    final collides = existing.any(
+      (e) => e.id != id && e.name.toLowerCase() == trimmed.toLowerCase(),
+    );
+    if (collides) {
+      return ExerciseRenameError.duplicate;
+    }
+
+    return null;
   }
 
   static Exercise? resolve(String name, List<Exercise> existing) {
