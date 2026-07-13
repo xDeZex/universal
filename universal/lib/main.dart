@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import 'screens/app_shell.dart';
 import 'services/update_service.dart';
+import 'theme/app_theme.dart';
 
 void main() {
   runApp(const UniversalApp());
@@ -23,13 +24,7 @@ class UniversalApp extends StatelessWidget {
       },
       child: MaterialApp(
         title: 'Universal',
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: Colors.blue,
-            brightness: Brightness.dark,
-          ),
-          useMaterial3: true,
-        ),
+        theme: AppTheme.dark,
         home: const AppShell(),
       ),
     );
