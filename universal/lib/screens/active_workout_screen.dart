@@ -45,15 +45,11 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
 
   void _addExerciseEntry() {
     final name = _nameController.text.trim();
-    final repo = _repo;
-    final before = _findWorkout(repo)?.exerciseEntries.length ?? 0;
+    final entry = _repo.addExerciseEntry(widget.workoutId, name);
 
-    repo.addExerciseEntry(widget.workoutId, name);
-
-    final after = _findWorkout(repo)?.exerciseEntries.length ?? 0;
-    if (after > before) {
+    if (entry != null) {
       setState(() {
-        _selectedEntryId = _findWorkout(repo)!.exerciseEntries.last.id;
+        _selectedEntryId = entry.id;
       });
       _nameController.clear();
     }

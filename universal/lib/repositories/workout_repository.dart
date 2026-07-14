@@ -40,11 +40,11 @@ class WorkoutRepository extends ChangeNotifier {
     notifyListeners();
   }
 
-  void addExerciseEntry(String workoutId, String name) {
-    if (!workouts.any((w) => w.id == workoutId)) return;
+  ExerciseEntry? addExerciseEntry(String workoutId, String name) {
+    if (!workouts.any((w) => w.id == workoutId)) return null;
 
     final exercise = Exercise.resolve(name, exercises);
-    if (exercise == null) return;
+    if (exercise == null) return null;
 
     final isNewExercise = !exercises.any((e) => e.id == exercise.id);
     final entry = ExerciseEntry(
@@ -63,6 +63,7 @@ class WorkoutRepository extends ChangeNotifier {
       _storage.saveExercises(exercises);
     }
     notifyListeners();
+    return entry;
   }
 
   void addSet({
@@ -72,17 +73,11 @@ class WorkoutRepository extends ChangeNotifier {
     required WeightUnit unit,
     required int reps,
   }) {
-    final replaced = _replaceWorkout(
+    _mutateWorkout(
       workoutId,
-      (workout) => workout.addSet(
-        entryId: entryId,
-        weight: weight,
-        unit: unit,
-        reps: reps,
-      ),
+      (workout) =>
+          workout.addSet(entryId: entryId, weight: weight, unit: unit, reps: reps),
     );
-    if (!replaced) return;
-    notifyListeners();
   }
 
   void editSet({
@@ -93,7 +88,7 @@ class WorkoutRepository extends ChangeNotifier {
     required WeightUnit unit,
     required int reps,
   }) {
-    final replaced = _replaceWorkout(
+    _mutateWorkout(
       workoutId,
       (workout) => workout.editSet(
         entryId: entryId,
@@ -103,8 +98,6 @@ class WorkoutRepository extends ChangeNotifier {
         reps: reps,
       ),
     );
-    if (!replaced) return;
-    notifyListeners();
   }
 
   void deleteSet({
@@ -112,24 +105,20 @@ class WorkoutRepository extends ChangeNotifier {
     required String entryId,
     required String setId,
   }) {
-    final replaced = _replaceWorkout(
+    _mutateWorkout(
       workoutId,
       (workout) => workout.deleteSet(entryId: entryId, setId: setId),
     );
-    if (!replaced) return;
-    notifyListeners();
   }
 
   void deleteExerciseEntry({
     required String workoutId,
     required String entryId,
   }) {
-    final replaced = _replaceWorkout(
+    _mutateWorkout(
       workoutId,
       (workout) => workout.deleteExerciseEntry(entryId: entryId),
     );
-    if (!replaced) return;
-    notifyListeners();
   }
 
   void finishWorkout(String workoutId) {
@@ -161,6 +150,12 @@ class WorkoutRepository extends ChangeNotifier {
         .toList();
     _storage.saveExercises(exercises);
     notifyListeners();
+  }
+
+  /// Replaces the Workout matching [workoutId] via [_replaceWorkout] and
+  /// notifies listeners only if a match was found.
+  void _mutateWorkout(String workoutId, Workout Function(Workout) update) {
+    if (_replaceWorkout(workoutId, update)) notifyListeners();
   }
 
   /// Replaces the Workout matching [workoutId], persisting and returning

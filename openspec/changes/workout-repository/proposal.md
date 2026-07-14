@@ -17,7 +17,7 @@ Persistence policy for Workouts and Exercises — when to load, when to save, ho
 - (none — this change restructures how existing Workout/Exercise state is owned and passed between screens; no new user-facing behavior)
 
 ### Modified Capabilities
-- (none — `workout-persistence` and `workout-logging-ui`'s requirements describe load/save timing and screen behavior, both of which are preserved as-is; only the internal implementation moves)
+- `workout-persistence` — "Workouts and Exercises load on app start" is rescoped: loading now happens when `WorkoutRepository` is created (scoped to the Workout tab's subtree) rather than when the Workout tab is first initialized directly. Behavior observed by the user is unchanged; see `specs/workout-persistence/spec.md` for the updated requirement. `workout-logging-ui`'s requirements describe screen behavior that is preserved as-is; only the internal implementation moves.
 
 ## Impact
 
