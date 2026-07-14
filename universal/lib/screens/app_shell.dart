@@ -15,7 +15,7 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   int _selectedIndex = 0;
 
-  static final _tabs = [
+  final _tabs = [
     const HomeScreen(),
     ChangeNotifierProvider<WorkoutRepository>(
       create: (_) => WorkoutRepository()..load(),
