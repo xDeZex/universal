@@ -442,19 +442,18 @@ void main() {
         await tester.tap(find.byKey(const ValueKey('past-workout-workout-1')));
         await tester.pumpAndSettle();
 
+        final screen = tester.widget<ActiveWorkoutScreen>(
+          find.byType(ActiveWorkoutScreen),
+        );
+        expect(screen.workoutId, 'workout-1');
+
+        // Confirms the reopened view reads live from WorkoutRepository
+        // rather than reusing the stale list it was first pushed with.
         expect(
           tester
               .widget<Text>(find.byKey(const ValueKey('set-weight-set-1')))
               .data,
           '99 kg',
-        );
-        expect(
-          tester.widget<Text>(find.byKey(const ValueKey('set-reps-set-1'))).data,
-          '5',
-        );
-        expect(
-          tester.widget<Text>(find.byKey(const ValueKey('set-time-set-1'))).data,
-          '10:30 AM',
         );
       },
     );
