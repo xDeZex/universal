@@ -23,14 +23,14 @@
 
 ## 4. Screens read and write through WorkoutRepository instead of callbacks
 
-- [ ] 4.1 `WorkoutHomeScreen` drops `initialWorkouts`/`initialExercises` constructor params and its own `_load`/`_onWorkoutChanged`/`_onWorkoutDiscarded`/`_onExercisesChanged` methods, reading in-progress state via `context.watch<WorkoutRepository>()`
-- [ ] 4.2 `WorkoutHomeScreen`'s Start/Continue Workout button behavior is unchanged from the user's perspective (still shows "Start Workout" / "Continue Workout" per whether a Workout is in progress)
-- [ ] 4.3 `PastWorkoutsScreen` drops `workouts`, `exercises`, `onWorkoutChanged`, `onExercisesChanged`, `onWorkoutDiscarded` constructor params entirely, reading the finished Workout list via `context.watch<WorkoutRepository>()`
-- [ ] 4.4 `PastWorkoutsScreen` navigates to `ActiveWorkoutScreen(workoutId: ...)` instead of passing a `Workout` object and callbacks
-- [ ] 4.5 `ActiveWorkoutScreen` takes `workoutId` instead of `workout`/`exercises`/the three callbacks, reading the current Workout and Exercise list via `context.watch<WorkoutRepository>()`
-- [ ] 4.6 `ActiveWorkoutScreen`'s mutation call sites (add Exercise Entry, add/edit/delete Set, delete Entry, discard, finish) call `context.read<WorkoutRepository>()` methods instead of `widget.onWorkoutChanged`/etc.
-- [ ] 4.7 `ActiveWorkoutScreen` defensively pops back to the previous screen if its `workoutId` is no longer found in `WorkoutRepository.workouts` (guards a structural possibility introduced by id-based lookup; not reachable via any current navigation path, so no dedicated spec scenario)
-- [ ] 4.8 `ManageExercisesScreen` drops `exercises`/`onExercisesChanged` constructor params, reading the Exercise list via `context.watch<WorkoutRepository>()` and renaming via `context.read<WorkoutRepository>().renameExercise(...)`
+- [x] 4.1 `WorkoutHomeScreen` drops `initialWorkouts`/`initialExercises` constructor params and its own `_load`/`_onWorkoutChanged`/`_onWorkoutDiscarded`/`_onExercisesChanged` methods, reading in-progress state via `context.watch<WorkoutRepository>()`
+- [x] 4.2 `WorkoutHomeScreen`'s Start/Continue Workout button behavior is unchanged from the user's perspective (still shows "Start Workout" / "Continue Workout" per whether a Workout is in progress)
+- [x] 4.3 `PastWorkoutsScreen` drops `workouts`, `exercises`, `onWorkoutChanged`, `onExercisesChanged`, `onWorkoutDiscarded` constructor params entirely, reading the finished Workout list via `context.watch<WorkoutRepository>()`
+- [x] 4.4 `PastWorkoutsScreen` navigates to `ActiveWorkoutScreen(workoutId: ...)` instead of passing a `Workout` object and callbacks
+- [x] 4.5 `ActiveWorkoutScreen` takes `workoutId` instead of `workout`/`exercises`/the three callbacks, reading the current Workout and Exercise list via `context.watch<WorkoutRepository>()`
+- [x] 4.6 `ActiveWorkoutScreen`'s mutation call sites (add Exercise Entry, add/edit/delete Set, delete Entry, discard, finish) call `context.read<WorkoutRepository>()` methods instead of `widget.onWorkoutChanged`/etc.
+- [x] 4.7 `ActiveWorkoutScreen` defensively pops back to the previous screen if its `workoutId` is no longer found in `WorkoutRepository.workouts` (guards a structural possibility introduced by id-based lookup; not reachable via any current navigation path, so no dedicated spec scenario)
+- [x] 4.8 `ManageExercisesScreen` drops `exercises`/`onExercisesChanged` constructor params, reading the Exercise list via `context.watch<WorkoutRepository>()` and renaming via `context.read<WorkoutRepository>().renameExercise(...)`
 
 ## 5. Tests exercise the new repository-based seam
 

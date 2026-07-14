@@ -1,32 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../models/exercise.dart';
 import '../models/workout.dart';
+import '../repositories/workout_repository.dart';
 import 'active_workout_screen.dart';
 
 class PastWorkoutsScreen extends StatelessWidget {
-  final List<Workout> workouts;
-  final List<Exercise> exercises;
-  final void Function(Workout) onWorkoutChanged;
-  final void Function(List<Exercise>) onExercisesChanged;
-  final void Function(String workoutId) onWorkoutDiscarded;
+  const PastWorkoutsScreen({super.key});
 
-  const PastWorkoutsScreen({
-    super.key,
-    required this.workouts,
-    required this.exercises,
-    required this.onWorkoutChanged,
-    required this.onExercisesChanged,
-    required this.onWorkoutDiscarded,
-  });
-
-  List<Workout> get _finishedWorkouts {
+  List<Workout> _finishedWorkouts(List<Workout> workouts) {
     final finished = workouts.where((w) => !w.isInProgress).toList();
     finished.sort((a, b) => b.endTime!.compareTo(a.endTime!));
     return finished;
   }
 
-  String _exerciseSummary(Workout workout) {
+  String _exerciseSummary(Workout workout, List<Exercise> exercises) {
     return workout.exerciseEntries
         .map((entry) => Exercise.nameFor(entry.exerciseId, exercises))
         .join(', ');
@@ -34,7 +23,8 @@ class PastWorkoutsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final finished = _finishedWorkouts;
+    final repo = context.watch<WorkoutRepository>();
+    final finished = _finishedWorkouts(repo.workouts);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Past Workouts')),
@@ -50,20 +40,15 @@ class PastWorkoutsScreen extends StatelessWidget {
                     ).formatShortDate(workout.endTime!),
                   ),
                   subtitle: Text(
-                    _exerciseSummary(workout),
+                    _exerciseSummary(workout, repo.exercises),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   onTap: () => Navigator.push<void>(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => ActiveWorkoutScreen(
-                        workout: workout,
-                        exercises: exercises,
-                        onWorkoutChanged: onWorkoutChanged,
-                        onExercisesChanged: onExercisesChanged,
-                        onWorkoutDiscarded: onWorkoutDiscarded,
-                      ),
+                      builder: (context) =>
+                          ActiveWorkoutScreen(workoutId: workout.id),
                     ),
                   ),
                 );

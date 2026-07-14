@@ -1,181 +1,88 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import '../models/exercise.dart';
-import '../models/workout.dart';
-import '../services/storage_service.dart';
+import '../repositories/workout_repository.dart';
 import 'active_workout_screen.dart';
 import 'manage_exercises_screen.dart';
 import 'past_workouts_screen.dart';
 
-class WorkoutHomeScreen extends StatefulWidget {
-  final List<Workout>? initialWorkouts;
-  final List<Exercise>? initialExercises;
+class WorkoutHomeScreen extends StatelessWidget {
+  const WorkoutHomeScreen({super.key});
 
-  const WorkoutHomeScreen({
-    super.key,
-    this.initialWorkouts,
-    this.initialExercises,
-  });
+  void _startWorkout(BuildContext context) {
+    final repo = context.read<WorkoutRepository>();
+    if (repo.workouts.any((w) => w.isInProgress)) return;
 
-  @override
-  State<WorkoutHomeScreen> createState() => _WorkoutHomeScreenState();
-}
-
-class _WorkoutHomeScreenState extends State<WorkoutHomeScreen> {
-  final StorageService _storage = StorageService();
-  List<Workout> _workouts = [];
-  List<Exercise> _exercises = [];
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
+    repo.startWorkout();
+    final workout = repo.workouts.firstWhere((w) => w.isInProgress);
+    _openActiveWorkout(context, workout.id);
   }
 
-  Future<void> _load() async {
-    if (widget.initialWorkouts != null || widget.initialExercises != null) {
-      setState(() {
-        _workouts = widget.initialWorkouts ?? [];
-        _exercises = widget.initialExercises ?? [];
-        _isLoading = false;
-      });
-      return;
-    }
-
-    final workouts = await _storage.loadWorkouts();
-    final exercises = await _storage.loadExercises();
-    setState(() {
-      _workouts = workouts;
-      _exercises = exercises;
-      _isLoading = false;
-    });
+  void _continueWorkout(BuildContext context) {
+    final workout = context
+        .read<WorkoutRepository>()
+        .workouts
+        .firstWhere((w) => w.isInProgress);
+    _openActiveWorkout(context, workout.id);
   }
 
-  bool get _hasInProgress => _workouts.any((w) => w.isInProgress);
-
-  Workout get _inProgressWorkout => _workouts.firstWhere((w) => w.isInProgress);
-
-  void _startWorkout() {
-    if (_hasInProgress) return;
-
-    final workout = Workout(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
-      startTime: DateTime.now(),
+  void _openPastWorkouts(BuildContext context) {
+    Navigator.push<void>(
+      context,
+      MaterialPageRoute(builder: (context) => const PastWorkoutsScreen()),
     );
-
-    setState(() {
-      _workouts = [..._workouts, workout];
-    });
-    _storage.saveWorkouts(_workouts);
-    _openActiveWorkout(workout);
   }
 
-  void _continueWorkout() {
-    _openActiveWorkout(_inProgressWorkout);
+  void _openManageExercises(BuildContext context) {
+    Navigator.push<void>(
+      context,
+      MaterialPageRoute(builder: (context) => const ManageExercisesScreen()),
+    );
   }
 
-  void _openPastWorkouts() {
+  void _openActiveWorkout(BuildContext context, String workoutId) {
     Navigator.push<void>(
       context,
       MaterialPageRoute(
-        builder: (context) => PastWorkoutsScreen(
-          workouts: _workouts,
-          exercises: _exercises,
-          onWorkoutChanged: _onWorkoutChanged,
-          onExercisesChanged: _onExercisesChanged,
-          onWorkoutDiscarded: _onWorkoutDiscarded,
-        ),
+        builder: (context) => ActiveWorkoutScreen(workoutId: workoutId),
       ),
     );
-  }
-
-  void _openManageExercises() {
-    Navigator.push<void>(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ManageExercisesScreen(
-          exercises: _exercises,
-          onExercisesChanged: _onExercisesChanged,
-        ),
-      ),
-    );
-  }
-
-  void _openActiveWorkout(Workout workout) {
-    Navigator.push<void>(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ActiveWorkoutScreen(
-          workout: workout,
-          exercises: _exercises,
-          onWorkoutChanged: _onWorkoutChanged,
-          onExercisesChanged: _onExercisesChanged,
-          onWorkoutDiscarded: _onWorkoutDiscarded,
-        ),
-      ),
-    );
-  }
-
-  void _onWorkoutChanged(Workout updated) {
-    setState(() {
-      _workouts = _workouts
-          .map((w) => w.id == updated.id ? updated : w)
-          .toList();
-    });
-    _storage.saveWorkouts(_workouts);
-  }
-
-  void _onWorkoutDiscarded(String workoutId) {
-    setState(() {
-      _workouts = _workouts
-          .where((w) => !(w.id == workoutId && w.isInProgress))
-          .toList();
-    });
-    _storage.saveWorkouts(_workouts);
-  }
-
-  void _onExercisesChanged(List<Exercise> updated) {
-    setState(() {
-      _exercises = updated;
-    });
-    _storage.saveExercises(_exercises);
   }
 
   @override
   Widget build(BuildContext context) {
+    final hasInProgress = context.watch<WorkoutRepository>().workouts.any(
+      (w) => w.isInProgress,
+    );
+
     return Scaffold(
       appBar: AppBar(title: const Text('Workout')),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ElevatedButton(
-                    onPressed: _hasInProgress
-                        ? _continueWorkout
-                        : _startWorkout,
-                    child: Text(
-                      _hasInProgress ? 'Continue Workout' : 'Start Workout',
-                    ),
-                  ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      TextButton(
-                        onPressed: _openPastWorkouts,
-                        child: const Text('Past Workouts'),
-                      ),
-                      TextButton(
-                        onPressed: _openManageExercises,
-                        child: const Text('Manage Exercises'),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ElevatedButton(
+              onPressed: hasInProgress
+                  ? () => _continueWorkout(context)
+                  : () => _startWorkout(context),
+              child: Text(hasInProgress ? 'Continue Workout' : 'Start Workout'),
             ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextButton(
+                  onPressed: () => _openPastWorkouts(context),
+                  child: const Text('Past Workouts'),
+                ),
+                TextButton(
+                  onPressed: () => _openManageExercises(context),
+                  child: const Text('Manage Exercises'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
