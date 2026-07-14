@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:universal/repositories/workout_repository.dart';
 import 'package:universal/screens/app_shell.dart';
 import 'package:universal/screens/home_screen.dart';
 import 'package:universal/screens/workout_home_screen.dart';
@@ -72,6 +73,34 @@ void main() {
         await tester.pump();
 
         expect(find.byType(CircularProgressIndicator), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'provides a WorkoutRepository to the Workout tab but not the '
+      'Checklists tab',
+      (tester) async {
+        await _pumpAppShell(tester);
+        await tester.pumpAndSettle();
+
+        expect(
+          () => Provider.of<WorkoutRepository>(
+            tester.element(find.byType(HomeScreen)),
+            listen: false,
+          ),
+          throwsA(isA<ProviderNotFoundException>()),
+        );
+
+        await tester.tap(_navTab('Workout'));
+        await tester.pumpAndSettle();
+
+        expect(
+          Provider.of<WorkoutRepository>(
+            tester.element(find.byType(WorkoutHomeScreen)),
+            listen: false,
+          ),
+          isA<WorkoutRepository>(),
+        );
       },
     );
   });

@@ -1,60 +1,43 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../models/exercise.dart';
+import '../repositories/workout_repository.dart';
 import '../widgets/exercise_tile.dart';
 
-class ManageExercisesScreen extends StatefulWidget {
-  final List<Exercise> exercises;
-  final void Function(List<Exercise>) onExercisesChanged;
+class ManageExercisesScreen extends StatelessWidget {
+  const ManageExercisesScreen({super.key});
 
-  const ManageExercisesScreen({
-    super.key,
-    required this.exercises,
-    required this.onExercisesChanged,
-  });
-
-  @override
-  State<ManageExercisesScreen> createState() => _ManageExercisesScreenState();
-}
-
-class _ManageExercisesScreenState extends State<ManageExercisesScreen> {
-  late List<Exercise> _exercises;
-
-  @override
-  void initState() {
-    super.initState();
-    _exercises = widget.exercises;
-  }
-
-  List<Exercise> get _sortedExercises {
-    final sorted = [..._exercises];
+  List<Exercise> _sortedExercises(List<Exercise> exercises) {
+    final sorted = [...exercises];
     sorted.sort(
       (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
     );
     return sorted;
   }
 
-  Future<void> _renameExercise(Exercise exercise) async {
+  Future<void> _renameExercise(
+    BuildContext context,
+    Exercise exercise,
+    List<Exercise> exercises,
+  ) async {
     final newName = await showDialog<String>(
       context: context,
       builder: (context) => _RenameExerciseDialog(
         exercise: exercise,
-        existingExercises: _exercises,
+        existingExercises: exercises,
       ),
     );
     if (newName == null) return;
+    if (!context.mounted) return;
 
-    setState(() {
-      _exercises = _exercises
-          .map((e) => e.id == exercise.id ? e.copyWith(name: newName) : e)
-          .toList();
-    });
-    widget.onExercisesChanged(_exercises);
+    context.read<WorkoutRepository>().renameExercise(exercise.id, newName);
   }
 
   @override
   Widget build(BuildContext context) {
-    final sorted = _sortedExercises;
+    final exercises = context.watch<WorkoutRepository>().exercises;
+    final sorted = _sortedExercises(exercises);
     return Scaffold(
       appBar: AppBar(title: const Text('Manage Exercises')),
       body: sorted.isEmpty
@@ -72,7 +55,7 @@ class _ManageExercisesScreenState extends State<ManageExercisesScreen> {
                 return ExerciseTile(
                   key: ValueKey('exercise-${exercise.id}'),
                   exercise: exercise,
-                  onTap: () => _renameExercise(exercise),
+                  onTap: () => _renameExercise(context, exercise, exercises),
                 );
               }).toList(),
             ),

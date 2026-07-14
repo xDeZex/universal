@@ -1,32 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:universal/models/exercise.dart';
 import 'package:universal/models/workout.dart';
+import 'package:universal/repositories/workout_repository.dart';
 import 'package:universal/screens/active_workout_screen.dart';
 import 'package:universal/screens/past_workouts_screen.dart';
 
-Future<void> _pumpPastWorkoutsScreen(
+Future<WorkoutRepository> _pumpPastWorkoutsScreen(
   WidgetTester tester, {
   required List<Workout> workouts,
   required List<Exercise> exercises,
-  void Function(Workout)? onWorkoutChanged,
-  void Function(List<Exercise>)? onExercisesChanged,
-  void Function(String)? onWorkoutDiscarded,
 }) async {
+  final repository = WorkoutRepository(
+    initialWorkouts: workouts,
+    initialExercises: exercises,
+  );
   await tester.pumpWidget(
     MaterialApp(
-      home: PastWorkoutsScreen(
-        workouts: workouts,
-        exercises: exercises,
-        onWorkoutChanged: onWorkoutChanged ?? (_) {},
-        onExercisesChanged: onExercisesChanged ?? (_) {},
-        onWorkoutDiscarded: onWorkoutDiscarded ?? (_) {},
+      home: ChangeNotifierProvider<WorkoutRepository>.value(
+        value: repository,
+        child: const PastWorkoutsScreen(),
       ),
     ),
   );
+  return repository;
 }
 
 void main() {
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+  });
+
   group('PastWorkoutsScreen', () {
     testWidgets(
       'lists only finished Workouts, excluding any in-progress Workout',
@@ -269,7 +275,7 @@ void main() {
         final screen = tester.widget<ActiveWorkoutScreen>(
           find.byType(ActiveWorkoutScreen),
         );
-        expect(screen.workout.id, 'w-finished');
+        expect(screen.workoutId, 'w-finished');
 
         expect(find.text('Bench Press'), findsOneWidget);
         expect(find.text('Squat'), findsOneWidget);
@@ -294,10 +300,9 @@ void main() {
     );
 
     testWidgets(
-      'editing a Set from a Past Workout\'s detail view invokes the real '
-      'onWorkoutChanged callback passed to PastWorkoutsScreen, not a no-op',
+      'editing a Set from a Past Workout\'s detail view persists the '
+      'change through WorkoutRepository, not a no-op',
       (tester) async {
-        Workout? savedWorkout;
         final entry = ExerciseEntry(
           id: 'entry-1',
           exerciseId: 'exercise-1',
@@ -318,11 +323,10 @@ void main() {
           exerciseEntries: [entry],
         );
 
-        await _pumpPastWorkoutsScreen(
+        final repository = await _pumpPastWorkoutsScreen(
           tester,
           workouts: [workout],
           exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
-          onWorkoutChanged: (w) => savedWorkout = w,
         );
 
         await tester.tap(find.byKey(const ValueKey('past-workout-w-finished')));
@@ -337,8 +341,10 @@ void main() {
         await tester.tap(find.byKey(const ValueKey('edit-submit-set-1')));
         await tester.pumpAndSettle();
 
-        expect(savedWorkout, isNotNull);
-        expect(savedWorkout!.exerciseEntries[0].sets[0].weight, 99);
+        final saved = repository.workouts.firstWhere(
+          (w) => w.id == 'w-finished',
+        );
+        expect(saved.exerciseEntries[0].sets[0].weight, 99);
       },
     );
 

@@ -1,42 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../models/exercise.dart';
 import '../models/workout.dart';
+import '../repositories/workout_repository.dart';
 import '../widgets/confirm_delete_dialog.dart';
 
 class ActiveWorkoutScreen extends StatefulWidget {
-  final Workout workout;
-  final List<Exercise> exercises;
-  final void Function(Workout) onWorkoutChanged;
-  final void Function(List<Exercise>) onExercisesChanged;
-  final void Function(String workoutId) onWorkoutDiscarded;
+  final String workoutId;
 
-  const ActiveWorkoutScreen({
-    super.key,
-    required this.workout,
-    required this.exercises,
-    required this.onWorkoutChanged,
-    required this.onExercisesChanged,
-    required this.onWorkoutDiscarded,
-  });
+  const ActiveWorkoutScreen({super.key, required this.workoutId});
 
   @override
   State<ActiveWorkoutScreen> createState() => _ActiveWorkoutScreenState();
 }
 
 class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
-  late Workout _workout;
-  late List<Exercise> _exercises;
   final TextEditingController _nameController = TextEditingController();
   String? _selectedEntryId;
   final Map<String, WeightUnit> _entryUnits = {};
-
-  @override
-  void initState() {
-    super.initState();
-    _workout = widget.workout;
-    _exercises = widget.exercises;
-  }
+  bool _isLeaving = false;
 
   @override
   void dispose() {
@@ -44,46 +27,38 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
     super.dispose();
   }
 
+  WorkoutRepository get _repo => context.read<WorkoutRepository>();
+
+  Workout? _findWorkout(WorkoutRepository repo) {
+    for (final workout in repo.workouts) {
+      if (workout.id == widget.workoutId) return workout;
+    }
+    return null;
+  }
+
   void _addExerciseEntry() {
     final name = _nameController.text.trim();
-    final exercise = Exercise.resolve(name, _exercises);
-    if (exercise == null) return;
+    final entry = _repo.addExerciseEntry(widget.workoutId, name);
 
-    final isNewExercise = !_exercises.any((e) => e.id == exercise.id);
-
-    final entry = ExerciseEntry(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
-      exerciseId: exercise.id,
-    );
-
-    setState(() {
-      _workout = _workout.copyWith(
-        exerciseEntries: [..._workout.exerciseEntries, entry],
-      );
-      if (isNewExercise) {
-        _exercises = [..._exercises, exercise];
-      }
-      _selectedEntryId = entry.id;
-    });
-
-    widget.onWorkoutChanged(_workout);
-    if (isNewExercise) {
-      widget.onExercisesChanged(_exercises);
+    if (entry != null) {
+      setState(() {
+        _selectedEntryId = entry.id;
+      });
+      _nameController.clear();
     }
-    _nameController.clear();
   }
 
   void _addSet(String entryId, num weight, WeightUnit unit, int reps) {
+    _repo.addSet(
+      workoutId: widget.workoutId,
+      entryId: entryId,
+      weight: weight,
+      unit: unit,
+      reps: reps,
+    );
     setState(() {
-      _workout = _workout.addSet(
-        entryId: entryId,
-        weight: weight,
-        unit: unit,
-        reps: reps,
-      );
       _entryUnits[entryId] = unit;
     });
-    widget.onWorkoutChanged(_workout);
   }
 
   WeightUnit _unitFor(String entryId) => _entryUnits[entryId] ?? WeightUnit.kg;
@@ -101,33 +76,31 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
     WeightUnit unit,
     int reps,
   ) {
-    setState(() {
-      _workout = _workout.editSet(
-        entryId: entryId,
-        setId: setId,
-        weight: weight,
-        unit: unit,
-        reps: reps,
-      );
-    });
-    widget.onWorkoutChanged(_workout);
+    _repo.editSet(
+      workoutId: widget.workoutId,
+      entryId: entryId,
+      setId: setId,
+      weight: weight,
+      unit: unit,
+      reps: reps,
+    );
   }
 
   void _deleteSet(String entryId, String setId) {
-    setState(() {
-      _workout = _workout.deleteSet(entryId: entryId, setId: setId);
-    });
-    widget.onWorkoutChanged(_workout);
+    _repo.deleteSet(
+      workoutId: widget.workoutId,
+      entryId: entryId,
+      setId: setId,
+    );
   }
 
   void _deleteExerciseEntry(String entryId) {
-    setState(() {
-      _workout = _workout.deleteExerciseEntry(entryId: entryId);
-      if (_selectedEntryId == entryId) {
+    _repo.deleteExerciseEntry(workoutId: widget.workoutId, entryId: entryId);
+    if (_selectedEntryId == entryId) {
+      setState(() {
         _selectedEntryId = null;
-      }
-    });
-    widget.onWorkoutChanged(_workout);
+      });
+    }
   }
 
   void _selectEntry(String entryId) {
@@ -136,8 +109,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
     });
   }
 
-  List<Widget> _buildEntryRows() {
-    final entries = _workout.exerciseEntries;
+  List<Widget> _buildEntryRows(Workout workout, List<Exercise> exercises) {
+    final entries = workout.exerciseEntries;
     final rows = <Widget>[];
     for (var i = 0; i < entries.length; i++) {
       final entry = entries[i];
@@ -145,9 +118,9 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
         _ExerciseEntryTile(
           key: ValueKey(entry.id),
           entry: entry,
-          exerciseName: Exercise.nameFor(entry.exerciseId, _exercises),
-          locked: !_canAddNew,
-          selected: _canAddNew && entry.id == _selectedEntryId,
+          exerciseName: Exercise.nameFor(entry.exerciseId, exercises),
+          locked: !_canAddNew(workout),
+          selected: _canAddNew(workout) && entry.id == _selectedEntryId,
           onSelect: () => _selectEntry(entry.id),
           onEditSet: (setId, weight, unit, reps) =>
               _editSet(entry.id, setId, weight, unit, reps),
@@ -162,24 +135,40 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
     return rows;
   }
 
-  bool get _hasLoggedSets =>
-      _workout.exerciseEntries.any((entry) => entry.sets.isNotEmpty);
+  bool _hasLoggedSets(Workout workout) =>
+      workout.exerciseEntries.any((entry) => entry.sets.isNotEmpty);
 
-  bool get _canAddNew => _workout.isInProgress;
+  bool _canAddNew(Workout workout) => workout.isInProgress;
 
-  String _appBarTitle(BuildContext context) {
-    if (_canAddNew) return 'Active Workout';
-    return MaterialLocalizations.of(context).formatShortDate(_workout.endTime!);
+  String _appBarTitle(BuildContext context, Workout workout) {
+    if (_canAddNew(workout)) return 'Active Workout';
+    return MaterialLocalizations.of(
+      context,
+    ).formatShortDate(workout.endTime!);
   }
 
   @override
   Widget build(BuildContext context) {
+    final repo = context.watch<WorkoutRepository>();
+    final workout = _findWorkout(repo);
+    if (workout == null) {
+      if (!_isLeaving) {
+        _isLeaving = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) Navigator.pop(context);
+        });
+      }
+      return const SizedBox.shrink();
+    }
+    final exercises = repo.exercises;
+    final canAddNew = _canAddNew(workout);
+
     return Scaffold(
-      appBar: AppBar(title: Text(_appBarTitle(context))),
+      appBar: AppBar(title: Text(_appBarTitle(context, workout))),
       body: SafeArea(
         child: Column(
           children: [
-            if (_canAddNew)
+            if (canAddNew)
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
@@ -200,8 +189,10 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                   ],
                 ),
               ),
-            Expanded(child: ListView(children: _buildEntryRows())),
-            if (_canAddNew && _selectedEntryId != null) ...[
+            Expanded(
+              child: ListView(children: _buildEntryRows(workout, exercises)),
+            ),
+            if (canAddNew && _selectedEntryId != null) ...[
               _AddSetBar(
                 key: ValueKey(_selectedEntryId),
                 initialUnit: _unitFor(_selectedEntryId!),
@@ -212,7 +203,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
               ),
               const Divider(height: 1),
             ],
-            if (_canAddNew)
+            if (canAddNew)
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
@@ -220,7 +211,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                     Expanded(
                       child: TextButton(
                         key: const ValueKey('discard-workout'),
-                        onPressed: _discard,
+                        onPressed: () => _discard(workout),
                         child: const Text('Discard'),
                       ),
                     ),
@@ -228,7 +219,9 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                     Expanded(
                       child: ElevatedButton(
                         key: const ValueKey('finish-workout'),
-                        onPressed: _hasLoggedSets ? _finish : null,
+                        onPressed: _hasLoggedSets(workout)
+                            ? () => _finish(workout)
+                            : null,
                         child: const Text('Finish'),
                       ),
                     ),
@@ -241,19 +234,16 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
     );
   }
 
-  void _finish() {
-    final finished = _workout.finish();
-    if (finished == null) return;
-
-    setState(() {
-      _workout = finished;
-    });
-    widget.onWorkoutChanged(finished);
+  void _finish(Workout workout) {
+    if (!_hasLoggedSets(workout)) return;
+    _isLeaving = true;
+    _repo.finishWorkout(widget.workoutId);
     Navigator.pop(context);
   }
 
-  void _discard() {
-    widget.onWorkoutDiscarded(_workout.id);
+  void _discard(Workout workout) {
+    _isLeaving = true;
+    _repo.discardWorkout(workout.id);
     Navigator.pop(context);
   }
 }

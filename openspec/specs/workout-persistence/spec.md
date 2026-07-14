@@ -1,3 +1,7 @@
+## Purpose
+
+Defines when Workout and Exercise data is loaded from and saved to persistent storage.
+## Requirements
 ### Requirement: Workout changes persist immediately
 The system SHALL save all Workout mutations (start, add Exercise Entry, add Set, finish, discard) to persistent storage at the time they occur, mirroring how Checklist mutations are saved.
 
@@ -29,12 +33,13 @@ The system SHALL save a newly created Exercise (created because a typed Exercise
 - **THEN** the stored Exercise list SHALL be unchanged, containing no duplicate Exercise
 
 ### Requirement: Workouts and Exercises load on app start
-The system SHALL load the stored Workout list and Exercise list from `SharedPreferences` when the Workout tab is first initialized, mirroring how Checklists are loaded on `HomeScreen` init.
+The system SHALL load the stored Workout list and Exercise list from `SharedPreferences` when `WorkoutRepository` is created, scoped to the Workout tab's subtree and independent of Checklist loading.
 
 #### Scenario: Load with prior data
-- **WHEN** the Workout tab initializes and `SharedPreferences` contains a previously saved Workout list and Exercise list
-- **THEN** both lists SHALL be loaded and available to the Workout home screen
+- **WHEN** the Workout tab's subtree initializes and `SharedPreferences` contains a previously saved Workout list and Exercise list
+- **THEN** both lists SHALL be loaded and available via `WorkoutRepository` to the Workout home screen and its descendant screens
 
 #### Scenario: Load with no prior data
-- **WHEN** the Workout tab initializes and `SharedPreferences` has no stored Workout or Exercise data
+- **WHEN** the Workout tab's subtree initializes and `SharedPreferences` has no stored Workout or Exercise data
 - **THEN** the system SHALL default to empty lists rather than throwing
+
