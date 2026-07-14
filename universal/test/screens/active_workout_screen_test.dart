@@ -712,8 +712,9 @@ void main() {
     );
 
     testWidgets(
-      'submitting a non-numeric weight from the edit dialog is rejected, '
-      'leaving the Set unchanged',
+      'submitting invalid weight input from the edit dialog is rejected, '
+      'leaving the Set unchanged (validation itself is covered by '
+      'ExerciseSet.parseInput unit tests)',
       (tester) async {
         var workoutSaveCount = 0;
         final entry = ExerciseEntry(
@@ -754,98 +755,6 @@ void main() {
 
         expect(workoutSaveCount, 0);
         expect(find.byKey(const ValueKey('edit-weight-set-1')), findsOneWidget);
-      },
-    );
-
-    testWidgets(
-      'submitting a non-positive-integer reps count from the edit dialog is '
-      'rejected, leaving the Set unchanged',
-      (tester) async {
-        var workoutSaveCount = 0;
-        final entry = ExerciseEntry(
-          id: 'entry-1',
-          exerciseId: 'exercise-1',
-          sets: [
-            ExerciseSet(
-              id: 'set-1',
-              weight: 60,
-              unit: WeightUnit.kg,
-              reps: 8,
-              loggedAt: DateTime(2026, 1, 1, 10, 0),
-            ),
-          ],
-        );
-        final workout = Workout(
-          id: 'workout-1',
-          startTime: DateTime(2026, 1, 1, 9, 0),
-          exerciseEntries: [entry],
-        );
-
-        await _pumpActiveWorkoutScreen(
-          tester,
-          workout: workout,
-          exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
-          onWorkoutChanged: (_) => workoutSaveCount++,
-        );
-
-        await tester.tap(find.byKey(const ValueKey('set-set-1')));
-        await tester.pumpAndSettle();
-
-        await tester.enterText(
-          find.byKey(const ValueKey('edit-reps-set-1')),
-          '0',
-        );
-        await tester.tap(find.byKey(const ValueKey('edit-submit-set-1')));
-        await tester.pumpAndSettle();
-
-        expect(workoutSaveCount, 0);
-        expect(find.byKey(const ValueKey('edit-reps-set-1')), findsOneWidget);
-      },
-    );
-
-    testWidgets(
-      'submitting a zero or negative weight from the edit dialog is '
-      'accepted, same as adding a Set',
-      (tester) async {
-        Workout? savedWorkout;
-        final entry = ExerciseEntry(
-          id: 'entry-1',
-          exerciseId: 'exercise-1',
-          sets: [
-            ExerciseSet(
-              id: 'set-1',
-              weight: 60,
-              unit: WeightUnit.kg,
-              reps: 8,
-              loggedAt: DateTime(2026, 1, 1, 10, 0),
-            ),
-          ],
-        );
-        final workout = Workout(
-          id: 'workout-1',
-          startTime: DateTime(2026, 1, 1, 9, 0),
-          exerciseEntries: [entry],
-        );
-
-        await _pumpActiveWorkoutScreen(
-          tester,
-          workout: workout,
-          exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
-          onWorkoutChanged: (w) => savedWorkout = w,
-        );
-
-        await tester.tap(find.byKey(const ValueKey('set-set-1')));
-        await tester.pumpAndSettle();
-
-        await tester.enterText(
-          find.byKey(const ValueKey('edit-weight-set-1')),
-          '-10',
-        );
-        await tester.tap(find.byKey(const ValueKey('edit-submit-set-1')));
-        await tester.pumpAndSettle();
-
-        expect(savedWorkout, isNotNull);
-        expect(savedWorkout!.exerciseEntries[0].sets[0].weight, -10);
       },
     );
 
