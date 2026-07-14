@@ -418,15 +418,15 @@ void main() {
 
         await tester.tap(find.byKey(const ValueKey('set-set-1')));
         await tester.pumpAndSettle();
-        await tester.enterText(
-          find.byKey(const ValueKey('edit-weight-set-1')),
-          '99',
+        await tester.tap(
+          find.byKey(const ValueKey('edit-weight-stepper-set-1-increment')),
         );
+        await tester.pumpAndSettle();
         await tester.tap(find.byKey(const ValueKey('edit-submit-set-1')));
         await tester.pumpAndSettle();
 
         final stored = await StorageService().loadWorkouts();
-        expect(stored[0].exerciseEntries[0].sets[0].weight, 99);
+        expect(stored[0].exerciseEntries[0].sets[0].weight, 62.5);
 
         // Reopen the detail view: back out to the Workout home screen, then
         // navigate to Past Workouts again so it's rebuilt from the current
@@ -453,7 +453,7 @@ void main() {
           tester
               .widget<Text>(find.byKey(const ValueKey('set-weight-set-1')))
               .data,
-          '99 kg',
+          '62.5 kg',
         );
       },
     );

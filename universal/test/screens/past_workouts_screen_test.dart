@@ -323,17 +323,17 @@ void main() {
 
         await tester.tap(find.byKey(const ValueKey('set-set-1')));
         await tester.pumpAndSettle();
-        await tester.enterText(
-          find.byKey(const ValueKey('edit-weight-set-1')),
-          '99',
+        await tester.tap(
+          find.byKey(const ValueKey('edit-weight-stepper-set-1-increment')),
         );
+        await tester.pumpAndSettle();
         await tester.tap(find.byKey(const ValueKey('edit-submit-set-1')));
         await tester.pumpAndSettle();
 
         final saved = repository.workouts.firstWhere(
           (w) => w.id == 'w-finished',
         );
-        expect(saved.exerciseEntries[0].sets[0].weight, 99);
+        expect(saved.exerciseEntries[0].sets[0].weight, 62.5);
       },
     );
 

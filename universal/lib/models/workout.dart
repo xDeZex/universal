@@ -49,20 +49,6 @@ class ExerciseSet {
       loggedAt: DateTime.parse(json['loggedAt'] as String),
     );
   }
-
-  /// Parses freeform weight/reps text input, as entered when adding or
-  /// editing a Set. Returns null if either field fails to parse, or if
-  /// reps isn't a positive integer. Weight has no such floor — zero or
-  /// negative weight is accepted (e.g. assisted or banded movements).
-  static ({num weight, int reps})? parseInput(
-    String weightText,
-    String repsText,
-  ) {
-    final weight = num.tryParse(weightText);
-    final reps = int.tryParse(repsText);
-    if (weight == null || reps == null || reps <= 0) return null;
-    return (weight: weight, reps: reps);
-  }
 }
 
 class ExerciseEntry {
