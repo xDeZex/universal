@@ -44,13 +44,12 @@ app.*.map.json
 /universal/android/app/profile
 /universal/android/app/release
 
-# Vendored agent skills (installed locally)
+# Vendored agent skills
 .claude/skills/
 .claude/commands/
 .claude/agents/
 .agents/
 .github/skills/
-skills-lock.json
 
 # Local symlink to AGENTS.md for tools that look for CLAUDE.md
 /CLAUDE.md
