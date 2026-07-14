@@ -543,6 +543,30 @@ void main() {
       expect(repository.workouts.map((w) => w.id), ['workout-1']);
       expect(notified, isFalse);
     });
+
+    test(
+      'is a no-op for a Workout that is already finished, leaving it '
+      'unchanged (discard is unavailable on a finished Workout)',
+      () {
+        final finished = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 1, 1, 9, 0),
+          endTime: DateTime(2026, 1, 1, 9, 30),
+        );
+        final repository = WorkoutRepository(
+          initialWorkouts: [finished],
+          initialExercises: const [],
+        );
+        var notified = false;
+        repository.addListener(() => notified = true);
+
+        repository.discardWorkout('workout-1');
+
+        expect(repository.workouts.map((w) => w.id), ['workout-1']);
+        expect(repository.workouts.single.isInProgress, isFalse);
+        expect(notified, isFalse);
+      },
+    );
   });
 
   group('WorkoutRepository.renameExercise', () {

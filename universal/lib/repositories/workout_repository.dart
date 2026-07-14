@@ -144,7 +144,7 @@ class WorkoutRepository extends ChangeNotifier {
   }
 
   void discardWorkout(String workoutId) {
-    if (!workouts.any((w) => w.id == workoutId)) return;
+    if (!workouts.any((w) => w.id == workoutId && w.isInProgress)) return;
 
     _workouts = workouts.where((w) => w.id != workoutId).toList();
     _storage.saveWorkouts(workouts);

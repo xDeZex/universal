@@ -1,27 +1,49 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:universal/models/exercise.dart';
 import 'package:universal/models/workout.dart';
+import 'package:universal/repositories/workout_repository.dart';
 import 'package:universal/screens/active_workout_screen.dart';
 import 'package:universal/screens/manage_exercises_screen.dart';
 import 'package:universal/screens/past_workouts_screen.dart';
 import 'package:universal/screens/workout_home_screen.dart';
 import 'package:universal/services/storage_service.dart';
 
-Future<void> _pumpWorkoutHomeScreen(
+Future<WorkoutRepository> _pumpWorkoutHomeScreen(
   WidgetTester tester, {
   List<Workout>? initialWorkouts,
   List<Exercise>? initialExercises,
 }) async {
+  final repository = WorkoutRepository(
+    initialWorkouts: initialWorkouts,
+    initialExercises: initialExercises,
+  );
   await tester.pumpWidget(
     MaterialApp(
-      home: WorkoutHomeScreen(
-        initialWorkouts: initialWorkouts,
-        initialExercises: initialExercises,
+      home: ChangeNotifierProvider<WorkoutRepository>.value(
+        value: repository,
+        child: const WorkoutHomeScreen(),
       ),
     ),
   );
+  return repository;
+}
+
+Future<WorkoutRepository> _pumpWorkoutHomeScreenFromStorage(
+  WidgetTester tester,
+) async {
+  final repository = WorkoutRepository()..load();
+  await tester.pumpWidget(
+    MaterialApp(
+      home: ChangeNotifierProvider<WorkoutRepository>.value(
+        value: repository,
+        child: const WorkoutHomeScreen(),
+      ),
+    ),
+  );
+  return repository;
 }
 
 void main() {
@@ -78,7 +100,7 @@ void main() {
         final screen = tester.widget<ActiveWorkoutScreen>(
           find.byType(ActiveWorkoutScreen),
         );
-        expect(screen.workout.id, 'workout-1');
+        expect(screen.workoutId, 'workout-1');
       },
     );
 
@@ -99,11 +121,18 @@ void main() {
         final screen = tester.widget<ActiveWorkoutScreen>(
           find.byType(ActiveWorkoutScreen),
         );
-        expect(screen.workout.isInProgress, isTrue);
+        final repo = Provider.of<WorkoutRepository>(
+          tester.element(find.byType(ActiveWorkoutScreen)),
+          listen: false,
+        );
+        final workout = repo.workouts.firstWhere(
+          (w) => w.id == screen.workoutId,
+        );
+        expect(workout.isInProgress, isTrue);
 
         final stored = await StorageService().loadWorkouts();
         expect(stored.length, 1);
-        expect(stored[0].id, screen.workout.id);
+        expect(stored[0].id, screen.workoutId);
       },
     );
 
@@ -138,17 +167,18 @@ void main() {
           Exercise(id: 'exercise-1', name: 'Bench Press'),
         ]);
 
-        await tester.pumpWidget(const MaterialApp(home: WorkoutHomeScreen()));
+        await _pumpWorkoutHomeScreenFromStorage(tester);
         await tester.pumpAndSettle();
 
         await tester.tap(find.text('Continue Workout'));
         await tester.pumpAndSettle();
 
-        final screen = tester.widget<ActiveWorkoutScreen>(
-          find.byType(ActiveWorkoutScreen),
+        final repo = Provider.of<WorkoutRepository>(
+          tester.element(find.byType(ActiveWorkoutScreen)),
+          listen: false,
         );
-        expect(screen.exercises.length, 1);
-        expect(screen.exercises[0].name, 'Bench Press');
+        expect(repo.exercises.length, 1);
+        expect(repo.exercises[0].name, 'Bench Press');
       },
     );
 
@@ -156,7 +186,7 @@ void main() {
       'defaults to empty lists and shows Start Workout when storage has no '
       'prior data',
       (tester) async {
-        await tester.pumpWidget(const MaterialApp(home: WorkoutHomeScreen()));
+        await _pumpWorkoutHomeScreenFromStorage(tester);
         await tester.pumpAndSettle();
 
         expect(find.text('Start Workout'), findsOneWidget);
@@ -300,49 +330,6 @@ void main() {
 
         final stored = await StorageService().loadWorkouts();
         expect(stored, isEmpty);
-      },
-    );
-
-    testWidgets(
-      'discarding a Workout id that is already finished (e.g. a stale '
-      'callback invocation racing a Finish) leaves it unchanged in storage',
-      (tester) async {
-        final finishedWorkout = Workout(
-          id: 'workout-finished',
-          startTime: DateTime(2026, 1, 1, 9, 0),
-          endTime: DateTime(2026, 1, 1, 9, 30),
-        );
-        final inProgressWorkout = Workout(
-          id: 'workout-in-progress',
-          startTime: DateTime(2026, 1, 1, 10, 0),
-        );
-
-        await _pumpWorkoutHomeScreen(
-          tester,
-          initialWorkouts: [finishedWorkout, inProgressWorkout],
-          initialExercises: [],
-        );
-        await tester.pumpAndSettle();
-
-        await tester.tap(find.text('Continue Workout'));
-        await tester.pumpAndSettle();
-
-        // The callback doesn't distinguish which Workout is currently open on
-        // screen from which id it's called with — invoke it directly with a
-        // Workout id that is already finished, as could happen if a stale
-        // Discard tap fires after a Finish has already persisted.
-        final onWorkoutDiscarded = tester
-            .widget<ActiveWorkoutScreen>(find.byType(ActiveWorkoutScreen))
-            .onWorkoutDiscarded;
-        onWorkoutDiscarded('workout-finished');
-        await tester.pumpAndSettle();
-
-        final stored = await StorageService().loadWorkouts();
-        expect(stored.map((w) => w.id), contains('workout-finished'));
-        expect(
-          stored.firstWhere((w) => w.id == 'workout-finished').isInProgress,
-          isFalse,
-        );
       },
     );
 

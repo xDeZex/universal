@@ -27,24 +27,40 @@ class WorkoutHomeScreen extends StatelessWidget {
   }
 
   void _openPastWorkouts(BuildContext context) {
+    final repo = context.read<WorkoutRepository>();
     Navigator.push<void>(
       context,
-      MaterialPageRoute(builder: (context) => const PastWorkoutsScreen()),
+      MaterialPageRoute(
+        builder: (context) => ChangeNotifierProvider<WorkoutRepository>.value(
+          value: repo,
+          child: const PastWorkoutsScreen(),
+        ),
+      ),
     );
   }
 
   void _openManageExercises(BuildContext context) {
+    final repo = context.read<WorkoutRepository>();
     Navigator.push<void>(
       context,
-      MaterialPageRoute(builder: (context) => const ManageExercisesScreen()),
+      MaterialPageRoute(
+        builder: (context) => ChangeNotifierProvider<WorkoutRepository>.value(
+          value: repo,
+          child: const ManageExercisesScreen(),
+        ),
+      ),
     );
   }
 
   void _openActiveWorkout(BuildContext context, String workoutId) {
+    final repo = context.read<WorkoutRepository>();
     Navigator.push<void>(
       context,
       MaterialPageRoute(
-        builder: (context) => ActiveWorkoutScreen(workoutId: workoutId),
+        builder: (context) => ChangeNotifierProvider<WorkoutRepository>.value(
+          value: repo,
+          child: ActiveWorkoutScreen(workoutId: workoutId),
+        ),
       ),
     );
   }

@@ -26,6 +26,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
   final TextEditingController _nameController = TextEditingController();
   String? _selectedEntryId;
   final Map<String, WeightUnit> _entryUnits = {};
+  bool _isLeaving = false;
 
   @override
   void dispose() {
@@ -162,9 +163,12 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
     final repo = context.watch<WorkoutRepository>();
     final workout = _findWorkout(repo);
     if (workout == null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) Navigator.pop(context);
-      });
+      if (!_isLeaving) {
+        _isLeaving = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) Navigator.pop(context);
+        });
+      }
       return const SizedBox.shrink();
     }
     final exercises = repo.exercises;
@@ -243,11 +247,13 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
 
   void _finish(Workout workout) {
     if (!_hasLoggedSets(workout)) return;
+    _isLeaving = true;
     _repo.finishWorkout(widget.workoutId);
     Navigator.pop(context);
   }
 
   void _discard(Workout workout) {
+    _isLeaving = true;
     _repo.discardWorkout(workout.id);
     Navigator.pop(context);
   }

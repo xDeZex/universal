@@ -34,7 +34,7 @@
 
 ## 5. Tests exercise the new repository-based seam
 
-- [ ] 5.1 New `test/repositories/workout_repository_test.dart` covers load (seeded vs. `SharedPreferences`-backed), and each mutation method's persistence + `notifyListeners` behavior
-- [ ] 5.2 `test/screens/workout_home_screen_test.dart`, `past_workouts_screen_test.dart`, `active_workout_screen_test.dart`, `manage_exercises_screen_test.dart` are updated to wrap the screen under test in `ChangeNotifierProvider<WorkoutRepository>.value(value: WorkoutRepository(initialWorkouts: ..., initialExercises: ...))` instead of passing `initialWorkouts`/objects/callbacks directly
-- [ ] 5.3 `flutter test` passes for the full suite
-- [ ] 5.4 `flutter analyze` reports no new warnings
+- [x] 5.1 New `test/repositories/workout_repository_test.dart` covers load (seeded vs. `SharedPreferences`-backed), and each mutation method's persistence + `notifyListeners` behavior
+- [x] 5.2 `test/screens/workout_home_screen_test.dart`, `past_workouts_screen_test.dart`, `active_workout_screen_test.dart`, `manage_exercises_screen_test.dart` are updated to wrap the screen under test in `ChangeNotifierProvider<WorkoutRepository>.value(value: WorkoutRepository(initialWorkouts: ..., initialExercises: ...))` instead of passing `initialWorkouts`/objects/callbacks directly
+- [x] 5.3 `flutter test` passes for the full suite
+- [x] 5.4 `flutter analyze` reports no new warnings

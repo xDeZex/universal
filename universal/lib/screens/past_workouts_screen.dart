@@ -48,7 +48,10 @@ class PastWorkoutsScreen extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) =>
-                          ActiveWorkoutScreen(workoutId: workout.id),
+                          ChangeNotifierProvider<WorkoutRepository>.value(
+                            value: repo,
+                            child: ActiveWorkoutScreen(workoutId: workout.id),
+                          ),
                     ),
                   ),
                 );

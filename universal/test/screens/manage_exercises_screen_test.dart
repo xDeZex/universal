@@ -1,25 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:universal/models/exercise.dart';
+import 'package:universal/repositories/workout_repository.dart';
 import 'package:universal/screens/manage_exercises_screen.dart';
 import 'package:universal/widgets/exercise_tile.dart';
 
-Future<void> _pumpManageExercisesScreen(
+Future<WorkoutRepository> _pumpManageExercisesScreen(
   WidgetTester tester, {
   required List<Exercise> exercises,
-  void Function(List<Exercise>)? onExercisesChanged,
 }) async {
+  final repository = WorkoutRepository(
+    initialWorkouts: const [],
+    initialExercises: exercises,
+  );
   await tester.pumpWidget(
     MaterialApp(
-      home: ManageExercisesScreen(
-        exercises: exercises,
-        onExercisesChanged: onExercisesChanged ?? (_) {},
+      home: ChangeNotifierProvider<WorkoutRepository>.value(
+        value: repository,
+        child: const ManageExercisesScreen(),
       ),
     ),
   );
+  return repository;
 }
 
 void main() {
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+  });
+
   group('ManageExercisesScreen', () {
     testWidgets(
       'lists Exercises sorted alphabetically by name, case-insensitively',
@@ -107,11 +118,9 @@ void main() {
       'cancelling the rename dialog leaves the Exercise unchanged and '
       'closes the dialog',
       (tester) async {
-        List<Exercise>? changed;
-        await _pumpManageExercisesScreen(
+        final repository = await _pumpManageExercisesScreen(
           tester,
           exercises: [Exercise(id: 'ex-1', name: 'Bench Press')],
-          onExercisesChanged: (updated) => changed = updated,
         );
 
         await tester.tap(find.text('Bench Press'));
@@ -126,7 +135,7 @@ void main() {
         expect(find.byType(AlertDialog), findsNothing);
         expect(find.text('Bench Press'), findsOneWidget);
         expect(find.text('Incline Bench Press'), findsNothing);
-        expect(changed, isNull);
+        expect(repository.exercises[0].name, 'Bench Press');
       },
     );
 
@@ -134,11 +143,9 @@ void main() {
       'submitting a valid new name renames the Exercise, persists the '
       'updated list, and closes the dialog',
       (tester) async {
-        List<Exercise>? changed;
-        await _pumpManageExercisesScreen(
+        final repository = await _pumpManageExercisesScreen(
           tester,
           exercises: [Exercise(id: 'ex-1', name: 'Bench Press')],
-          onExercisesChanged: (updated) => changed = updated,
         );
 
         await tester.tap(find.text('Bench Press'));
@@ -153,9 +160,10 @@ void main() {
         expect(find.byType(AlertDialog), findsNothing);
         expect(find.text('Incline Bench Press'), findsOneWidget);
         expect(find.text('Bench Press'), findsNothing);
-        expect(changed, isNotNull);
-        expect(changed![0].id, 'ex-1');
-        expect(changed![0].name, 'Incline Bench Press');
+        final renamed = repository.exercises.firstWhere(
+          (e) => e.id == 'ex-1',
+        );
+        expect(renamed.name, 'Incline Bench Press');
       },
     );
 
@@ -163,14 +171,12 @@ void main() {
       'submitting the Exercise\'s own current name with different casing '
       'succeeds, since it does not collide with any other Exercise',
       (tester) async {
-        List<Exercise>? changed;
-        await _pumpManageExercisesScreen(
+        final repository = await _pumpManageExercisesScreen(
           tester,
           exercises: [
             Exercise(id: 'ex-1', name: 'Bench Press'),
             Exercise(id: 'ex-2', name: 'Squat'),
           ],
-          onExercisesChanged: (updated) => changed = updated,
         );
 
         await tester.tap(find.text('Bench Press'));
@@ -183,9 +189,8 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.byType(AlertDialog), findsNothing);
-        expect(changed, isNotNull);
         expect(
-          changed!.firstWhere((e) => e.id == 'ex-1').name,
+          repository.exercises.firstWhere((e) => e.id == 'ex-1').name,
           'bench press',
         );
       },
@@ -195,14 +200,12 @@ void main() {
       'submitting the Exercise\'s own current name unchanged succeeds, '
       'since it does not collide with any other Exercise',
       (tester) async {
-        List<Exercise>? changed;
-        await _pumpManageExercisesScreen(
+        final repository = await _pumpManageExercisesScreen(
           tester,
           exercises: [
             Exercise(id: 'ex-1', name: 'Bench Press'),
             Exercise(id: 'ex-2', name: 'Squat'),
           ],
-          onExercisesChanged: (updated) => changed = updated,
         );
 
         await tester.tap(find.text('Bench Press'));
@@ -211,9 +214,8 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.byType(AlertDialog), findsNothing);
-        expect(changed, isNotNull);
         expect(
-          changed!.firstWhere((e) => e.id == 'ex-1').name,
+          repository.exercises.firstWhere((e) => e.id == 'ex-1').name,
           'Bench Press',
         );
       },
@@ -224,11 +226,9 @@ void main() {
       'validation error, keeps the dialog open, and leaves the Exercise '
       'unchanged',
       (tester) async {
-        List<Exercise>? changed;
-        await _pumpManageExercisesScreen(
+        final repository = await _pumpManageExercisesScreen(
           tester,
           exercises: [Exercise(id: 'ex-1', name: 'Bench Press')],
-          onExercisesChanged: (updated) => changed = updated,
         );
 
         await tester.tap(find.text('Bench Press'));
@@ -242,7 +242,7 @@ void main() {
 
         expect(find.byType(AlertDialog), findsOneWidget);
         expect(find.text('Bench Press'), findsOneWidget);
-        expect(changed, isNull);
+        expect(repository.exercises[0].name, 'Bench Press');
 
         final field = tester.widget<TextField>(
           find.byKey(const ValueKey('rename-exercise-field')),
@@ -256,14 +256,12 @@ void main() {
       'case-insensitively shows an inline validation error, keeps the '
       'dialog open, and leaves the Exercise unchanged',
       (tester) async {
-        List<Exercise>? changed;
-        await _pumpManageExercisesScreen(
+        final repository = await _pumpManageExercisesScreen(
           tester,
           exercises: [
             Exercise(id: 'ex-1', name: 'Bench Press'),
             Exercise(id: 'ex-2', name: 'Squat'),
           ],
-          onExercisesChanged: (updated) => changed = updated,
         );
 
         await tester.tap(find.text('Bench Press'));
@@ -277,7 +275,10 @@ void main() {
 
         expect(find.byType(AlertDialog), findsOneWidget);
         expect(find.text('Bench Press'), findsOneWidget);
-        expect(changed, isNull);
+        expect(
+          repository.exercises.firstWhere((e) => e.id == 'ex-1').name,
+          'Bench Press',
+        );
 
         final field = tester.widget<TextField>(
           find.byKey(const ValueKey('rename-exercise-field')),
