@@ -1,4 +1,8 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:mcp_toolkit/mcp_toolkit.dart';
 import 'package:provider/provider.dart';
 
 import 'screens/app_shell.dart';
@@ -6,7 +10,20 @@ import 'services/update_service.dart';
 import 'theme/app_theme.dart';
 
 void main() {
-  runApp(const UniversalApp());
+  if (kDebugMode) {
+    runZonedGuarded(
+      () {
+        WidgetsFlutterBinding.ensureInitialized();
+        MCPToolkitBinding.instance
+          ..initialize()
+          ..initializeFlutterToolkit();
+        runApp(const UniversalApp());
+      },
+      (error, stack) => MCPToolkitBinding.instance.handleZoneError(error, stack),
+    );
+  } else {
+    runApp(const UniversalApp());
+  }
 }
 
 class UniversalApp extends StatelessWidget {
