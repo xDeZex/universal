@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:universal/repositories/workout_repository.dart';
 import 'package:universal/screens/app_shell.dart';
 import 'package:universal/screens/home_screen.dart';
 import 'package:universal/screens/workout_home_screen.dart';

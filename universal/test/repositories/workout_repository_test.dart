@@ -5,6 +5,21 @@ import 'package:universal/models/workout.dart';
 import 'package:universal/repositories/workout_repository.dart';
 import 'package:universal/services/storage_service.dart';
 
+/// Returns fixed, storage-independent data so tests can prove a
+/// [WorkoutRepository] reads through *this* instance rather than a
+/// `StorageService()` it silently constructed itself.
+class _FakeStorageService extends StorageService {
+  @override
+  Future<List<Workout>> loadWorkouts() async => [
+        Workout(id: 'fake-only-workout', startTime: DateTime(2026, 1, 1)),
+      ];
+
+  @override
+  Future<List<Exercise>> loadExercises() async => [
+        Exercise(id: 'fake-only-exercise', name: 'Fake Exercise'),
+      ];
+}
+
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
@@ -63,18 +78,55 @@ void main() {
     );
 
     test(
+      'seeding only initialWorkouts (no initialExercises) still skips the '
+      'StorageService load entirely, leaving exercises empty',
+      () async {
+        final storage = StorageService();
+        await storage.saveExercises([
+          Exercise(id: 'stored-exercise', name: 'Bench Press'),
+        ]);
+
+        final repository = WorkoutRepository(
+          initialWorkouts: [
+            Workout(id: 'seeded-workout', startTime: DateTime(2026, 1, 1)),
+          ],
+        );
+
+        await repository.load();
+
+        expect(repository.workouts.map((w) => w.id), ['seeded-workout']);
+        expect(repository.exercises, isEmpty);
+      },
+    );
+
+    test(
       'uses an injected StorageService instance instead of constructing its '
       'own',
       () async {
-        final fakeStorage = StorageService();
-        await fakeStorage.saveWorkouts([
-          Workout(id: 'workout-1', startTime: DateTime(2026, 1, 1)),
-        ]);
-
-        final repository = WorkoutRepository(storage: fakeStorage);
+        // Nothing is saved to the real (mocked) SharedPreferences backing
+        // store, so this can only pass if the repository reads through the
+        // injected fake rather than a StorageService() it built itself.
+        final repository = WorkoutRepository(storage: _FakeStorageService());
         await repository.load();
 
-        expect(repository.workouts.map((w) => w.id), ['workout-1']);
+        expect(repository.workouts.map((w) => w.id), ['fake-only-workout']);
+        expect(
+          repository.exercises.map((e) => e.name),
+          ['Fake Exercise'],
+        );
+      },
+    );
+
+    test(
+      'with no seed data and no prior storage, load() defaults to empty '
+      'lists rather than throwing',
+      () async {
+        final repository = WorkoutRepository();
+
+        await repository.load();
+
+        expect(repository.workouts, isEmpty);
+        expect(repository.exercises, isEmpty);
       },
     );
   });
