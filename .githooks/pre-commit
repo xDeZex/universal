@@ -5,6 +5,27 @@ if [ "$branch" = "main" ]; then
   exit 1
 fi
 
+# File-size check on staged Dart/Go files. Growth-based: only blocks a file
+# that is over the limit AND longer than it was at HEAD, so pre-existing
+# large files are grandfathered and can still be edited — they just can't
+# get any bigger. Use --no-verify for a deliberate exception.
+size_limit=300
+staged_code=$(git diff --cached --name-only | grep -E '\.(dart|go)$')
+if [ -n "$staged_code" ]; then
+  while IFS= read -r f; do
+    [ -z "$f" ] && continue
+    staged_lines=$(git show ":$f" 2>/dev/null | wc -l)
+    head_lines=$(git show "HEAD:$f" 2>/dev/null | wc -l)
+    if [ "$staged_lines" -gt "$size_limit" ] && [ "$staged_lines" -gt "$head_lines" ]; then
+      echo "ERROR: $f is $staged_lines lines (limit $size_limit) and grew from $head_lines lines at HEAD."
+      echo "  Split the file, or commit with --no-verify if the growth is intentional."
+      exit 1
+    fi
+  done <<EOF
+$staged_code
+EOF
+fi
+
 # Flutter checks on staged Dart or Flutter config files
 staged_flutter=$(git diff --cached --name-only | grep -E '^universal/.*(\.dart$|pubspec\.(yaml|lock)$|analysis_options\.yaml$)')
 if [ -n "$staged_flutter" ]; then
