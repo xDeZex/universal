@@ -78,4 +78,376 @@ void main() {
       },
     );
   });
+
+  group('WorkoutRepository.startWorkout', () {
+    test(
+      'creates a new in-progress Workout, adds it to workouts, persists it, '
+      'and notifies listeners',
+      () async {
+        final repository = WorkoutRepository(
+          initialWorkouts: const [],
+          initialExercises: const [],
+        );
+        var notified = false;
+        repository.addListener(() => notified = true);
+
+        repository.startWorkout();
+
+        expect(repository.workouts.length, 1);
+        expect(repository.workouts[0].isInProgress, isTrue);
+        expect(notified, isTrue);
+
+        await Future<void>.delayed(Duration.zero);
+        final stored = await StorageService().loadWorkouts();
+        expect(stored.length, 1);
+        expect(stored[0].id, repository.workouts[0].id);
+      },
+    );
+  });
+
+  group('WorkoutRepository.addExerciseEntry', () {
+    test(
+      'resolving a new Exercise name creates the Exercise, appends the '
+      'Entry, persists both lists, and notifies listeners',
+      () async {
+        final workout = Workout(id: 'workout-1', startTime: DateTime(2026, 1, 1));
+        final repository = WorkoutRepository(
+          initialWorkouts: [workout],
+          initialExercises: const [],
+        );
+        var notified = false;
+        repository.addListener(() => notified = true);
+
+        repository.addExerciseEntry('workout-1', 'Bench Press');
+
+        expect(repository.exercises.map((e) => e.name), ['Bench Press']);
+        final updated = repository.workouts.single;
+        expect(updated.exerciseEntries.single.exerciseId, repository.exercises.single.id);
+        expect(notified, isTrue);
+
+        await Future<void>.delayed(Duration.zero);
+        expect((await StorageService().loadExercises()).length, 1);
+        expect((await StorageService().loadWorkouts())[0].exerciseEntries.length, 1);
+      },
+    );
+
+    test(
+      'resolving an existing Exercise name (case-insensitive) reuses it '
+      'instead of creating a duplicate',
+      () async {
+        final exercise = Exercise(id: 'exercise-1', name: 'Bench Press');
+        final workout = Workout(id: 'workout-1', startTime: DateTime(2026, 1, 1));
+        final repository = WorkoutRepository(
+          initialWorkouts: [workout],
+          initialExercises: [exercise],
+        );
+
+        repository.addExerciseEntry('workout-1', 'bench press');
+
+        expect(repository.exercises.length, 1);
+        expect(
+          repository.workouts.single.exerciseEntries.single.exerciseId,
+          'exercise-1',
+        );
+      },
+    );
+  });
+
+  group('WorkoutRepository.addSet', () {
+    test(
+      'delegates to Workout.addSet, replaces the Workout, persists it, and '
+      'notifies listeners',
+      () async {
+        final entry = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 1, 1),
+          exerciseEntries: [entry],
+        );
+        final repository = WorkoutRepository(
+          initialWorkouts: [workout],
+          initialExercises: const [],
+        );
+        var notified = false;
+        repository.addListener(() => notified = true);
+
+        repository.addSet(
+          workoutId: 'workout-1',
+          entryId: 'entry-1',
+          weight: 60,
+          unit: WeightUnit.kg,
+          reps: 5,
+        );
+
+        final updated = repository.workouts.single;
+        expect(updated.exerciseEntries.single.sets.single.weight, 60);
+        expect(notified, isTrue);
+
+        await Future<void>.delayed(Duration.zero);
+        final stored = await StorageService().loadWorkouts();
+        expect(stored[0].exerciseEntries[0].sets.single.weight, 60);
+      },
+    );
+  });
+
+  group('WorkoutRepository.editSet', () {
+    test('delegates to Workout.editSet, persists, and notifies listeners', () async {
+      final set = ExerciseSet(
+        id: 'set-1',
+        weight: 60,
+        unit: WeightUnit.kg,
+        reps: 5,
+        loggedAt: DateTime(2026, 1, 1),
+      );
+      final entry = ExerciseEntry(
+        id: 'entry-1',
+        exerciseId: 'exercise-1',
+        sets: [set],
+      );
+      final workout = Workout(
+        id: 'workout-1',
+        startTime: DateTime(2026, 1, 1),
+        exerciseEntries: [entry],
+      );
+      final repository = WorkoutRepository(
+        initialWorkouts: [workout],
+        initialExercises: const [],
+      );
+      var notified = false;
+      repository.addListener(() => notified = true);
+
+      repository.editSet(
+        workoutId: 'workout-1',
+        entryId: 'entry-1',
+        setId: 'set-1',
+        weight: 99,
+        unit: WeightUnit.kg,
+        reps: 3,
+      );
+
+      final updatedSet = repository.workouts.single.exerciseEntries.single.sets.single;
+      expect(updatedSet.weight, 99);
+      expect(updatedSet.reps, 3);
+      expect(notified, isTrue);
+
+      await Future<void>.delayed(Duration.zero);
+      final stored = await StorageService().loadWorkouts();
+      expect(stored[0].exerciseEntries[0].sets[0].weight, 99);
+    });
+  });
+
+  group('WorkoutRepository.deleteSet', () {
+    test('delegates to Workout.deleteSet, persists, and notifies listeners', () async {
+      final set = ExerciseSet(
+        id: 'set-1',
+        weight: 60,
+        unit: WeightUnit.kg,
+        reps: 5,
+        loggedAt: DateTime(2026, 1, 1),
+      );
+      final entry = ExerciseEntry(
+        id: 'entry-1',
+        exerciseId: 'exercise-1',
+        sets: [set],
+      );
+      final workout = Workout(
+        id: 'workout-1',
+        startTime: DateTime(2026, 1, 1),
+        exerciseEntries: [entry],
+      );
+      final repository = WorkoutRepository(
+        initialWorkouts: [workout],
+        initialExercises: const [],
+      );
+      var notified = false;
+      repository.addListener(() => notified = true);
+
+      repository.deleteSet(
+        workoutId: 'workout-1',
+        entryId: 'entry-1',
+        setId: 'set-1',
+      );
+
+      expect(repository.workouts.single.exerciseEntries.single.sets, isEmpty);
+      expect(notified, isTrue);
+
+      await Future<void>.delayed(Duration.zero);
+      final stored = await StorageService().loadWorkouts();
+      expect(stored[0].exerciseEntries[0].sets, isEmpty);
+    });
+  });
+
+  group('WorkoutRepository.deleteExerciseEntry', () {
+    test(
+      'delegates to Workout.deleteExerciseEntry, persists, and notifies '
+      'listeners',
+      () async {
+        final entry = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 1, 1),
+          exerciseEntries: [entry],
+        );
+        final repository = WorkoutRepository(
+          initialWorkouts: [workout],
+          initialExercises: const [],
+        );
+        var notified = false;
+        repository.addListener(() => notified = true);
+
+        repository.deleteExerciseEntry(workoutId: 'workout-1', entryId: 'entry-1');
+
+        expect(repository.workouts.single.exerciseEntries, isEmpty);
+        expect(notified, isTrue);
+
+        await Future<void>.delayed(Duration.zero);
+        final stored = await StorageService().loadWorkouts();
+        expect(stored[0].exerciseEntries, isEmpty);
+      },
+    );
+  });
+
+  group('WorkoutRepository.finishWorkout', () {
+    test(
+      'delegates to Workout.finish(), persists, and notifies listeners',
+      () async {
+        final loggedAt = DateTime(2026, 1, 1, 10, 30);
+        final set = ExerciseSet(
+          id: 'set-1',
+          weight: 60,
+          unit: WeightUnit.kg,
+          reps: 5,
+          loggedAt: loggedAt,
+        );
+        final entry = ExerciseEntry(
+          id: 'entry-1',
+          exerciseId: 'exercise-1',
+          sets: [set],
+        );
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 1, 1, 10, 0),
+          exerciseEntries: [entry],
+        );
+        final repository = WorkoutRepository(
+          initialWorkouts: [workout],
+          initialExercises: const [],
+        );
+        var notified = false;
+        repository.addListener(() => notified = true);
+
+        repository.finishWorkout('workout-1');
+
+        expect(repository.workouts.single.isInProgress, isFalse);
+        expect(repository.workouts.single.endTime, loggedAt);
+        expect(notified, isTrue);
+
+        await Future<void>.delayed(Duration.zero);
+        final stored = await StorageService().loadWorkouts();
+        expect(stored[0].isInProgress, isFalse);
+      },
+    );
+
+    test(
+      'is a no-op when Workout.finish() returns null (no logged Sets)',
+      () async {
+        final workout = Workout(id: 'workout-1', startTime: DateTime(2026, 1, 1));
+        final repository = WorkoutRepository(
+          initialWorkouts: [workout],
+          initialExercises: const [],
+        );
+        var notified = false;
+        repository.addListener(() => notified = true);
+
+        repository.finishWorkout('workout-1');
+
+        expect(repository.workouts.single.isInProgress, isTrue);
+        expect(notified, isFalse);
+      },
+    );
+  });
+
+  group('WorkoutRepository.discardWorkout', () {
+    test(
+      'removes the Workout entirely from workouts, persists, and notifies '
+      'listeners',
+      () async {
+        final workout = Workout(id: 'workout-1', startTime: DateTime(2026, 1, 1));
+        final repository = WorkoutRepository(
+          initialWorkouts: [workout],
+          initialExercises: const [],
+        );
+        var notified = false;
+        repository.addListener(() => notified = true);
+
+        repository.discardWorkout('workout-1');
+
+        expect(repository.workouts, isEmpty);
+        expect(notified, isTrue);
+
+        await Future<void>.delayed(Duration.zero);
+        final stored = await StorageService().loadWorkouts();
+        expect(stored, isEmpty);
+      },
+    );
+  });
+
+  group('WorkoutRepository.renameExercise', () {
+    test(
+      'delegates to Exercise.copyWith(name:), persists, and notifies '
+      'listeners',
+      () async {
+        final exercise = Exercise(id: 'exercise-1', name: 'Bench Press');
+        final repository = WorkoutRepository(
+          initialWorkouts: const [],
+          initialExercises: [exercise],
+        );
+        var notified = false;
+        repository.addListener(() => notified = true);
+
+        repository.renameExercise('exercise-1', 'Incline Bench Press');
+
+        expect(repository.exercises.single.name, 'Incline Bench Press');
+        expect(notified, isTrue);
+
+        await Future<void>.delayed(Duration.zero);
+        final stored = await StorageService().loadExercises();
+        expect(stored[0].name, 'Incline Bench Press');
+      },
+    );
+
+    test('rejects a blank new name, leaving the Exercise unchanged', () async {
+      final exercise = Exercise(id: 'exercise-1', name: 'Bench Press');
+      final repository = WorkoutRepository(
+        initialWorkouts: const [],
+        initialExercises: [exercise],
+      );
+
+      repository.renameExercise('exercise-1', '   ');
+
+      expect(repository.exercises.single.name, 'Bench Press');
+    });
+
+    test(
+      'rejects a name colliding with another Exercise, leaving both '
+      'unchanged',
+      () async {
+        final exercises = [
+          Exercise(id: 'exercise-1', name: 'Bench Press'),
+          Exercise(id: 'exercise-2', name: 'Squat'),
+        ];
+        final repository = WorkoutRepository(
+          initialWorkouts: const [],
+          initialExercises: exercises,
+        );
+
+        repository.renameExercise('exercise-2', 'bench press');
+
+        expect(
+          repository.exercises.firstWhere((e) => e.id == 'exercise-2').name,
+          'Squat',
+        );
+      },
+    );
+  });
 }

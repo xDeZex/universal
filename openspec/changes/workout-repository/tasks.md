@@ -6,15 +6,15 @@
 
 ## 2. WorkoutRepository exposes Workout mutations
 
-- [ ] 2.1 `startWorkout()` creates a new in-progress Workout, adds it to `workouts`, persists via `StorageService.saveWorkouts`, and notifies listeners
-- [ ] 2.2 `addExerciseEntry(workoutId, name)` resolves the Exercise by case-insensitive name (reusing or creating it per existing `Exercise.resolve` behavior), appends the Entry to the named Workout, persists both lists as needed, and notifies listeners
-- [ ] 2.3 `addSet(workoutId, entryId, weight, unit, reps)` delegates to `Workout.addSet`, replaces the Workout in `workouts`, persists via `StorageService.saveWorkouts`, and notifies listeners
-- [ ] 2.4 `editSet(workoutId, entryId, setId, weight, reps)` delegates to `Workout.editSet`, persists, and notifies listeners
-- [ ] 2.5 `deleteSet(workoutId, entryId, setId)` delegates to `Workout.deleteSet`, persists, and notifies listeners
-- [ ] 2.6 `deleteExerciseEntry(workoutId, entryId)` delegates to `Workout.deleteExerciseEntry`, persists, and notifies listeners
-- [ ] 2.7 `finishWorkout(workoutId)` delegates to `Workout.finish()`, persists, and notifies listeners; rejecting (no-op) when `Workout.finish()` returns null
-- [ ] 2.8 `discardWorkout(workoutId)` removes the Workout entirely from `workouts`, persists, and notifies listeners
-- [ ] 2.9 `renameExercise(exerciseId, newName)` delegates to `Exercise.copyWith(name:)` with the existing collision/blank-name validation, persists via `StorageService.saveExercises`, and notifies listeners
+- [x] 2.1 `startWorkout()` creates a new in-progress Workout, adds it to `workouts`, persists via `StorageService.saveWorkouts`, and notifies listeners
+- [x] 2.2 `addExerciseEntry(workoutId, name)` resolves the Exercise by case-insensitive name (reusing or creating it per existing `Exercise.resolve` behavior), appends the Entry to the named Workout, persists both lists as needed, and notifies listeners
+- [x] 2.3 `addSet(workoutId, entryId, weight, unit, reps)` delegates to `Workout.addSet`, replaces the Workout in `workouts`, persists via `StorageService.saveWorkouts`, and notifies listeners
+- [x] 2.4 `editSet(workoutId, entryId, setId, weight, reps)` delegates to `Workout.editSet`, persists, and notifies listeners
+- [x] 2.5 `deleteSet(workoutId, entryId, setId)` delegates to `Workout.deleteSet`, persists, and notifies listeners
+- [x] 2.6 `deleteExerciseEntry(workoutId, entryId)` delegates to `Workout.deleteExerciseEntry`, persists, and notifies listeners
+- [x] 2.7 `finishWorkout(workoutId)` delegates to `Workout.finish()`, persists, and notifies listeners; rejecting (no-op) when `Workout.finish()` returns null
+- [x] 2.8 `discardWorkout(workoutId)` removes the Workout entirely from `workouts`, persists, and notifies listeners
+- [x] 2.9 `renameExercise(exerciseId, newName)` delegates to `Exercise.copyWith(name:)` with the existing collision/blank-name validation, persists via `StorageService.saveExercises`, and notifies listeners
 
 ## 3. WorkoutRepository is wired into the widget tree
 
