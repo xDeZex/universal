@@ -51,38 +51,41 @@ class WorkoutHomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasInProgress = context.watch<WorkoutRepository>().workouts.any(
-      (w) => w.isInProgress,
-    );
+    final repo = context.watch<WorkoutRepository>();
+    final hasInProgress = repo.workouts.any((w) => w.isInProgress);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Workout')),
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ElevatedButton(
-              onPressed: hasInProgress
-                  ? () => _continueWorkout(context)
-                  : () => _startWorkout(context),
-              child: Text(hasInProgress ? 'Continue Workout' : 'Start Workout'),
+      body: !repo.isLoaded
+          ? const Center(child: CircularProgressIndicator())
+          : Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ElevatedButton(
+                    onPressed: hasInProgress
+                        ? () => _continueWorkout(context)
+                        : () => _startWorkout(context),
+                    child: Text(
+                      hasInProgress ? 'Continue Workout' : 'Start Workout',
+                    ),
+                  ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextButton(
+                        onPressed: () => _openPastWorkouts(context),
+                        child: const Text('Past Workouts'),
+                      ),
+                      TextButton(
+                        onPressed: () => _openManageExercises(context),
+                        child: const Text('Manage Exercises'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextButton(
-                  onPressed: () => _openPastWorkouts(context),
-                  child: const Text('Past Workouts'),
-                ),
-                TextButton(
-                  onPressed: () => _openManageExercises(context),
-                  child: const Text('Manage Exercises'),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

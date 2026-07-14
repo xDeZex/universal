@@ -21,6 +21,7 @@ class WorkoutRepository extends ChangeNotifier {
 
   List<Workout> get workouts => _workouts ?? [];
   List<Exercise> get exercises => _exercises ?? [];
+  bool get isLoaded => _workouts != null;
 
   Future<void> load() async {
     if (_workouts != null) return;
