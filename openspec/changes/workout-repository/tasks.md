@@ -18,8 +18,8 @@
 
 ## 3. WorkoutRepository is wired into the widget tree
 
-- [ ] 3.1 `AppShell` wraps the Workout tab's entry (`WorkoutHomeScreen`) in `ChangeNotifierProvider<WorkoutRepository>`, not the Checklists tab
-- [ ] 3.2 `main.dart`'s existing `ChangeNotifierProvider<UpdateService>` at the `MaterialApp` root is unaffected
+- [x] 3.1 `AppShell` wraps the Workout tab's entry (`WorkoutHomeScreen`) in `ChangeNotifierProvider<WorkoutRepository>`, not the Checklists tab
+- [x] 3.2 `main.dart`'s existing `ChangeNotifierProvider<UpdateService>` at the `MaterialApp` root is unaffected
 
 ## 4. Screens read and write through WorkoutRepository instead of callbacks
 

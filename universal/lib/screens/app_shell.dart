@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../repositories/workout_repository.dart';
 import 'home_screen.dart';
 import 'workout_home_screen.dart';
 
@@ -13,7 +15,13 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   int _selectedIndex = 0;
 
-  static const _tabs = [HomeScreen(), WorkoutHomeScreen()];
+  static final _tabs = [
+    const HomeScreen(),
+    ChangeNotifierProvider<WorkoutRepository>(
+      create: (_) => WorkoutRepository()..load(),
+      child: const WorkoutHomeScreen(),
+    ),
+  ];
 
   @override
   Widget build(BuildContext context) {

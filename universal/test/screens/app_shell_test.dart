@@ -75,5 +75,33 @@ void main() {
         expect(find.byType(CircularProgressIndicator), findsNothing);
       },
     );
+
+    testWidgets(
+      'provides a WorkoutRepository to the Workout tab but not the '
+      'Checklists tab',
+      (tester) async {
+        await _pumpAppShell(tester);
+        await tester.pumpAndSettle();
+
+        expect(
+          () => Provider.of<WorkoutRepository>(
+            tester.element(find.byType(HomeScreen)),
+            listen: false,
+          ),
+          throwsA(isA<ProviderNotFoundException>()),
+        );
+
+        await tester.tap(_navTab('Workout'));
+        await tester.pumpAndSettle();
+
+        expect(
+          Provider.of<WorkoutRepository>(
+            tester.element(find.byType(WorkoutHomeScreen)),
+            listen: false,
+          ),
+          isA<WorkoutRepository>(),
+        );
+      },
+    );
   });
 }
