@@ -123,40 +123,6 @@ void main() {
 
       expect(() => ExerciseSet.fromJson(json), throwsA(anything));
     });
-
-    group('parseInput', () {
-      test('parses valid weight and reps text', () {
-        final result = ExerciseSet.parseInput('65', '6');
-
-        expect(result, isNotNull);
-        expect(result!.weight, 65);
-        expect(result.reps, 6);
-      });
-
-      test('rejects a non-numeric weight', () {
-        expect(ExerciseSet.parseInput('not-a-number', '6'), isNull);
-      });
-
-      test('rejects a non-numeric reps count', () {
-        expect(ExerciseSet.parseInput('65', 'not-a-number'), isNull);
-      });
-
-      test('rejects zero reps', () {
-        expect(ExerciseSet.parseInput('65', '0'), isNull);
-      });
-
-      test('rejects negative reps', () {
-        expect(ExerciseSet.parseInput('65', '-1'), isNull);
-      });
-
-      test('accepts zero or negative weight', () {
-        expect(ExerciseSet.parseInput('0', '6'), equals((weight: 0, reps: 6)));
-        expect(
-          ExerciseSet.parseInput('-10', '6'),
-          equals((weight: -10, reps: 6)),
-        );
-      });
-    });
   });
 
   group('ExerciseEntry', () {
@@ -207,32 +173,35 @@ void main() {
       expect(copy.sets, entry.sets);
     });
 
-    test('toJson/fromJson round-trip preserves id, exerciseId, and nested sets', () {
-      final entry = ExerciseEntry(
-        id: 'entry-1',
-        exerciseId: 'ex-1',
-        sets: [
-          ExerciseSet(
-            id: 'set-1',
-            weight: 60,
-            unit: WeightUnit.kg,
-            reps: 8,
-            loggedAt: DateTime(2026, 7, 10, 12, 0),
-          ),
-        ],
-      );
+    test(
+      'toJson/fromJson round-trip preserves id, exerciseId, and nested sets',
+      () {
+        final entry = ExerciseEntry(
+          id: 'entry-1',
+          exerciseId: 'ex-1',
+          sets: [
+            ExerciseSet(
+              id: 'set-1',
+              weight: 60,
+              unit: WeightUnit.kg,
+              reps: 8,
+              loggedAt: DateTime(2026, 7, 10, 12, 0),
+            ),
+          ],
+        );
 
-      final restored = ExerciseEntry.fromJson(entry.toJson());
+        final restored = ExerciseEntry.fromJson(entry.toJson());
 
-      expect(restored.id, 'entry-1');
-      expect(restored.exerciseId, 'ex-1');
-      expect(restored.sets.length, 1);
-      expect(restored.sets[0].id, 'set-1');
-      expect(restored.sets[0].weight, 60);
-      expect(restored.sets[0].unit, WeightUnit.kg);
-      expect(restored.sets[0].reps, 8);
-      expect(restored.sets[0].loggedAt, entry.sets[0].loggedAt);
-    });
+        expect(restored.id, 'entry-1');
+        expect(restored.exerciseId, 'ex-1');
+        expect(restored.sets.length, 1);
+        expect(restored.sets[0].id, 'set-1');
+        expect(restored.sets[0].weight, 60);
+        expect(restored.sets[0].unit, WeightUnit.kg);
+        expect(restored.sets[0].reps, 8);
+        expect(restored.sets[0].loggedAt, entry.sets[0].loggedAt);
+      },
+    );
 
     test('fromJson throws when id key is missing', () {
       final json = {'exerciseId': 'ex-1', 'sets': []};
@@ -273,15 +242,18 @@ void main() {
       expect(workout.isInProgress, isFalse);
     });
 
-    test('creates with id, startTime, no endTime, and empty exerciseEntries', () {
-      final startTime = DateTime(2026, 7, 10, 10, 0);
-      final workout = Workout(id: 'workout-1', startTime: startTime);
+    test(
+      'creates with id, startTime, no endTime, and empty exerciseEntries',
+      () {
+        final startTime = DateTime(2026, 7, 10, 10, 0);
+        final workout = Workout(id: 'workout-1', startTime: startTime);
 
-      expect(workout.id, 'workout-1');
-      expect(workout.startTime, startTime);
-      expect(workout.endTime, isNull);
-      expect(workout.exerciseEntries, isEmpty);
-    });
+        expect(workout.id, 'workout-1');
+        expect(workout.startTime, startTime);
+        expect(workout.endTime, isNull);
+        expect(workout.exerciseEntries, isEmpty);
+      },
+    );
 
     test('copyWith returns a new Workout with updated fields', () {
       final workout = Workout(
@@ -313,47 +285,51 @@ void main() {
       expect(copy.exerciseEntries, workout.exerciseEntries);
     });
 
-    test('addSet appends a Set with loggedAt stamped at call time to the given entry',
-        () {
-      final workout = Workout(
-        id: 'workout-1',
-        startTime: DateTime(2026, 7, 10, 10, 0),
-        exerciseEntries: [
-          ExerciseEntry(id: 'entry-1', exerciseId: 'ex-1'),
-          ExerciseEntry(id: 'entry-2', exerciseId: 'ex-2'),
-        ],
-      );
+    test(
+      'addSet appends a Set with loggedAt stamped at call time to the given entry',
+      () {
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 7, 10, 10, 0),
+          exerciseEntries: [
+            ExerciseEntry(id: 'entry-1', exerciseId: 'ex-1'),
+            ExerciseEntry(id: 'entry-2', exerciseId: 'ex-2'),
+          ],
+        );
 
-      final before = DateTime.now();
-      final updated = workout.addSet(
-        entryId: 'entry-1',
-        weight: 60,
-        unit: WeightUnit.lbs,
-        reps: 8,
-      );
-      final after = DateTime.now();
+        final before = DateTime.now();
+        final updated = workout.addSet(
+          entryId: 'entry-1',
+          weight: 60,
+          unit: WeightUnit.lbs,
+          reps: 8,
+        );
+        final after = DateTime.now();
 
-      final entry1 = updated.exerciseEntries
-          .firstWhere((e) => e.id == 'entry-1');
-      final entry2 = updated.exerciseEntries
-          .firstWhere((e) => e.id == 'entry-2');
+        final entry1 = updated.exerciseEntries.firstWhere(
+          (e) => e.id == 'entry-1',
+        );
+        final entry2 = updated.exerciseEntries.firstWhere(
+          (e) => e.id == 'entry-2',
+        );
 
-      expect(entry1.sets.length, 1);
-      expect(entry1.sets[0].weight, 60);
-      expect(entry1.sets[0].unit, WeightUnit.lbs);
-      expect(entry1.sets[0].reps, 8);
-      expect(
-        entry1.sets[0].loggedAt.isAfter(before) ||
-            entry1.sets[0].loggedAt.isAtSameMomentAs(before),
-        isTrue,
-      );
-      expect(
-        entry1.sets[0].loggedAt.isBefore(after) ||
-            entry1.sets[0].loggedAt.isAtSameMomentAs(after),
-        isTrue,
-      );
-      expect(entry2.sets, isEmpty);
-    });
+        expect(entry1.sets.length, 1);
+        expect(entry1.sets[0].weight, 60);
+        expect(entry1.sets[0].unit, WeightUnit.lbs);
+        expect(entry1.sets[0].reps, 8);
+        expect(
+          entry1.sets[0].loggedAt.isAfter(before) ||
+              entry1.sets[0].loggedAt.isAtSameMomentAs(before),
+          isTrue,
+        );
+        expect(
+          entry1.sets[0].loggedAt.isBefore(after) ||
+              entry1.sets[0].loggedAt.isAtSameMomentAs(after),
+          isTrue,
+        );
+        expect(entry2.sets, isEmpty);
+      },
+    );
 
     test('addSet throws when entryId matches no Exercise Entry', () {
       final workout = Workout(
@@ -374,52 +350,53 @@ void main() {
     });
 
     test(
-        'editSet updates weight, unit, and reps on the matching Set and leaves '
-        'loggedAt unchanged',
-        () {
-      final loggedAt = DateTime(2026, 7, 10, 10, 15);
-      final workout = Workout(
-        id: 'workout-1',
-        startTime: DateTime(2026, 7, 10, 10, 0),
-        exerciseEntries: [
-          ExerciseEntry(
-            id: 'entry-1',
-            exerciseId: 'ex-1',
-            sets: [
-              ExerciseSet(
-                id: 'set-1',
-                weight: 60,
-                unit: WeightUnit.kg,
-                reps: 8,
-                loggedAt: loggedAt,
-              ),
-              ExerciseSet(
-                id: 'set-2',
-                weight: 20,
-                unit: WeightUnit.kg,
-                reps: 10,
-                loggedAt: loggedAt,
-              ),
-            ],
-          ),
-        ],
-      );
+      'editSet updates weight, unit, and reps on the matching Set and leaves '
+      'loggedAt unchanged',
+      () {
+        final loggedAt = DateTime(2026, 7, 10, 10, 15);
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 7, 10, 10, 0),
+          exerciseEntries: [
+            ExerciseEntry(
+              id: 'entry-1',
+              exerciseId: 'ex-1',
+              sets: [
+                ExerciseSet(
+                  id: 'set-1',
+                  weight: 60,
+                  unit: WeightUnit.kg,
+                  reps: 8,
+                  loggedAt: loggedAt,
+                ),
+                ExerciseSet(
+                  id: 'set-2',
+                  weight: 20,
+                  unit: WeightUnit.kg,
+                  reps: 10,
+                  loggedAt: loggedAt,
+                ),
+              ],
+            ),
+          ],
+        );
 
-      final updated = workout.editSet(
-        entryId: 'entry-1',
-        setId: 'set-1',
-        weight: 65,
-        unit: WeightUnit.lbs,
-        reps: 6,
-      );
+        final updated = workout.editSet(
+          entryId: 'entry-1',
+          setId: 'set-1',
+          weight: 65,
+          unit: WeightUnit.lbs,
+          reps: 6,
+        );
 
-      final entry = updated.exerciseEntries.first;
-      expect(entry.sets[0].weight, 65);
-      expect(entry.sets[0].unit, WeightUnit.lbs);
-      expect(entry.sets[0].reps, 6);
-      expect(entry.sets[0].loggedAt, loggedAt);
-      expect(entry.sets[1].weight, 20);
-    });
+        final entry = updated.exerciseEntries.first;
+        expect(entry.sets[0].weight, 65);
+        expect(entry.sets[0].unit, WeightUnit.lbs);
+        expect(entry.sets[0].reps, 6);
+        expect(entry.sets[0].loggedAt, loggedAt);
+        expect(entry.sets[1].weight, 20);
+      },
+    );
 
     test('editSet throws when entryId matches no Exercise Entry', () {
       final workout = Workout(
@@ -460,54 +437,53 @@ void main() {
     });
 
     test(
-        'deleteSet removes the matching Set from its Entry, leaving other Sets '
-        'and other Entries untouched',
-        () {
-      final workout = Workout(
-        id: 'workout-1',
-        startTime: DateTime(2026, 7, 10, 10, 0),
-        exerciseEntries: [
-          ExerciseEntry(
-            id: 'entry-1',
-            exerciseId: 'ex-1',
-            sets: [
-              ExerciseSet(
-                id: 'set-1',
-                weight: 60,
-                unit: WeightUnit.kg,
-                reps: 8,
-                loggedAt: DateTime(2026, 7, 10, 10, 10),
-              ),
-              ExerciseSet(
-                id: 'set-2',
-                weight: 20,
-                unit: WeightUnit.kg,
-                reps: 10,
-                loggedAt: DateTime(2026, 7, 10, 10, 20),
-              ),
-            ],
-          ),
-          ExerciseEntry(id: 'entry-2', exerciseId: 'ex-2'),
-        ],
-      );
+      'deleteSet removes the matching Set from its Entry, leaving other Sets '
+      'and other Entries untouched',
+      () {
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 7, 10, 10, 0),
+          exerciseEntries: [
+            ExerciseEntry(
+              id: 'entry-1',
+              exerciseId: 'ex-1',
+              sets: [
+                ExerciseSet(
+                  id: 'set-1',
+                  weight: 60,
+                  unit: WeightUnit.kg,
+                  reps: 8,
+                  loggedAt: DateTime(2026, 7, 10, 10, 10),
+                ),
+                ExerciseSet(
+                  id: 'set-2',
+                  weight: 20,
+                  unit: WeightUnit.kg,
+                  reps: 10,
+                  loggedAt: DateTime(2026, 7, 10, 10, 20),
+                ),
+              ],
+            ),
+            ExerciseEntry(id: 'entry-2', exerciseId: 'ex-2'),
+          ],
+        );
 
-      final updated = workout.deleteSet(entryId: 'entry-1', setId: 'set-1');
+        final updated = workout.deleteSet(entryId: 'entry-1', setId: 'set-1');
 
-      final entry1 = updated.exerciseEntries.firstWhere(
-        (e) => e.id == 'entry-1',
-      );
-      expect(entry1.sets.length, 1);
-      expect(entry1.sets[0].id, 'set-2');
-      expect(
-        updated.exerciseEntries.firstWhere((e) => e.id == 'entry-2').sets,
-        isEmpty,
-      );
-    });
+        final entry1 = updated.exerciseEntries.firstWhere(
+          (e) => e.id == 'entry-1',
+        );
+        expect(entry1.sets.length, 1);
+        expect(entry1.sets[0].id, 'set-2');
+        expect(
+          updated.exerciseEntries.firstWhere((e) => e.id == 'entry-2').sets,
+          isEmpty,
+        );
+      },
+    );
 
-    test(
-        'deleteSet leaves the Exercise Entry listed with zero Sets when '
-        'deleting its only Set',
-        () {
+    test('deleteSet leaves the Exercise Entry listed with zero Sets when '
+        'deleting its only Set', () {
       final workout = Workout(
         id: 'workout-1',
         startTime: DateTime(2026, 7, 10, 10, 0),
@@ -561,10 +537,8 @@ void main() {
       );
     });
 
-    test(
-        'deleteExerciseEntry removes the matching Entry and all its Sets, '
-        'leaving other Entries untouched',
-        () {
+    test('deleteExerciseEntry removes the matching Entry and all its Sets, '
+        'leaving other Entries untouched', () {
       final workout = Workout(
         id: 'workout-1',
         startTime: DateTime(2026, 7, 10, 10, 0),
@@ -592,124 +566,130 @@ void main() {
       expect(updated.exerciseEntries[0].id, 'entry-2');
     });
 
-    test('deleteExerciseEntry throws when entryId matches no Exercise Entry',
-        () {
-      final workout = Workout(
-        id: 'workout-1',
-        startTime: DateTime(2026, 7, 10, 10, 0),
-        exerciseEntries: [ExerciseEntry(id: 'entry-1', exerciseId: 'ex-1')],
-      );
+    test(
+      'deleteExerciseEntry throws when entryId matches no Exercise Entry',
+      () {
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 7, 10, 10, 0),
+          exerciseEntries: [ExerciseEntry(id: 'entry-1', exerciseId: 'ex-1')],
+        );
 
-      expect(
-        () => workout.deleteExerciseEntry(entryId: 'does-not-exist'),
-        throwsA(anything),
-      );
-    });
+        expect(
+          () => workout.deleteExerciseEntry(entryId: 'does-not-exist'),
+          throwsA(anything),
+        );
+      },
+    );
 
     test(
-        'finish sets endTime to the loggedAt of the most recently logged Set across all entries',
-        () {
-      final earliest = DateTime(2026, 7, 10, 10, 10);
-      final latest = DateTime(2026, 7, 10, 10, 30);
-      final middle = DateTime(2026, 7, 10, 10, 20);
+      'finish sets endTime to the loggedAt of the most recently logged Set across all entries',
+      () {
+        final earliest = DateTime(2026, 7, 10, 10, 10);
+        final latest = DateTime(2026, 7, 10, 10, 30);
+        final middle = DateTime(2026, 7, 10, 10, 20);
 
-      final workout = Workout(
-        id: 'workout-1',
-        startTime: DateTime(2026, 7, 10, 10, 0),
-        exerciseEntries: [
-          ExerciseEntry(
-            id: 'entry-1',
-            exerciseId: 'ex-1',
-            sets: [
-              ExerciseSet(
-                id: 'set-1',
-                weight: 60,
-                unit: WeightUnit.kg,
-                reps: 8,
-                loggedAt: earliest,
-              ),
-              ExerciseSet(
-                id: 'set-2',
-                weight: 65,
-                unit: WeightUnit.kg,
-                reps: 6,
-                loggedAt: latest,
-              ),
-            ],
-          ),
-          ExerciseEntry(
-            id: 'entry-2',
-            exerciseId: 'ex-2',
-            sets: [
-              ExerciseSet(
-                id: 'set-3',
-                weight: 20,
-                unit: WeightUnit.kg,
-                reps: 10,
-                loggedAt: middle,
-              ),
-            ],
-          ),
-        ],
-      );
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 7, 10, 10, 0),
+          exerciseEntries: [
+            ExerciseEntry(
+              id: 'entry-1',
+              exerciseId: 'ex-1',
+              sets: [
+                ExerciseSet(
+                  id: 'set-1',
+                  weight: 60,
+                  unit: WeightUnit.kg,
+                  reps: 8,
+                  loggedAt: earliest,
+                ),
+                ExerciseSet(
+                  id: 'set-2',
+                  weight: 65,
+                  unit: WeightUnit.kg,
+                  reps: 6,
+                  loggedAt: latest,
+                ),
+              ],
+            ),
+            ExerciseEntry(
+              id: 'entry-2',
+              exerciseId: 'ex-2',
+              sets: [
+                ExerciseSet(
+                  id: 'set-3',
+                  weight: 20,
+                  unit: WeightUnit.kg,
+                  reps: 10,
+                  loggedAt: middle,
+                ),
+              ],
+            ),
+          ],
+        );
 
-      final finished = workout.finish()!;
+        final finished = workout.finish()!;
 
-      expect(finished.endTime, latest);
-      expect(finished.isInProgress, isFalse);
-    });
-
-    test('finish returns null and leaves the Workout unchanged when zero Sets are logged',
-        () {
-      final workout = Workout(
-        id: 'workout-1',
-        startTime: DateTime(2026, 7, 10, 10, 0),
-        exerciseEntries: [ExerciseEntry(id: 'entry-1', exerciseId: 'ex-1')],
-      );
-
-      final result = workout.finish();
-
-      expect(result, isNull);
-      expect(workout.endTime, isNull);
-      expect(workout.isInProgress, isTrue);
-    });
+        expect(finished.endTime, latest);
+        expect(finished.isInProgress, isFalse);
+      },
+    );
 
     test(
-        'toJson/fromJson round-trip preserves id, startTime, endTime, and nested entries/sets',
-        () {
-      final workout = Workout(
-        id: 'workout-1',
-        startTime: DateTime(2026, 7, 10, 10, 0),
-        endTime: DateTime(2026, 7, 10, 11, 0),
-        exerciseEntries: [
-          ExerciseEntry(
-            id: 'entry-1',
-            exerciseId: 'ex-1',
-            sets: [
-              ExerciseSet(
-                id: 'set-1',
-                weight: 60,
-                unit: WeightUnit.kg,
-                reps: 8,
-                loggedAt: DateTime(2026, 7, 10, 10, 30),
-              ),
-            ],
-          ),
-        ],
-      );
+      'finish returns null and leaves the Workout unchanged when zero Sets are logged',
+      () {
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 7, 10, 10, 0),
+          exerciseEntries: [ExerciseEntry(id: 'entry-1', exerciseId: 'ex-1')],
+        );
 
-      final restored = Workout.fromJson(workout.toJson());
+        final result = workout.finish();
 
-      expect(restored.id, 'workout-1');
-      expect(restored.startTime, workout.startTime);
-      expect(restored.endTime, workout.endTime);
-      expect(restored.exerciseEntries.length, 1);
-      expect(restored.exerciseEntries[0].id, 'entry-1');
-      expect(restored.exerciseEntries[0].exerciseId, 'ex-1');
-      expect(restored.exerciseEntries[0].sets.length, 1);
-      expect(restored.exerciseEntries[0].sets[0].id, 'set-1');
-      expect(restored.exerciseEntries[0].sets[0].unit, WeightUnit.kg);
-    });
+        expect(result, isNull);
+        expect(workout.endTime, isNull);
+        expect(workout.isInProgress, isTrue);
+      },
+    );
+
+    test(
+      'toJson/fromJson round-trip preserves id, startTime, endTime, and nested entries/sets',
+      () {
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 7, 10, 10, 0),
+          endTime: DateTime(2026, 7, 10, 11, 0),
+          exerciseEntries: [
+            ExerciseEntry(
+              id: 'entry-1',
+              exerciseId: 'ex-1',
+              sets: [
+                ExerciseSet(
+                  id: 'set-1',
+                  weight: 60,
+                  unit: WeightUnit.kg,
+                  reps: 8,
+                  loggedAt: DateTime(2026, 7, 10, 10, 30),
+                ),
+              ],
+            ),
+          ],
+        );
+
+        final restored = Workout.fromJson(workout.toJson());
+
+        expect(restored.id, 'workout-1');
+        expect(restored.startTime, workout.startTime);
+        expect(restored.endTime, workout.endTime);
+        expect(restored.exerciseEntries.length, 1);
+        expect(restored.exerciseEntries[0].id, 'entry-1');
+        expect(restored.exerciseEntries[0].exerciseId, 'ex-1');
+        expect(restored.exerciseEntries[0].sets.length, 1);
+        expect(restored.exerciseEntries[0].sets[0].id, 'set-1');
+        expect(restored.exerciseEntries[0].sets[0].unit, WeightUnit.kg);
+      },
+    );
 
     test('fromJson throws when id key is missing', () {
       final json = {
