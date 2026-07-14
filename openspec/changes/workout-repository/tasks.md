@@ -1,8 +1,8 @@
 ## 1. WorkoutRepository owns load and save
 
-- [ ] 1.1 `WorkoutRepository()` with no seed data loads Workouts and Exercises from `StorageService` on `load()` and notifies listeners once both are available
-- [ ] 1.2 `WorkoutRepository(initialWorkouts: ..., initialExercises: ...)` skips the `StorageService` load entirely — `load()` is a no-op when seeded
-- [ ] 1.3 `WorkoutRepository(storage: fakeOrRealStorage)` uses the injected `StorageService` instance instead of constructing its own
+- [x] 1.1 `WorkoutRepository()` with no seed data loads Workouts and Exercises from `StorageService` on `load()` and notifies listeners once both are available
+- [x] 1.2 `WorkoutRepository(initialWorkouts: ..., initialExercises: ...)` skips the `StorageService` load entirely — `load()` is a no-op when seeded
+- [x] 1.3 `WorkoutRepository(storage: fakeOrRealStorage)` uses the injected `StorageService` instance instead of constructing its own
 
 ## 2. WorkoutRepository exposes Workout mutations
 
