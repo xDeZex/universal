@@ -29,9 +29,84 @@ fi
 # Flutter checks on staged Dart or Flutter config files
 staged_flutter=$(git diff --cached --name-only | grep -E '^universal/.*(\.dart$|pubspec\.(yaml|lock)$|analysis_options\.yaml$)')
 if [ -n "$staged_flutter" ]; then
-  echo "Flutter files staged — running tests and analysis..."
-  (cd universal && flutter test --concurrency=4 --reporter=compact) || exit 1
+  echo "Flutter files staged — running tests, analysis, and coverage checks..."
+  (cd universal && flutter test --concurrency=4 --reporter=compact --coverage) || exit 1
   (cd universal && flutter analyze) || exit 1
+
+  command -v diff-cover >/dev/null 2>&1 || {
+    echo "ERROR: diff-cover not found. Install it with: pipx install diff-cover"
+    exit 1
+  }
+
+  COVERAGE_THRESHOLD=95.0 python3 - <<'PYEOF' || exit 1
+import os
+
+THRESHOLD = float(os.environ["COVERAGE_THRESHOLD"])
+EXCLUDE = {"lib/main.dart"}
+LCOV_PATH = "universal/coverage/lcov.info"
+
+try:
+    with open(LCOV_PATH) as f:
+        lcov_lines = f.readlines()
+except FileNotFoundError:
+    print(f"ERROR: {LCOV_PATH} not found — did `flutter test --coverage` run?")
+    raise SystemExit(1)
+
+records = []
+name = lf = lh = 0
+for line in lcov_lines:
+    line = line.strip()
+    if line.startswith("SF:"):
+        name = line[3:]
+    elif line.startswith("LF:"):
+        lf = int(line[3:])
+    elif line.startswith("LH:"):
+        lh = int(line[3:])
+    elif line == "end_of_record":
+        records.append((name, lh, lf))
+        name, lf, lh = "", 0, 0
+
+total_hit = total_found = 0
+gaps = []
+for rel, lh, lf in records:
+    if rel in EXCLUDE:
+        continue
+    total_hit += lh
+    total_found += lf
+    if lf and lh < lf:
+        gaps.append((100 * lh / lf, rel, lh, lf))
+
+if total_found == 0:
+    print(f"ERROR: no coverage data found in {LCOV_PATH}")
+    raise SystemExit(1)
+
+pct = 100 * total_hit / total_found
+print(f"Global line coverage: {pct:.1f}% ({total_hit}/{total_found}), threshold {THRESHOLD}%")
+if pct < THRESHOLD:
+    print("ERROR: global coverage below threshold. Files with gaps:")
+    for gpct, rel, lh, lf in sorted(gaps):
+        print(f"  {gpct:5.1f}%  {lh}/{lf}  {rel}")
+    raise SystemExit(1)
+PYEOF
+
+  # diff-cover matches lcov paths against `git diff` paths, which are always
+  # repo-root-relative — rewrite the lcov.info's universal/-relative SF: paths
+  # to match before invoking it from the repo root. Cleanup is done inline
+  # (not left to the trap) since the infra-checks block below registers its
+  # own EXIT trap, which would silently replace this one in POSIX sh (traps
+  # don't stack) if a single commit touched both Dart and deploy/ files. The
+  # trap is still set for the duration of the diff-cover call itself, to
+  # cover the SIGINT/SIGTERM window, then cleared right after.
+  lcov_root=$(mktemp --suffix=.info)
+  sed 's/^SF:/SF:universal\//' universal/coverage/lcov.info > "$lcov_root"
+  trap 'rm -f "$lcov_root"' EXIT INT TERM
+  diff-cover "$lcov_root" \
+    --compare-branch=HEAD --ignore-unstaged \
+    --fail-under=100 --show-uncovered
+  diff_cover_status=$?
+  rm -f "$lcov_root"
+  trap - EXIT INT TERM
+  [ $diff_cover_status -eq 0 ] || exit 1
 fi
 
 # YAML/manifest checks on staged deploy/, .github/, or .yamllint.yml files
