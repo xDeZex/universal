@@ -11,9 +11,9 @@ class WorkoutRepository extends ChangeNotifier {
     StorageService? storage,
     List<Workout>? initialWorkouts,
     List<Exercise>? initialExercises,
-  })  : _storage = storage ?? StorageService(),
-        _workouts = initialWorkouts,
-        _exercises = initialExercises;
+  }) : _storage = storage ?? StorageService(),
+       _workouts = initialWorkouts,
+       _exercises = initialExercises;
 
   final StorageService _storage;
   List<Workout>? _workouts;
@@ -40,6 +40,8 @@ class WorkoutRepository extends ChangeNotifier {
   }
 
   void addExerciseEntry(String workoutId, String name) {
+    if (!workouts.any((w) => w.id == workoutId)) return;
+
     final exercise = Exercise.resolve(name, exercises);
     if (exercise == null) return;
 
@@ -69,11 +71,16 @@ class WorkoutRepository extends ChangeNotifier {
     required WeightUnit unit,
     required int reps,
   }) {
-    _replaceWorkout(
+    final replaced = _replaceWorkout(
       workoutId,
-      (workout) =>
-          workout.addSet(entryId: entryId, weight: weight, unit: unit, reps: reps),
+      (workout) => workout.addSet(
+        entryId: entryId,
+        weight: weight,
+        unit: unit,
+        reps: reps,
+      ),
     );
+    if (!replaced) return;
     notifyListeners();
   }
 
@@ -85,7 +92,7 @@ class WorkoutRepository extends ChangeNotifier {
     required WeightUnit unit,
     required int reps,
   }) {
-    _replaceWorkout(
+    final replaced = _replaceWorkout(
       workoutId,
       (workout) => workout.editSet(
         entryId: entryId,
@@ -95,6 +102,7 @@ class WorkoutRepository extends ChangeNotifier {
         reps: reps,
       ),
     );
+    if (!replaced) return;
     notifyListeners();
   }
 
@@ -103,24 +111,31 @@ class WorkoutRepository extends ChangeNotifier {
     required String entryId,
     required String setId,
   }) {
-    _replaceWorkout(
+    final replaced = _replaceWorkout(
       workoutId,
       (workout) => workout.deleteSet(entryId: entryId, setId: setId),
     );
+    if (!replaced) return;
     notifyListeners();
   }
 
-  void deleteExerciseEntry({required String workoutId, required String entryId}) {
-    _replaceWorkout(
+  void deleteExerciseEntry({
+    required String workoutId,
+    required String entryId,
+  }) {
+    final replaced = _replaceWorkout(
       workoutId,
       (workout) => workout.deleteExerciseEntry(entryId: entryId),
     );
+    if (!replaced) return;
     notifyListeners();
   }
 
   void finishWorkout(String workoutId) {
-    final workout = workouts.firstWhere((w) => w.id == workoutId);
-    final finished = workout.finish();
+    final index = workouts.indexWhere((w) => w.id == workoutId);
+    if (index == -1) return;
+
+    final finished = workouts[index].finish();
     if (finished == null) return;
 
     _replaceWorkout(workoutId, (_) => finished);
@@ -128,14 +143,17 @@ class WorkoutRepository extends ChangeNotifier {
   }
 
   void discardWorkout(String workoutId) {
+    if (!workouts.any((w) => w.id == workoutId)) return;
+
     _workouts = workouts.where((w) => w.id != workoutId).toList();
     _storage.saveWorkouts(workouts);
     notifyListeners();
   }
 
   void renameExercise(String exerciseId, String newName) {
-    final exercise = exercises.firstWhere((e) => e.id == exerciseId);
-    if (exercise.validateRename(newName, exercises) != null) return;
+    final index = exercises.indexWhere((e) => e.id == exerciseId);
+    if (index == -1) return;
+    if (exercises[index].validateRename(newName, exercises) != null) return;
 
     _exercises = exercises
         .map((e) => e.id == exerciseId ? e.copyWith(name: newName.trim()) : e)
@@ -144,10 +162,14 @@ class WorkoutRepository extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _replaceWorkout(String workoutId, Workout Function(Workout) update) {
-    _workouts = workouts
-        .map((w) => w.id == workoutId ? update(w) : w)
-        .toList();
+  /// Replaces the Workout matching [workoutId], persisting and returning
+  /// `true` only if a match was found — a no-op otherwise, so callers don't
+  /// persist or notify for an id that doesn't exist.
+  bool _replaceWorkout(String workoutId, Workout Function(Workout) update) {
+    if (!workouts.any((w) => w.id == workoutId)) return false;
+
+    _workouts = workouts.map((w) => w.id == workoutId ? update(w) : w).toList();
     _storage.saveWorkouts(workouts);
+    return true;
   }
 }
