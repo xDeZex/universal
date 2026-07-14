@@ -6,13 +6,6 @@ import '../models/workout.dart';
 import '../repositories/workout_repository.dart';
 import '../widgets/confirm_delete_dialog.dart';
 
-({num weight, int reps})? _parseSetInput(String weightText, String repsText) {
-  final weight = num.tryParse(weightText);
-  final reps = int.tryParse(repsText);
-  if (weight == null || reps == null || reps <= 0) return null;
-  return (weight: weight, reps: reps);
-}
-
 class ActiveWorkoutScreen extends StatefulWidget {
   final String workoutId;
 
@@ -647,7 +640,10 @@ class _EditSetDialogState extends State<_EditSetDialog> {
   }
 
   void _submit() {
-    final parsed = _parseSetInput(_weightController.text, _repsController.text);
+    final parsed = ExerciseSet.parseInput(
+      _weightController.text,
+      _repsController.text,
+    );
     if (parsed == null) return;
 
     Navigator.pop(

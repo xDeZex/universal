@@ -123,6 +123,40 @@ void main() {
 
       expect(() => ExerciseSet.fromJson(json), throwsA(anything));
     });
+
+    group('parseInput', () {
+      test('parses valid weight and reps text', () {
+        final result = ExerciseSet.parseInput('65', '6');
+
+        expect(result, isNotNull);
+        expect(result!.weight, 65);
+        expect(result.reps, 6);
+      });
+
+      test('rejects a non-numeric weight', () {
+        expect(ExerciseSet.parseInput('not-a-number', '6'), isNull);
+      });
+
+      test('rejects a non-numeric reps count', () {
+        expect(ExerciseSet.parseInput('65', 'not-a-number'), isNull);
+      });
+
+      test('rejects zero reps', () {
+        expect(ExerciseSet.parseInput('65', '0'), isNull);
+      });
+
+      test('rejects negative reps', () {
+        expect(ExerciseSet.parseInput('65', '-1'), isNull);
+      });
+
+      test('accepts zero or negative weight', () {
+        expect(ExerciseSet.parseInput('0', '6'), equals((weight: 0, reps: 6)));
+        expect(
+          ExerciseSet.parseInput('-10', '6'),
+          equals((weight: -10, reps: 6)),
+        );
+      });
+    });
   });
 
   group('ExerciseEntry', () {
