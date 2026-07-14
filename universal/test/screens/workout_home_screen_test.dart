@@ -188,19 +188,23 @@ void main() {
 
         var storedWorkouts = await StorageService().loadWorkouts();
         expect(storedWorkouts[0].exerciseEntries.length, 1);
-        final entryId = storedWorkouts[0].exerciseEntries[0].id;
 
-        await tester.enterText(
-          find.byKey(ValueKey('weight-$entryId')),
-          '60',
-        );
-        await tester.enterText(find.byKey(ValueKey('reps-$entryId')), '5');
-        await tester.tap(find.byKey(ValueKey('add-set-$entryId')));
+        // A newly added Exercise Entry is auto-selected, so the add-Set bar
+        // is already showing.
+        await tester.tap(find.byKey(const ValueKey('weight-stepper-increment')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const ValueKey('weight-stepper-increment')));
+        await tester.pumpAndSettle();
+        for (var i = 0; i < 5; i++) {
+          await tester.tap(find.byKey(const ValueKey('reps-stepper-increment')));
+          await tester.pumpAndSettle();
+        }
+        await tester.tap(find.byKey(const ValueKey('add-set')));
         await tester.pumpAndSettle();
 
         storedWorkouts = await StorageService().loadWorkouts();
         expect(storedWorkouts[0].exerciseEntries[0].sets.length, 1);
-        expect(storedWorkouts[0].exerciseEntries[0].sets[0].weight, 60);
+        expect(storedWorkouts[0].exerciseEntries[0].sets[0].weight, 5);
         expect(storedWorkouts[0].exerciseEntries[0].sets[0].unit, WeightUnit.kg);
         expect(storedWorkouts[0].exerciseEntries[0].sets[0].reps, 5);
       },
@@ -450,7 +454,20 @@ void main() {
         await tester.tap(find.byKey(const ValueKey('past-workout-workout-1')));
         await tester.pumpAndSettle();
 
-        expect(find.text('5 reps at 99 kg — 10:30 AM'), findsOneWidget);
+        expect(
+          tester
+              .widget<Text>(find.byKey(const ValueKey('set-weight-set-1')))
+              .data,
+          '99 kg',
+        );
+        expect(
+          tester.widget<Text>(find.byKey(const ValueKey('set-reps-set-1'))).data,
+          '5',
+        );
+        expect(
+          tester.widget<Text>(find.byKey(const ValueKey('set-time-set-1'))).data,
+          '10:30 AM',
+        );
       },
     );
 

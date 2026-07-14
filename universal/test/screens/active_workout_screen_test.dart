@@ -25,6 +25,19 @@ Future<void> _pumpActiveWorkoutScreen(
   );
 }
 
+Future<void> _tapAndSettle(WidgetTester tester, String key) async {
+  await tester.tap(find.byKey(ValueKey(key)));
+  await tester.pumpAndSettle();
+}
+
+String _weightStepperValue(WidgetTester tester) => tester
+    .widget<Text>(find.byKey(const ValueKey('weight-stepper-value')))
+    .data!;
+
+String _repsStepperValue(WidgetTester tester) => tester
+    .widget<Text>(find.byKey(const ValueKey('reps-stepper-value')))
+    .data!;
+
 void main() {
   group('ActiveWorkoutScreen', () {
     testWidgets(
@@ -104,8 +117,8 @@ void main() {
     });
 
     testWidgets(
-      'submitting valid weight and reps on an Exercise Entry adds a Set and '
-      'persists the Workout',
+      'adding a Set via the bottom bar adds it to the selected Exercise '
+      'Entry and persists the Workout',
       (tester) async {
         Workout? savedWorkout;
         final entry = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
@@ -122,41 +135,44 @@ void main() {
           onWorkoutChanged: (w) => savedWorkout = w,
         );
 
-        final weightField = find.byKey(const ValueKey('weight-entry-1'));
-        final repsField = find.byKey(const ValueKey('reps-entry-1'));
+        await tester.tap(find.byKey(const ValueKey('entry-header-entry-1')));
+        await tester.pumpAndSettle();
 
-        await tester.enterText(weightField, '60');
-        await tester.enterText(repsField, '5');
-        await tester.tap(find.byKey(const ValueKey('add-set-entry-1')));
+        await tester.tap(find.byKey(const ValueKey('weight-stepper-increment')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const ValueKey('weight-stepper-increment')));
+        await tester.pumpAndSettle();
+        for (var i = 0; i < 5; i++) {
+          await tester.tap(find.byKey(const ValueKey('reps-stepper-increment')));
+          await tester.pumpAndSettle();
+        }
+        await tester.tap(find.byKey(const ValueKey('add-set')));
         await tester.pumpAndSettle();
 
         expect(savedWorkout, isNotNull);
         expect(savedWorkout!.exerciseEntries[0].sets.length, 1);
-        expect(savedWorkout!.exerciseEntries[0].sets[0].weight, 60);
+        expect(savedWorkout!.exerciseEntries[0].sets[0].weight, 5);
         expect(savedWorkout!.exerciseEntries[0].sets[0].unit, WeightUnit.kg);
         expect(savedWorkout!.exerciseEntries[0].sets[0].reps, 5);
       },
     );
 
     testWidgets(
-      'a freshly added Exercise Entry shows a kg/lbs unit toggle next to the '
-      'weight and reps fields',
+      'a freshly added Exercise Entry is selected and its add-Set bar shows '
+      'a kg/lbs unit toggle',
       (tester) async {
-        final entry = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
-        final workout = Workout(
-          id: 'workout-1',
-          startTime: DateTime(2026, 1, 1),
-          exerciseEntries: [entry],
-        );
-
         await _pumpActiveWorkoutScreen(
           tester,
-          workout: workout,
-          exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
+          workout: Workout(id: 'workout-1', startTime: DateTime(2026, 1, 1)),
+          exercises: const [],
         );
 
-        expect(find.byKey(const ValueKey('unit-kg-entry-1')), findsOneWidget);
-        expect(find.byKey(const ValueKey('unit-lbs-entry-1')), findsOneWidget);
+        await tester.enterText(find.byType(TextField).first, 'Bench Press');
+        await tester.testTextInput.receiveAction(TextInputAction.done);
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const ValueKey('unit-kg')), findsOneWidget);
+        expect(find.byKey(const ValueKey('unit-lbs')), findsOneWidget);
       },
     );
 
@@ -178,18 +194,23 @@ void main() {
           onWorkoutChanged: (w) => savedWorkout = w,
         );
 
-        await tester.tap(find.byKey(const ValueKey('unit-lbs-entry-1')));
+        await tester.tap(find.byKey(const ValueKey('entry-header-entry-1')));
         await tester.pumpAndSettle();
-        await tester.enterText(
-          find.byKey(const ValueKey('weight-entry-1')),
-          '135',
-        );
-        await tester.enterText(find.byKey(const ValueKey('reps-entry-1')), '8');
-        await tester.tap(find.byKey(const ValueKey('add-set-entry-1')));
+        await tester.tap(find.byKey(const ValueKey('unit-lbs')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const ValueKey('weight-stepper-increment')));
+        await tester.pumpAndSettle();
+        for (var i = 0; i < 8; i++) {
+          await tester.tap(find.byKey(const ValueKey('reps-stepper-increment')));
+          await tester.pumpAndSettle();
+        }
+        await tester.tap(find.byKey(const ValueKey('add-set')));
         await tester.pumpAndSettle();
 
         expect(savedWorkout, isNotNull);
         expect(savedWorkout!.exerciseEntries[0].sets[0].unit, WeightUnit.lbs);
+        expect(savedWorkout!.exerciseEntries[0].sets[0].weight, 5);
+        expect(savedWorkout!.exerciseEntries[0].sets[0].reps, 8);
       },
     );
 
@@ -212,32 +233,43 @@ void main() {
           onWorkoutChanged: (w) => savedWorkout = w,
         );
 
-        await tester.tap(find.byKey(const ValueKey('unit-lbs-entry-1')));
+        await tester.tap(find.byKey(const ValueKey('entry-header-entry-1')));
         await tester.pumpAndSettle();
-        await tester.enterText(
-          find.byKey(const ValueKey('weight-entry-1')),
-          '135',
-        );
-        await tester.enterText(find.byKey(const ValueKey('reps-entry-1')), '8');
-        await tester.tap(find.byKey(const ValueKey('add-set-entry-1')));
+        await tester.tap(find.byKey(const ValueKey('unit-lbs')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const ValueKey('weight-stepper-increment')));
+        await tester.pumpAndSettle();
+        for (var i = 0; i < 8; i++) {
+          await tester.tap(find.byKey(const ValueKey('reps-stepper-increment')));
+          await tester.pumpAndSettle();
+        }
+        await tester.tap(find.byKey(const ValueKey('add-set')));
         await tester.pumpAndSettle();
 
-        await tester.enterText(
-          find.byKey(const ValueKey('weight-entry-1')),
-          '140',
+        // The unit chip should still read lbs without re-selecting it.
+        expect(
+          tester.widget<ChoiceChip>(find.byKey(const ValueKey('unit-lbs'))).selected,
+          isTrue,
         );
-        await tester.enterText(find.byKey(const ValueKey('reps-entry-1')), '6');
-        await tester.tap(find.byKey(const ValueKey('add-set-entry-1')));
+
+        await tester.tap(find.byKey(const ValueKey('weight-stepper-increment')));
+        await tester.pumpAndSettle();
+        for (var i = 0; i < 6; i++) {
+          await tester.tap(find.byKey(const ValueKey('reps-stepper-increment')));
+          await tester.pumpAndSettle();
+        }
+        await tester.tap(find.byKey(const ValueKey('add-set')));
         await tester.pumpAndSettle();
 
         expect(savedWorkout, isNotNull);
         expect(savedWorkout!.exerciseEntries[0].sets.length, 2);
         expect(savedWorkout!.exerciseEntries[0].sets[1].unit, WeightUnit.lbs);
+        expect(savedWorkout!.exerciseEntries[0].sets[1].reps, 6);
       },
     );
 
     testWidgets(
-      'a logged Set is displayed as "<reps> reps at <weight> <unit>"',
+      'a logged Set is displayed with its weight (incl. unit) and reps',
       (tester) async {
         final entry = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
         final workout = Workout(
@@ -252,23 +284,26 @@ void main() {
           exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
         );
 
-        await tester.tap(find.byKey(const ValueKey('unit-lbs-entry-1')));
+        await tester.tap(find.byKey(const ValueKey('entry-header-entry-1')));
         await tester.pumpAndSettle();
-        await tester.enterText(
-          find.byKey(const ValueKey('weight-entry-1')),
-          '135',
-        );
-        await tester.enterText(find.byKey(const ValueKey('reps-entry-1')), '8');
-        await tester.tap(find.byKey(const ValueKey('add-set-entry-1')));
+        await tester.tap(find.byKey(const ValueKey('unit-lbs')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const ValueKey('weight-stepper-increment')));
+        await tester.pumpAndSettle();
+        for (var i = 0; i < 8; i++) {
+          await tester.tap(find.byKey(const ValueKey('reps-stepper-increment')));
+          await tester.pumpAndSettle();
+        }
+        await tester.tap(find.byKey(const ValueKey('add-set')));
         await tester.pumpAndSettle();
 
-        expect(find.text('8 reps at 135 lbs'), findsOneWidget);
+        expect(find.text('5 lbs'), findsOneWidget);
+        expect(find.text('8'), findsOneWidget);
       },
     );
 
     testWidgets(
-      'a logged Set on a finished Workout is displayed as "<reps> reps at '
-      '<weight> <unit> — <loggedAt time>"',
+      'a logged Set on a finished Workout additionally shows its logged time',
       (tester) async {
         final entry = ExerciseEntry(
           id: 'entry-1',
@@ -296,68 +331,20 @@ void main() {
           exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
         );
 
-        expect(find.text('8 reps at 50 kg — 6:42 PM'), findsOneWidget);
-      },
-    );
-
-    testWidgets(
-      'submitting a non-numeric weight is rejected with no Set added',
-      (tester) async {
-        var workoutSaveCount = 0;
-        final entry = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
-        final workout = Workout(
-          id: 'workout-1',
-          startTime: DateTime(2026, 1, 1),
-          exerciseEntries: [entry],
+        expect(
+          tester
+              .widget<Text>(find.byKey(const ValueKey('set-weight-set-1')))
+              .data,
+          '50 kg',
         );
-
-        await _pumpActiveWorkoutScreen(
-          tester,
-          workout: workout,
-          exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
-          onWorkoutChanged: (_) => workoutSaveCount++,
+        expect(
+          tester.widget<Text>(find.byKey(const ValueKey('set-reps-set-1'))).data,
+          '8',
         );
-
-        await tester.enterText(
-          find.byKey(const ValueKey('weight-entry-1')),
-          'not-a-number',
+        expect(
+          tester.widget<Text>(find.byKey(const ValueKey('set-time-set-1'))).data,
+          '6:42 PM',
         );
-        await tester.enterText(find.byKey(const ValueKey('reps-entry-1')), '5');
-        await tester.tap(find.byKey(const ValueKey('add-set-entry-1')));
-        await tester.pumpAndSettle();
-
-        expect(workoutSaveCount, 0);
-      },
-    );
-
-    testWidgets(
-      'submitting a non-positive-integer reps count is rejected with no Set '
-      'added',
-      (tester) async {
-        var workoutSaveCount = 0;
-        final entry = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
-        final workout = Workout(
-          id: 'workout-1',
-          startTime: DateTime(2026, 1, 1),
-          exerciseEntries: [entry],
-        );
-
-        await _pumpActiveWorkoutScreen(
-          tester,
-          workout: workout,
-          exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
-          onWorkoutChanged: (_) => workoutSaveCount++,
-        );
-
-        await tester.enterText(
-          find.byKey(const ValueKey('weight-entry-1')),
-          '60',
-        );
-        await tester.enterText(find.byKey(const ValueKey('reps-entry-1')), '0');
-        await tester.tap(find.byKey(const ValueKey('add-set-entry-1')));
-        await tester.pumpAndSettle();
-
-        expect(workoutSaveCount, 0);
       },
     );
 
@@ -507,8 +494,7 @@ void main() {
 
         expect(find.byType(TextField), findsNothing);
         expect(find.byType(ChoiceChip), findsNothing);
-        expect(find.byKey(const ValueKey('add-set-entry-1')), findsNothing);
-        expect(find.byKey(const ValueKey('add-set-entry-2')), findsNothing);
+        expect(find.byKey(const ValueKey('add-set-bar')), findsNothing);
         expect(
           find.byKey(const ValueKey('discard-workout')),
           findsNothing,
@@ -516,15 +502,42 @@ void main() {
         expect(find.byKey(const ValueKey('finish-workout')), findsNothing);
 
         expect(find.text('Bench Press'), findsOneWidget);
-        expect(find.text('5 reps at 60 kg — 10:30 AM'), findsOneWidget);
+        expect(
+          tester
+              .widget<Text>(find.byKey(const ValueKey('set-weight-set-1')))
+              .data,
+          '60 kg',
+        );
+        expect(
+          tester.widget<Text>(find.byKey(const ValueKey('set-reps-set-1'))).data,
+          '5',
+        );
+        expect(
+          tester.widget<Text>(find.byKey(const ValueKey('set-time-set-1'))).data,
+          '10:30 AM',
+        );
         expect(find.text('Squat'), findsOneWidget);
-        expect(find.text('8 reps at 40 kg — 10:20 AM'), findsOneWidget);
+        expect(
+          tester
+              .widget<Text>(find.byKey(const ValueKey('set-weight-set-2')))
+              .data,
+          '40 kg',
+        );
+        expect(
+          tester.widget<Text>(find.byKey(const ValueKey('set-reps-set-2'))).data,
+          '8',
+        );
+        expect(
+          tester.widget<Text>(find.byKey(const ValueKey('set-time-set-2'))).data,
+          '10:20 AM',
+        );
       },
     );
 
     testWidgets(
-      'an in-progress Workout still shows the add-Exercise-Entry field, '
-      'add-Set controls, and Discard/Finish buttons',
+      'an in-progress Workout still shows the add-Exercise-Entry field and '
+      'Discard/Finish buttons, and selecting its Exercise Entry reveals the '
+      'add-Set bar',
       (tester) async {
         final entry = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
         final workout = Workout(
@@ -539,13 +552,18 @@ void main() {
           exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
         );
 
-        expect(find.byType(TextField), findsNWidgets(3));
-        expect(find.byKey(const ValueKey('add-set-entry-1')), findsOneWidget);
+        expect(find.byType(TextField), findsOneWidget);
+        expect(find.byKey(const ValueKey('add-set-bar')), findsNothing);
         expect(
           find.byKey(const ValueKey('discard-workout')),
           findsOneWidget,
         );
         expect(find.byKey(const ValueKey('finish-workout')), findsOneWidget);
+
+        await tester.tap(find.byKey(const ValueKey('entry-header-entry-1')));
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const ValueKey('add-set-bar')), findsOneWidget);
       },
     );
 
@@ -925,7 +943,16 @@ void main() {
 
         expect(workoutSaveCount, 0);
         expect(find.byKey(const ValueKey('edit-weight-set-1')), findsNothing);
-        expect(find.text('8 reps at 60 kg'), findsOneWidget);
+        expect(
+          tester
+              .widget<Text>(find.byKey(const ValueKey('set-weight-set-1')))
+              .data,
+          '60 kg',
+        );
+        expect(
+          tester.widget<Text>(find.byKey(const ValueKey('set-reps-set-1'))).data,
+          '8',
+        );
       },
     );
 
@@ -1271,7 +1298,16 @@ void main() {
 
         expect(workoutSaveCount, 0);
         expect(find.text('Bench Press'), findsOneWidget);
-        expect(find.text('8 reps at 60 kg'), findsOneWidget);
+        expect(
+          tester
+              .widget<Text>(find.byKey(const ValueKey('set-weight-set-1')))
+              .data,
+          '60 kg',
+        );
+        expect(
+          tester.widget<Text>(find.byKey(const ValueKey('set-reps-set-1'))).data,
+          '8',
+        );
       },
     );
 
@@ -1360,6 +1396,694 @@ void main() {
         expect(savedWorkout!.exerciseEntries, isEmpty);
         expect(savedWorkout!.isInProgress, isFalse);
         expect(savedWorkout!.endTime, loggedAt);
+      },
+    );
+
+    testWidgets(
+      'Exercise Entries render as flat rows (no Card) with a Divider '
+      'between entries',
+      (tester) async {
+        final entry1 = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
+        final entry2 = ExerciseEntry(id: 'entry-2', exerciseId: 'exercise-2');
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 1, 1),
+          exerciseEntries: [entry1, entry2],
+        );
+
+        await _pumpActiveWorkoutScreen(
+          tester,
+          workout: workout,
+          exercises: [
+            Exercise(id: 'exercise-1', name: 'Bench Press'),
+            Exercise(id: 'exercise-2', name: 'Squat'),
+          ],
+        );
+
+        expect(find.byType(Card), findsNothing);
+        expect(find.byType(Divider), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'each Set row within an Exercise Entry is preceded by a Divider, '
+      'distinct from the Divider between Exercise Entries',
+      (tester) async {
+        final entry = ExerciseEntry(
+          id: 'entry-1',
+          exerciseId: 'exercise-1',
+          sets: [
+            ExerciseSet(
+              id: 'set-1',
+              weight: 60,
+              unit: WeightUnit.kg,
+              reps: 5,
+              loggedAt: DateTime(2026, 1, 1, 10),
+            ),
+            ExerciseSet(
+              id: 'set-2',
+              weight: 60,
+              unit: WeightUnit.kg,
+              reps: 5,
+              loggedAt: DateTime(2026, 1, 1, 10, 5),
+            ),
+          ],
+        );
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 1, 1),
+          exerciseEntries: [entry],
+        );
+
+        await _pumpActiveWorkoutScreen(
+          tester,
+          workout: workout,
+          exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
+        );
+
+        // One Divider before each of the two Sets; no between-entry Divider
+        // since there's only one Exercise Entry.
+        expect(find.byType(Divider), findsNWidgets(2));
+      },
+    );
+
+    testWidgets(
+      'tapping an in-progress Exercise Entry selects it and tints its rows',
+      (tester) async {
+        final entry = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 1, 1),
+          exerciseEntries: [entry],
+        );
+
+        await _pumpActiveWorkoutScreen(
+          tester,
+          workout: workout,
+          exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
+        );
+
+        final expectedTint = Theme.of(
+          tester.element(find.byType(Scaffold)),
+        ).colorScheme.secondaryContainer;
+
+        expect(
+          tester.widget<Material>(find.byKey(const ValueKey('entry-entry-1'))).color,
+          isNot(expectedTint),
+        );
+
+        await tester.tap(find.byKey(const ValueKey('entry-header-entry-1')));
+        await tester.pumpAndSettle();
+
+        expect(
+          tester.widget<Material>(find.byKey(const ValueKey('entry-entry-1'))).color,
+          expectedTint,
+        );
+      },
+    );
+
+    testWidgets(
+      'selecting a different Exercise Entry un-tints the previously '
+      'selected one',
+      (tester) async {
+        final entry1 = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
+        final entry2 = ExerciseEntry(id: 'entry-2', exerciseId: 'exercise-2');
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 1, 1),
+          exerciseEntries: [entry1, entry2],
+        );
+
+        await _pumpActiveWorkoutScreen(
+          tester,
+          workout: workout,
+          exercises: [
+            Exercise(id: 'exercise-1', name: 'Bench Press'),
+            Exercise(id: 'exercise-2', name: 'Squat'),
+          ],
+        );
+
+        final expectedTint = Theme.of(
+          tester.element(find.byType(Scaffold)),
+        ).colorScheme.secondaryContainer;
+
+        await tester.tap(find.byKey(const ValueKey('entry-header-entry-1')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const ValueKey('entry-header-entry-2')));
+        await tester.pumpAndSettle();
+
+        expect(
+          tester.widget<Material>(find.byKey(const ValueKey('entry-entry-1'))).color,
+          isNot(expectedTint),
+        );
+        expect(
+          tester.widget<Material>(find.byKey(const ValueKey('entry-entry-2'))).color,
+          expectedTint,
+        );
+      },
+    );
+
+    testWidgets(
+      'adding a new Exercise Entry selects it, tinting its rows',
+      (tester) async {
+        Workout? savedWorkout;
+
+        await _pumpActiveWorkoutScreen(
+          tester,
+          workout: Workout(id: 'workout-1', startTime: DateTime(2026, 1, 1)),
+          exercises: const [],
+          onWorkoutChanged: (w) => savedWorkout = w,
+        );
+
+        await tester.enterText(find.byType(TextField).first, 'Bench Press');
+        await tester.testTextInput.receiveAction(TextInputAction.done);
+        await tester.pumpAndSettle();
+
+        final expectedTint = Theme.of(
+          tester.element(find.byType(Scaffold)),
+        ).colorScheme.secondaryContainer;
+        final newEntryId = savedWorkout!.exerciseEntries[0].id;
+
+        expect(
+          tester
+              .widget<Material>(find.byKey(ValueKey('entry-$newEntryId')))
+              .color,
+          expectedTint,
+        );
+      },
+    );
+
+    testWidgets(
+      'a Workout with zero Exercise Entries renders with no selection and '
+      'no exception',
+      (tester) async {
+        await _pumpActiveWorkoutScreen(
+          tester,
+          workout: Workout(id: 'workout-1', startTime: DateTime(2026, 1, 1)),
+          exercises: const [],
+        );
+
+        expect(tester.takeException(), isNull);
+        final entryTiles = tester
+            .widgetList<Material>(find.byType(Material))
+            .where(
+              (m) => m.key is ValueKey && '${(m.key as ValueKey).value}'.startsWith('entry-'),
+            );
+        expect(entryTiles, isEmpty);
+      },
+    );
+
+    testWidgets(
+      'deleting the currently selected Exercise Entry clears the '
+      'selection instead of falling back to another entry',
+      (tester) async {
+        final entry1 = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
+        final entry2 = ExerciseEntry(id: 'entry-2', exerciseId: 'exercise-2');
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 1, 1),
+          exerciseEntries: [entry1, entry2],
+        );
+
+        await _pumpActiveWorkoutScreen(
+          tester,
+          workout: workout,
+          exercises: [
+            Exercise(id: 'exercise-1', name: 'Bench Press'),
+            Exercise(id: 'exercise-2', name: 'Squat'),
+          ],
+        );
+
+        final expectedTint = Theme.of(
+          tester.element(find.byType(Scaffold)),
+        ).colorScheme.secondaryContainer;
+
+        await tester.tap(find.byKey(const ValueKey('entry-header-entry-1')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const ValueKey('delete-entry-entry-1')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const ValueKey('confirm-delete-confirm')));
+        await tester.pumpAndSettle();
+
+        expect(
+          tester.widget<Material>(find.byKey(const ValueKey('entry-entry-2'))).color,
+          isNot(expectedTint),
+        );
+      },
+    );
+
+    testWidgets(
+      'deleting a non-selected Exercise Entry leaves the current '
+      'selection unchanged',
+      (tester) async {
+        final entry1 = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
+        final entry2 = ExerciseEntry(id: 'entry-2', exerciseId: 'exercise-2');
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 1, 1),
+          exerciseEntries: [entry1, entry2],
+        );
+
+        await _pumpActiveWorkoutScreen(
+          tester,
+          workout: workout,
+          exercises: [
+            Exercise(id: 'exercise-1', name: 'Bench Press'),
+            Exercise(id: 'exercise-2', name: 'Squat'),
+          ],
+        );
+
+        final expectedTint = Theme.of(
+          tester.element(find.byType(Scaffold)),
+        ).colorScheme.secondaryContainer;
+
+        await tester.tap(find.byKey(const ValueKey('entry-header-entry-1')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const ValueKey('delete-entry-entry-2')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const ValueKey('confirm-delete-confirm')));
+        await tester.pumpAndSettle();
+
+        expect(
+          tester.widget<Material>(find.byKey(const ValueKey('entry-entry-1'))).color,
+          expectedTint,
+        );
+      },
+    );
+
+    testWidgets(
+      'tapping an Exercise Entry on a Locked Workout does not select it or '
+      'show the selected-state tint',
+      (tester) async {
+        final loggedAt = DateTime(2026, 1, 1, 10, 0);
+        final entry = ExerciseEntry(
+          id: 'entry-1',
+          exerciseId: 'exercise-1',
+          sets: [
+            ExerciseSet(
+              id: 'set-1',
+              weight: 60,
+              unit: WeightUnit.kg,
+              reps: 8,
+              loggedAt: loggedAt,
+            ),
+          ],
+        );
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 1, 1, 9, 0),
+          endTime: loggedAt,
+          exerciseEntries: [entry],
+        );
+
+        await _pumpActiveWorkoutScreen(
+          tester,
+          workout: workout,
+          exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
+        );
+
+        final expectedTint = Theme.of(
+          tester.element(find.byType(Scaffold)),
+        ).colorScheme.secondaryContainer;
+
+        await tester.tap(find.byKey(const ValueKey('entry-header-entry-1')));
+        await tester.pumpAndSettle();
+
+        expect(tester.takeException(), isNull);
+        expect(
+          tester.widget<Material>(find.byKey(const ValueKey('entry-entry-1'))).color,
+          isNot(expectedTint),
+        );
+      },
+    );
+
+    testWidgets(
+      'the add-Set bar has a distinct surface tone and is seamed off from '
+      'the Discard/Finish row',
+      (tester) async {
+        final entry = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 1, 1),
+          exerciseEntries: [entry],
+        );
+
+        await _pumpActiveWorkoutScreen(
+          tester,
+          workout: workout,
+          exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
+        );
+
+        await tester.tap(find.byKey(const ValueKey('entry-header-entry-1')));
+        await tester.pumpAndSettle();
+
+        final expectedTone = Theme.of(
+          tester.element(find.byType(Scaffold)),
+        ).colorScheme.surfaceContainerHighest;
+
+        final bar = tester.widget<Container>(
+          find.byKey(const ValueKey('add-set-bar')),
+        );
+        expect(bar.color, expectedTone);
+
+        // With a single Exercise Entry the only Divider present is the seam
+        // between the add-Set bar and the Discard/Finish row.
+        expect(find.byType(Divider), findsOneWidget);
+
+        final barBottom = tester
+            .getBottomLeft(find.byKey(const ValueKey('add-set-bar')))
+            .dy;
+        final discardTop = tester
+            .getTopLeft(find.byKey(const ValueKey('discard-workout')))
+            .dy;
+        expect(barBottom, lessThanOrEqualTo(discardTop));
+      },
+    );
+
+    testWidgets(
+      'the add-Set bar is hidden when no Exercise Entry is selected and on '
+      'a Locked Workout',
+      (tester) async {
+        final entry = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
+        final inProgress = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 1, 1),
+          exerciseEntries: [entry],
+        );
+
+        await _pumpActiveWorkoutScreen(
+          tester,
+          workout: inProgress,
+          exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
+        );
+
+        expect(find.byKey(const ValueKey('add-set-bar')), findsNothing);
+
+        final loggedAt = DateTime(2026, 1, 1, 10, 0);
+        final lockedEntry = ExerciseEntry(
+          id: 'entry-1',
+          exerciseId: 'exercise-1',
+          sets: [
+            ExerciseSet(
+              id: 'set-1',
+              weight: 60,
+              unit: WeightUnit.kg,
+              reps: 8,
+              loggedAt: loggedAt,
+            ),
+          ],
+        );
+        final locked = Workout(
+          id: 'workout-2',
+          startTime: DateTime(2026, 1, 1, 9, 0),
+          endTime: loggedAt,
+          exerciseEntries: [lockedEntry],
+        );
+
+        await _pumpActiveWorkoutScreen(
+          tester,
+          workout: locked,
+          exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
+        );
+
+        expect(find.byKey(const ValueKey('add-set-bar')), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'the add-Set bar arranges weight, unit toggle, and reps controls in a '
+      'single row above a full-width Add Set button',
+      (tester) async {
+        final entry = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 1, 1),
+          exerciseEntries: [entry],
+        );
+
+        await _pumpActiveWorkoutScreen(
+          tester,
+          workout: workout,
+          exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
+        );
+
+        await tester.tap(find.byKey(const ValueKey('entry-header-entry-1')));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(FilledButton), findsOneWidget);
+
+        final weightY = tester
+            .getCenter(find.byKey(const ValueKey('weight-stepper-value')))
+            .dy;
+        final unitKgY = tester
+            .getCenter(find.byKey(const ValueKey('unit-kg')))
+            .dy;
+        final repsY = tester
+            .getCenter(find.byKey(const ValueKey('reps-stepper-value')))
+            .dy;
+        expect(weightY, closeTo(unitKgY, 1));
+        expect(weightY, closeTo(repsY, 1));
+
+        final buttonTop = tester
+            .getTopLeft(find.byKey(const ValueKey('add-set')))
+            .dy;
+        expect(weightY, lessThan(buttonTop));
+
+        final barLeft = tester
+            .getTopLeft(find.byKey(const ValueKey('add-set-bar')))
+            .dx;
+        final barRight = tester
+            .getTopRight(find.byKey(const ValueKey('add-set-bar')))
+            .dx;
+        final buttonLeft = tester
+            .getTopLeft(find.byKey(const ValueKey('add-set')))
+            .dx;
+        final buttonRight = tester
+            .getTopRight(find.byKey(const ValueKey('add-set')))
+            .dx;
+        expect(
+          buttonRight - buttonLeft,
+          greaterThan((barRight - barLeft) * 0.8),
+        );
+      },
+    );
+
+    testWidgets(
+      'the weight stepper steps by 2.5 in kg and 5 in lbs and can go '
+      'negative; the reps stepper has a minimum of zero',
+      (tester) async {
+        final entry = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 1, 1),
+          exerciseEntries: [entry],
+        );
+
+        await _pumpActiveWorkoutScreen(
+          tester,
+          workout: workout,
+          exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
+        );
+
+        await tester.tap(find.byKey(const ValueKey('entry-header-entry-1')));
+        await tester.pumpAndSettle();
+
+        expect(_weightStepperValue(tester), '0');
+        expect(_repsStepperValue(tester), '0');
+
+        await _tapAndSettle(tester, 'weight-stepper-decrement');
+        expect(_weightStepperValue(tester), '-2.5');
+
+        await _tapAndSettle(tester, 'weight-stepper-increment');
+        expect(_weightStepperValue(tester), '0');
+
+        await _tapAndSettle(tester, 'weight-stepper-increment');
+        expect(_weightStepperValue(tester), '2.5');
+
+        await _tapAndSettle(tester, 'unit-lbs');
+        await _tapAndSettle(tester, 'weight-stepper-decrement');
+        expect(_weightStepperValue(tester), '-2.5');
+
+        await _tapAndSettle(tester, 'weight-stepper-decrement');
+        expect(_weightStepperValue(tester), '-7.5');
+
+        await _tapAndSettle(tester, 'weight-stepper-increment');
+        await _tapAndSettle(tester, 'weight-stepper-increment');
+        expect(_weightStepperValue(tester), '2.5');
+
+        await _tapAndSettle(tester, 'reps-stepper-decrement');
+        expect(_repsStepperValue(tester), '0');
+
+        await _tapAndSettle(tester, 'reps-stepper-increment');
+        expect(_repsStepperValue(tester), '1');
+      },
+    );
+
+    testWidgets(
+      'the Add Set button is disabled while the reps stepper is at zero',
+      (tester) async {
+        final entry = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 1, 1),
+          exerciseEntries: [entry],
+        );
+
+        await _pumpActiveWorkoutScreen(
+          tester,
+          workout: workout,
+          exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
+        );
+
+        await tester.tap(find.byKey(const ValueKey('entry-header-entry-1')));
+        await tester.pumpAndSettle();
+
+        FilledButton addSetButton() => tester.widget<FilledButton>(
+          find.byKey(const ValueKey('add-set')),
+        );
+
+        expect(addSetButton().onPressed, isNull);
+
+        await tester.tap(find.byKey(const ValueKey('weight-stepper-increment')));
+        await tester.pumpAndSettle();
+        expect(addSetButton().onPressed, isNull);
+
+        await tester.tap(find.byKey(const ValueKey('reps-stepper-increment')));
+        await tester.pumpAndSettle();
+        expect(addSetButton().onPressed, isNotNull);
+      },
+    );
+
+    testWidgets(
+      'tapping Add Set adds a Set to the selected Exercise Entry stamped '
+      'with the current time',
+      (tester) async {
+        Workout? savedWorkout;
+        final entry = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 1, 1),
+          exerciseEntries: [entry],
+        );
+
+        await _pumpActiveWorkoutScreen(
+          tester,
+          workout: workout,
+          exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
+          onWorkoutChanged: (w) => savedWorkout = w,
+        );
+
+        await tester.tap(find.byKey(const ValueKey('entry-header-entry-1')));
+        await tester.pumpAndSettle();
+
+        final before = DateTime.now();
+        await tester.tap(find.byKey(const ValueKey('weight-stepper-increment')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const ValueKey('reps-stepper-increment')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const ValueKey('add-set')));
+        await tester.pumpAndSettle();
+        final after = DateTime.now();
+
+        expect(savedWorkout, isNotNull);
+        final set = savedWorkout!.exerciseEntries[0].sets.single;
+        expect(set.weight, 2.5);
+        expect(set.unit, WeightUnit.kg);
+        expect(set.reps, 1);
+        expect(
+          set.loggedAt.isAfter(before.subtract(const Duration(seconds: 1))),
+          isTrue,
+        );
+        expect(
+          set.loggedAt.isBefore(after.add(const Duration(seconds: 1))),
+          isTrue,
+        );
+      },
+    );
+
+    testWidgets(
+      'the unit defaults to kg for a freshly selected Exercise Entry with '
+      'no logged Sets yet',
+      (tester) async {
+        final entry = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 1, 1),
+          exerciseEntries: [entry],
+        );
+
+        await _pumpActiveWorkoutScreen(
+          tester,
+          workout: workout,
+          exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
+        );
+
+        await tester.tap(find.byKey(const ValueKey('entry-header-entry-1')));
+        await tester.pumpAndSettle();
+
+        final kgChip = tester.widget<ChoiceChip>(
+          find.byKey(const ValueKey('unit-kg')),
+        );
+        expect(kgChip.selected, isTrue);
+      },
+    );
+
+    testWidgets(
+      'switching the selected Exercise Entry resets the weight and reps '
+      'steppers to zero while keeping each entry\'s unit sticky',
+      (tester) async {
+        Workout? savedWorkout;
+        final entry1 = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
+        final entry2 = ExerciseEntry(id: 'entry-2', exerciseId: 'exercise-2');
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 1, 1),
+          exerciseEntries: [entry1, entry2],
+        );
+
+        await _pumpActiveWorkoutScreen(
+          tester,
+          workout: workout,
+          exercises: [
+            Exercise(id: 'exercise-1', name: 'Bench Press'),
+            Exercise(id: 'exercise-2', name: 'Squat'),
+          ],
+          onWorkoutChanged: (w) => savedWorkout = w,
+        );
+
+        // Log an lbs Set against entry-2 so lbs becomes sticky for it.
+        await _tapAndSettle(tester, 'entry-header-entry-2');
+        await _tapAndSettle(tester, 'unit-lbs');
+        await _tapAndSettle(tester, 'weight-stepper-increment');
+        await _tapAndSettle(tester, 'reps-stepper-increment');
+        await _tapAndSettle(tester, 'add-set');
+
+        // Bump the weight stepper on entry-2 again without submitting.
+        await _tapAndSettle(tester, 'weight-stepper-increment');
+        expect(_weightStepperValue(tester), '5');
+
+        // Switch to entry-1, which has never had a Set logged (defaults to kg).
+        await _tapAndSettle(tester, 'entry-header-entry-1');
+
+        expect(_weightStepperValue(tester), '0');
+        expect(_repsStepperValue(tester), '0');
+        expect(
+          tester.widget<ChoiceChip>(find.byKey(const ValueKey('unit-kg'))).selected,
+          isTrue,
+        );
+
+        // Switch back to entry-2: unit is sticky lbs, steppers reset to zero.
+        await _tapAndSettle(tester, 'entry-header-entry-2');
+
+        expect(_weightStepperValue(tester), '0');
+        expect(_repsStepperValue(tester), '0');
+        expect(
+          tester.widget<ChoiceChip>(find.byKey(const ValueKey('unit-lbs'))).selected,
+          isTrue,
+        );
+
+        expect(savedWorkout, isNotNull);
+        expect(savedWorkout!.exerciseEntries[1].sets.single.unit, WeightUnit.lbs);
       },
     );
   });

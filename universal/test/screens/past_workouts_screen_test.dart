@@ -273,7 +273,20 @@ void main() {
 
         expect(find.text('Bench Press'), findsOneWidget);
         expect(find.text('Squat'), findsOneWidget);
-        expect(find.text('5 reps at 60 kg — 9:20 AM'), findsOneWidget);
+        expect(
+          tester
+              .widget<Text>(find.byKey(const ValueKey('set-weight-set-1')))
+              .data,
+          '60 kg',
+        );
+        expect(
+          tester.widget<Text>(find.byKey(const ValueKey('set-reps-set-1'))).data,
+          '5',
+        );
+        expect(
+          tester.widget<Text>(find.byKey(const ValueKey('set-time-set-1'))).data,
+          '9:20 AM',
+        );
         expect(find.byType(TextField), findsNothing);
         expect(find.byKey(const ValueKey('discard-workout')), findsNothing);
         expect(find.byKey(const ValueKey('finish-workout')), findsNothing);

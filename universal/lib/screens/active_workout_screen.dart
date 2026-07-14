@@ -35,6 +35,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
   late Workout _workout;
   late List<Exercise> _exercises;
   final TextEditingController _nameController = TextEditingController();
+  String? _selectedEntryId;
+  final Map<String, WeightUnit> _entryUnits = {};
 
   @override
   void initState() {
@@ -68,6 +70,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
       if (isNewExercise) {
         _exercises = [..._exercises, exercise];
       }
+      _selectedEntryId = entry.id;
     });
 
     widget.onWorkoutChanged(_workout);
@@ -85,8 +88,17 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
         unit: unit,
         reps: reps,
       );
+      _entryUnits[entryId] = unit;
     });
     widget.onWorkoutChanged(_workout);
+  }
+
+  WeightUnit _unitFor(String entryId) => _entryUnits[entryId] ?? WeightUnit.kg;
+
+  void _setEntryUnit(String entryId, WeightUnit unit) {
+    setState(() {
+      _entryUnits[entryId] = unit;
+    });
   }
 
   void _editSet(
@@ -118,8 +130,43 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
   void _deleteExerciseEntry(String entryId) {
     setState(() {
       _workout = _workout.deleteExerciseEntry(entryId: entryId);
+      if (_selectedEntryId == entryId) {
+        _selectedEntryId = null;
+      }
     });
     widget.onWorkoutChanged(_workout);
+  }
+
+  void _selectEntry(String entryId) {
+    setState(() {
+      _selectedEntryId = entryId;
+    });
+  }
+
+  List<Widget> _buildEntryRows() {
+    final entries = _workout.exerciseEntries;
+    final rows = <Widget>[];
+    for (var i = 0; i < entries.length; i++) {
+      final entry = entries[i];
+      rows.add(
+        _ExerciseEntryTile(
+          key: ValueKey(entry.id),
+          entry: entry,
+          exerciseName: Exercise.nameFor(entry.exerciseId, _exercises),
+          locked: !_canAddNew,
+          selected: _canAddNew && entry.id == _selectedEntryId,
+          onSelect: () => _selectEntry(entry.id),
+          onEditSet: (setId, weight, unit, reps) =>
+              _editSet(entry.id, setId, weight, unit, reps),
+          onDeleteSet: (setId) => _deleteSet(entry.id, setId),
+          onDeleteEntry: () => _deleteExerciseEntry(entry.id),
+        ),
+      );
+      if (i != entries.length - 1) {
+        rows.add(const Divider(height: 1));
+      }
+    }
+    return rows;
   }
 
   bool get _hasLoggedSets =>
@@ -160,27 +207,18 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                   ],
                 ),
               ),
-            Expanded(
-              child: ListView(
-                children: _workout.exerciseEntries.map((entry) {
-                  return _ExerciseEntryTile(
-                    key: ValueKey(entry.id),
-                    entry: entry,
-                    exerciseName: Exercise.nameFor(
-                      entry.exerciseId,
-                      _exercises,
-                    ),
-                    locked: !_canAddNew,
-                    onAddSet: (weight, unit, reps) =>
-                        _addSet(entry.id, weight, unit, reps),
-                    onEditSet: (setId, weight, unit, reps) =>
-                        _editSet(entry.id, setId, weight, unit, reps),
-                    onDeleteSet: (setId) => _deleteSet(entry.id, setId),
-                    onDeleteEntry: () => _deleteExerciseEntry(entry.id),
-                  );
-                }).toList(),
+            Expanded(child: ListView(children: _buildEntryRows())),
+            if (_canAddNew && _selectedEntryId != null) ...[
+              _AddSetBar(
+                key: ValueKey(_selectedEntryId),
+                initialUnit: _unitFor(_selectedEntryId!),
+                onAddSet: (weight, unit, reps) =>
+                    _addSet(_selectedEntryId!, weight, unit, reps),
+                onUnitChanged: (unit) =>
+                    _setEntryUnit(_selectedEntryId!, unit),
               ),
-            ),
+              const Divider(height: 1),
+            ],
             if (_canAddNew)
               Padding(
                 padding: const EdgeInsets.all(16),
@@ -231,7 +269,8 @@ class _ExerciseEntryTile extends StatefulWidget {
   final ExerciseEntry entry;
   final String exerciseName;
   final bool locked;
-  final void Function(num weight, WeightUnit unit, int reps) onAddSet;
+  final bool selected;
+  final VoidCallback onSelect;
   final void Function(String setId, num weight, WeightUnit unit, int reps)
   onEditSet;
   final void Function(String setId) onDeleteSet;
@@ -242,7 +281,8 @@ class _ExerciseEntryTile extends StatefulWidget {
     required this.entry,
     required this.exerciseName,
     required this.locked,
-    required this.onAddSet,
+    required this.selected,
+    required this.onSelect,
     required this.onEditSet,
     required this.onDeleteSet,
     required this.onDeleteEntry,
@@ -253,31 +293,8 @@ class _ExerciseEntryTile extends StatefulWidget {
 }
 
 class _ExerciseEntryTileState extends State<_ExerciseEntryTile> {
-  final TextEditingController _weightController = TextEditingController();
-  final TextEditingController _repsController = TextEditingController();
-  WeightUnit _selectedUnit = WeightUnit.kg;
-
-  @override
-  void dispose() {
-    _weightController.dispose();
-    _repsController.dispose();
-    super.dispose();
-  }
-
-  void _submit() {
-    final parsed = _parseSetInput(_weightController.text, _repsController.text);
-    if (parsed == null) return;
-
-    widget.onAddSet(parsed.weight, _selectedUnit, parsed.reps);
-    _weightController.clear();
-    _repsController.clear();
-  }
-
-  String _setLabel(ExerciseSet set) {
-    final base = '${set.reps} reps at ${set.weight} ${set.unit.name}';
-    if (!widget.locked) return base;
-    return '$base — ${TimeOfDay.fromDateTime(set.loggedAt).format(context)}';
-  }
+  static const _setColumnWidth = 34.0;
+  static const _timeColumnWidth = 64.0;
 
   Future<void> _openEditDialog(ExerciseSet set) async {
     final result = await showDialog<_EditSetDialogResult>(
@@ -309,81 +326,284 @@ class _ExerciseEntryTileState extends State<_ExerciseEntryTile> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  widget.exerciseName,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
+    final theme = Theme.of(context);
+    final tint = widget.selected ? theme.colorScheme.secondaryContainer : null;
+    return Material(
+      key: ValueKey('entry-${widget.entry.id}'),
+      color: tint ?? Colors.transparent,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          InkWell(
+            key: ValueKey('entry-header-${widget.entry.id}'),
+            onTap: widget.locked ? null : widget.onSelect,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 8,
               ),
-              IconButton(
-                key: ValueKey('delete-entry-${widget.entry.id}'),
-                icon: const Icon(Icons.delete),
-                onPressed: _deleteEntry,
-              ),
-            ],
-          ),
-        ),
-        for (final set in widget.entry.sets)
-          ListTile(
-            key: ValueKey('set-${set.id}'),
-            title: Text(_setLabel(set)),
-            onTap: () => _openEditDialog(set),
-          ),
-        if (!widget.locked)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    key: ValueKey('weight-${widget.entry.id}'),
-                    controller: _weightController,
-                    decoration: const InputDecoration(hintText: 'Weight'),
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      widget.exerciseName,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                ChoiceChip(
-                  key: ValueKey('unit-kg-${widget.entry.id}'),
-                  label: const Text('kg'),
-                  selected: _selectedUnit == WeightUnit.kg,
-                  onSelected: (_) =>
-                      setState(() => _selectedUnit = WeightUnit.kg),
-                ),
-                const SizedBox(width: 8),
-                ChoiceChip(
-                  key: ValueKey('unit-lbs-${widget.entry.id}'),
-                  label: const Text('lbs'),
-                  selected: _selectedUnit == WeightUnit.lbs,
-                  onSelected: (_) =>
-                      setState(() => _selectedUnit = WeightUnit.lbs),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: TextField(
-                    key: ValueKey('reps-${widget.entry.id}'),
-                    controller: _repsController,
-                    decoration: const InputDecoration(hintText: 'Reps'),
-                    keyboardType: TextInputType.number,
+                  IconButton(
+                    key: ValueKey('delete-entry-${widget.entry.id}'),
+                    icon: const Icon(Icons.delete),
+                    onPressed: _deleteEntry,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (widget.entry.sets.isNotEmpty) _columnHeaderRow(theme),
+          for (var i = 0; i < widget.entry.sets.length; i++) ...[
+            const Divider(height: 1, indent: _setColumnWidth + 16),
+            _setRow(theme, i, widget.entry.sets[i]),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _columnHeaderRow(ThemeData theme) {
+    final style = theme.textTheme.labelSmall?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
+      fontWeight: FontWeight.bold,
+      letterSpacing: 0.6,
+    );
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+      child: Row(
+        children: [
+          SizedBox(width: _setColumnWidth, child: Text('SET', style: style)),
+          Expanded(child: Text('WEIGHT', style: style)),
+          Expanded(child: Text('REPS', style: style)),
+          SizedBox(
+            width: _timeColumnWidth,
+            child: widget.locked
+                ? Text('TIME', style: style, textAlign: TextAlign.right)
+                : null,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _setRow(ThemeData theme, int index, ExerciseSet set) {
+    final mutedStyle = theme.textTheme.bodyMedium?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
+    );
+    return InkWell(
+      key: ValueKey('set-${set.id}'),
+      onTap: () => _openEditDialog(set),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Row(
+          children: [
+            SizedBox(
+              width: _setColumnWidth,
+              child: CircleAvatar(
+                radius: 12,
+                backgroundColor: theme.colorScheme.surfaceContainerHigh,
+                child: Text(
+                  '${index + 1}',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-                IconButton(
-                  key: ValueKey('add-set-${widget.entry.id}'),
-                  icon: const Icon(Icons.add),
-                  onPressed: _submit,
+              ),
+            ),
+            Expanded(
+              child: Text(
+                '${set.weight} ${set.unit.name}',
+                key: ValueKey('set-weight-${set.id}'),
+                style: theme.textTheme.bodyMedium,
+              ),
+            ),
+            Expanded(
+              child: Text(
+                '${set.reps}',
+                key: ValueKey('set-reps-${set.id}'),
+                style: mutedStyle,
+              ),
+            ),
+            SizedBox(
+              width: _timeColumnWidth,
+              child: widget.locked
+                  ? Text(
+                      TimeOfDay.fromDateTime(set.loggedAt).format(context),
+                      key: ValueKey('set-time-${set.id}'),
+                      textAlign: TextAlign.right,
+                      style: mutedStyle?.copyWith(fontSize: 12),
+                    )
+                  : null,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+num _normalizeStepValue(num value) {
+  if (value is int) return value;
+  final rounded = value.roundToDouble();
+  return value == rounded ? value.toInt() : value;
+}
+
+class _AddSetBar extends StatefulWidget {
+  final WeightUnit initialUnit;
+  final void Function(num weight, WeightUnit unit, int reps) onAddSet;
+  final void Function(WeightUnit unit) onUnitChanged;
+
+  const _AddSetBar({
+    super.key,
+    required this.initialUnit,
+    required this.onAddSet,
+    required this.onUnitChanged,
+  });
+
+  @override
+  State<_AddSetBar> createState() => _AddSetBarState();
+}
+
+class _AddSetBarState extends State<_AddSetBar> {
+  late WeightUnit _unit;
+  num _weight = 0;
+  int _reps = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _unit = widget.initialUnit;
+  }
+
+  num get _weightStep => _unit == WeightUnit.kg ? 2.5 : 5;
+
+  void _setUnit(WeightUnit unit) {
+    setState(() => _unit = unit);
+    widget.onUnitChanged(unit);
+  }
+
+  void _submit() {
+    if (_reps <= 0) return;
+    widget.onAddSet(_weight, _unit, _reps);
+    setState(() {
+      _weight = 0;
+      _reps = 0;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      key: const ValueKey('add-set-bar'),
+      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _NumberStepper(
+                  keyPrefix: 'weight-stepper',
+                  value: _weight,
+                  step: _weightStep,
+                  allowNegative: true,
+                  onChanged: (value) => setState(() => _weight = value),
+                ),
+                const SizedBox(width: 8),
+                ChoiceChip(
+                  key: const ValueKey('unit-kg'),
+                  label: const Text('kg'),
+                  showCheckmark: false,
+                  selected: _unit == WeightUnit.kg,
+                  onSelected: (_) => _setUnit(WeightUnit.kg),
+                ),
+                const SizedBox(width: 8),
+                ChoiceChip(
+                  key: const ValueKey('unit-lbs'),
+                  label: const Text('lbs'),
+                  showCheckmark: false,
+                  selected: _unit == WeightUnit.lbs,
+                  onSelected: (_) => _setUnit(WeightUnit.lbs),
+                ),
+                const SizedBox(width: 8),
+                _NumberStepper(
+                  keyPrefix: 'reps-stepper',
+                  value: _reps,
+                  step: 1,
+                  onChanged: (value) =>
+                      setState(() => _reps = value.toInt()),
                 ),
               ],
             ),
           ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              key: const ValueKey('add-set'),
+              onPressed: _reps > 0 ? _submit : null,
+              child: const Text('Add Set'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NumberStepper extends StatelessWidget {
+  final String keyPrefix;
+  final num value;
+  final num step;
+  final bool allowNegative;
+  final void Function(num value) onChanged;
+
+  const _NumberStepper({
+    required this.keyPrefix,
+    required this.value,
+    required this.step,
+    this.allowNegative = false,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          key: ValueKey('$keyPrefix-decrement'),
+          icon: const Icon(Icons.remove),
+          onPressed: (allowNegative || value > 0)
+              ? () => onChanged(_normalizeStepValue(value - step))
+              : null,
+        ),
+        SizedBox(
+          width: 40,
+          child: Text(
+            '${_normalizeStepValue(value)}',
+            key: ValueKey('$keyPrefix-value'),
+            textAlign: TextAlign.center,
+          ),
+        ),
+        IconButton(
+          key: ValueKey('$keyPrefix-increment'),
+          icon: const Icon(Icons.add),
+          onPressed: () => onChanged(_normalizeStepValue(value + step)),
+        ),
       ],
     );
   }
