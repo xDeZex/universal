@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../repositories/workout_repository.dart';
 import 'active_workout_screen.dart';
 import 'manage_exercises_screen.dart';
+import 'navigation_helpers.dart';
 import 'past_workouts_screen.dart';
 
 class WorkoutHomeScreen extends StatelessWidget {
@@ -27,41 +28,26 @@ class WorkoutHomeScreen extends StatelessWidget {
   }
 
   void _openPastWorkouts(BuildContext context) {
-    final repo = context.read<WorkoutRepository>();
-    Navigator.push<void>(
+    pushWithRepository(
       context,
-      MaterialPageRoute(
-        builder: (context) => ChangeNotifierProvider<WorkoutRepository>.value(
-          value: repo,
-          child: const PastWorkoutsScreen(),
-        ),
-      ),
+      context.read<WorkoutRepository>(),
+      (context) => const PastWorkoutsScreen(),
     );
   }
 
   void _openManageExercises(BuildContext context) {
-    final repo = context.read<WorkoutRepository>();
-    Navigator.push<void>(
+    pushWithRepository(
       context,
-      MaterialPageRoute(
-        builder: (context) => ChangeNotifierProvider<WorkoutRepository>.value(
-          value: repo,
-          child: const ManageExercisesScreen(),
-        ),
-      ),
+      context.read<WorkoutRepository>(),
+      (context) => const ManageExercisesScreen(),
     );
   }
 
   void _openActiveWorkout(BuildContext context, String workoutId) {
-    final repo = context.read<WorkoutRepository>();
-    Navigator.push<void>(
+    pushWithRepository(
       context,
-      MaterialPageRoute(
-        builder: (context) => ChangeNotifierProvider<WorkoutRepository>.value(
-          value: repo,
-          child: ActiveWorkoutScreen(workoutId: workoutId),
-        ),
-      ),
+      context.read<WorkoutRepository>(),
+      (context) => ActiveWorkoutScreen(workoutId: workoutId),
     );
   }
 

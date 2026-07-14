@@ -5,6 +5,7 @@ import '../models/exercise.dart';
 import '../models/workout.dart';
 import '../repositories/workout_repository.dart';
 import 'active_workout_screen.dart';
+import 'navigation_helpers.dart';
 
 class PastWorkoutsScreen extends StatelessWidget {
   const PastWorkoutsScreen({super.key});
@@ -44,15 +45,10 @@ class PastWorkoutsScreen extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  onTap: () => Navigator.push<void>(
+                  onTap: () => pushWithRepository(
                     context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          ChangeNotifierProvider<WorkoutRepository>.value(
-                            value: repo,
-                            child: ActiveWorkoutScreen(workoutId: workout.id),
-                          ),
-                    ),
+                    repo,
+                    (context) => ActiveWorkoutScreen(workoutId: workout.id),
                   ),
                 );
               }).toList(),
