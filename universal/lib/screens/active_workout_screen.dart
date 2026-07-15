@@ -6,6 +6,7 @@ import '../models/workout.dart';
 import '../repositories/workout_repository.dart';
 import '../widgets/add_set_bar.dart';
 import '../widgets/exercise_entry_tile.dart';
+import 'active_workout_controller.dart';
 
 class ActiveWorkoutScreen extends StatefulWidget {
   final String workoutId;
@@ -18,99 +19,33 @@ class ActiveWorkoutScreen extends StatefulWidget {
 
 class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
   final TextEditingController _nameController = TextEditingController();
-  String? _selectedEntryId;
-  final Map<String, WeightUnit> _entryUnits = {};
+  late final ActiveWorkoutController _controller;
   bool _isLeaving = false;
 
   @override
+  void initState() {
+    super.initState();
+    _controller = ActiveWorkoutController(
+      repository: context.read<WorkoutRepository>(),
+      workoutId: widget.workoutId,
+    )..addListener(_onControllerChanged);
+  }
+
+  void _onControllerChanged() => setState(() {});
+
+  @override
   void dispose() {
+    _controller.removeListener(_onControllerChanged);
+    _controller.dispose();
     _nameController.dispose();
     super.dispose();
   }
 
-  WorkoutRepository get _repo => context.read<WorkoutRepository>();
-
-  Workout? _findWorkout(WorkoutRepository repo) {
-    for (final workout in repo.workouts) {
-      if (workout.id == widget.workoutId) return workout;
-    }
-    return null;
-  }
-
   void _addExerciseEntry() {
-    final name = _nameController.text.trim();
-    final entry = _repo.addExerciseEntry(widget.workoutId, name);
-
+    final entry = _controller.addExerciseEntry(_nameController.text.trim());
     if (entry != null) {
-      setState(() {
-        _selectedEntryId = entry.id;
-      });
       _nameController.clear();
     }
-  }
-
-  void _addSet(String entryId, num weight, WeightUnit unit, int reps) {
-    _repo.addSet(
-      workoutId: widget.workoutId,
-      entryId: entryId,
-      weight: weight,
-      unit: unit,
-      reps: reps,
-    );
-    setState(() {
-      _entryUnits[entryId] = unit;
-    });
-  }
-
-  WeightUnit _unitFor(String entryId) => _entryUnits[entryId] ?? WeightUnit.kg;
-
-  void _setEntryUnit(String entryId, WeightUnit unit) {
-    setState(() {
-      _entryUnits[entryId] = unit;
-    });
-  }
-
-  void _editSet(
-    String entryId,
-    String setId,
-    num weight,
-    WeightUnit unit,
-    int reps,
-  ) {
-    _repo.editSet(
-      workoutId: widget.workoutId,
-      entryId: entryId,
-      setId: setId,
-      weight: weight,
-      unit: unit,
-      reps: reps,
-    );
-    setState(() {
-      _entryUnits[entryId] = unit;
-    });
-  }
-
-  void _deleteSet(String entryId, String setId) {
-    _repo.deleteSet(
-      workoutId: widget.workoutId,
-      entryId: entryId,
-      setId: setId,
-    );
-  }
-
-  void _deleteExerciseEntry(String entryId) {
-    _repo.deleteExerciseEntry(workoutId: widget.workoutId, entryId: entryId);
-    if (_selectedEntryId == entryId) {
-      setState(() {
-        _selectedEntryId = null;
-      });
-    }
-  }
-
-  void _selectEntry(String entryId) {
-    setState(() {
-      _selectedEntryId = entryId;
-    });
   }
 
   List<Widget> _buildEntryRows(Workout workout, List<Exercise> exercises) {
@@ -123,13 +58,21 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
           key: ValueKey(entry.id),
           entry: entry,
           exerciseName: Exercise.nameFor(entry.exerciseId, exercises),
-          locked: !_canAddNew(workout),
-          selected: _canAddNew(workout) && entry.id == _selectedEntryId,
-          onSelect: () => _selectEntry(entry.id),
-          onEditSet: (setId, weight, unit, reps) =>
-              _editSet(entry.id, setId, weight, unit, reps),
-          onDeleteSet: (setId) => _deleteSet(entry.id, setId),
-          onDeleteEntry: () => _deleteExerciseEntry(entry.id),
+          locked: !_controller.canAddNew(workout),
+          selected:
+              _controller.canAddNew(workout) &&
+              entry.id == _controller.selectedEntryId,
+          onSelect: () => _controller.selectEntry(entry.id),
+          onEditSet: (setId, weight, unit, reps) => _controller.editSet(
+            entryId: entry.id,
+            setId: setId,
+            weight: weight,
+            unit: unit,
+            reps: reps,
+          ),
+          onDeleteSet: (setId) =>
+              _controller.deleteSet(entryId: entry.id, setId: setId),
+          onDeleteEntry: () => _controller.deleteExerciseEntry(entry.id),
         ),
       );
       if (i != entries.length - 1) {
@@ -139,20 +82,15 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
     return rows;
   }
 
-  bool _hasLoggedSets(Workout workout) =>
-      workout.exerciseEntries.any((entry) => entry.sets.isNotEmpty);
-
-  bool _canAddNew(Workout workout) => workout.isInProgress;
-
   String _appBarTitle(BuildContext context, Workout workout) {
-    if (_canAddNew(workout)) return 'Active Workout';
+    if (_controller.canAddNew(workout)) return 'Active Workout';
     return MaterialLocalizations.of(context).formatShortDate(workout.endTime!);
   }
 
   @override
   Widget build(BuildContext context) {
     final repo = context.watch<WorkoutRepository>();
-    final workout = _findWorkout(repo);
+    final workout = _controller.workout;
     if (workout == null) {
       if (!_isLeaving) {
         _isLeaving = true;
@@ -163,7 +101,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
       return const SizedBox.shrink();
     }
     final exercises = repo.exercises;
-    final canAddNew = _canAddNew(workout);
+    final canAddNew = _controller.canAddNew(workout);
 
     return Scaffold(
       appBar: AppBar(title: Text(_appBarTitle(context, workout))),
@@ -194,13 +132,20 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
             Expanded(
               child: ListView(children: _buildEntryRows(workout, exercises)),
             ),
-            if (canAddNew && _selectedEntryId != null) ...[
+            if (canAddNew && _controller.selectedEntryId != null) ...[
               AddSetBar(
-                key: ValueKey(_selectedEntryId),
-                initialUnit: _unitFor(_selectedEntryId!),
-                onAddSet: (weight, unit, reps) =>
-                    _addSet(_selectedEntryId!, weight, unit, reps),
-                onUnitChanged: (unit) => _setEntryUnit(_selectedEntryId!, unit),
+                key: ValueKey(_controller.selectedEntryId),
+                initialUnit: _controller.unitFor(_controller.selectedEntryId!),
+                onAddSet: (weight, unit, reps) => _controller.addSet(
+                  entryId: _controller.selectedEntryId!,
+                  weight: weight,
+                  unit: unit,
+                  reps: reps,
+                ),
+                onUnitChanged: (unit) => _controller.setEntryUnit(
+                  _controller.selectedEntryId!,
+                  unit,
+                ),
               ),
               const Divider(height: 1),
             ],
@@ -212,7 +157,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                     Expanded(
                       child: TextButton(
                         key: const ValueKey('discard-workout'),
-                        onPressed: () => _discard(workout),
+                        onPressed: _discard,
                         child: const Text('Discard'),
                       ),
                     ),
@@ -220,8 +165,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                     Expanded(
                       child: ElevatedButton(
                         key: const ValueKey('finish-workout'),
-                        onPressed: _hasLoggedSets(workout)
-                            ? () => _finish(workout)
+                        onPressed: _controller.hasLoggedSets(workout)
+                            ? _finish
                             : null,
                         child: const Text('Finish'),
                       ),
@@ -235,16 +180,15 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
     );
   }
 
-  void _finish(Workout workout) {
-    if (!_hasLoggedSets(workout)) return;
+  void _finish() {
     _isLeaving = true;
-    _repo.finishWorkout(widget.workoutId);
+    _controller.finish();
     Navigator.pop(context);
   }
 
-  void _discard(Workout workout) {
+  void _discard() {
     _isLeaving = true;
-    _repo.discardWorkout(workout.id);
+    _controller.discard();
     Navigator.pop(context);
   }
 }
