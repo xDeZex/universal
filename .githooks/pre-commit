@@ -30,8 +30,13 @@ fi
 staged_flutter=$(git diff --cached --name-only | grep -E '^universal/.*(\.dart$|pubspec\.(yaml|lock)$|analysis_options\.yaml$)')
 if [ -n "$staged_flutter" ]; then
   echo "Flutter files staged — running tests, analysis, and coverage checks..."
-  (cd universal && flutter test --concurrency=4 --reporter=compact --coverage) || exit 1
-  (cd universal && flutter analyze) || exit 1
+  # Git exports GIT_DIR/GIT_WORK_TREE/GIT_INDEX_FILE into a hook's
+  # environment, pointing at this repo. flutter's own git-based version
+  # detection doesn't clear them before shelling out to git, so it reads
+  # this repo's HEAD instead of ~/flutter's and corrupts the shared, global
+  # bin/cache/flutter.version.json with it — unset them before invoking it.
+  (cd universal && unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE && flutter test --concurrency=4 --reporter=compact --coverage) || exit 1
+  (cd universal && unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE && flutter analyze) || exit 1
 
   command -v diff-cover >/dev/null 2>&1 || {
     echo "ERROR: diff-cover not found. Install it with: pipx install diff-cover"
