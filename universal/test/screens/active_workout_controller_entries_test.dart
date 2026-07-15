@@ -5,24 +5,12 @@ import 'package:universal/models/workout.dart';
 import 'package:universal/repositories/workout_repository.dart';
 import 'package:universal/screens/active_workout_controller.dart';
 
+import 'active_workout_controller_test_helpers.dart';
+
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
   });
-
-  ActiveWorkoutController makeController({
-    required Workout workout,
-    List<Exercise> exercises = const [],
-  }) {
-    final repository = WorkoutRepository(
-      initialWorkouts: [workout],
-      initialExercises: exercises,
-    );
-    return ActiveWorkoutController(
-      repository: repository,
-      workoutId: workout.id,
-    );
-  }
 
   group('ActiveWorkoutController.workout', () {
     test('resolves the Workout matching workoutId from the repository', () {

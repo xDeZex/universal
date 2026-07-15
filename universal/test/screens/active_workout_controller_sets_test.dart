@@ -1,28 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:universal/models/exercise.dart';
 import 'package:universal/models/workout.dart';
-import 'package:universal/repositories/workout_repository.dart';
-import 'package:universal/screens/active_workout_controller.dart';
+
+import 'active_workout_controller_test_helpers.dart';
 
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
   });
-
-  ActiveWorkoutController makeController({
-    required Workout workout,
-    List<Exercise> exercises = const [],
-  }) {
-    final repository = WorkoutRepository(
-      initialWorkouts: [workout],
-      initialExercises: exercises,
-    );
-    return ActiveWorkoutController(
-      repository: repository,
-      workoutId: workout.id,
-    );
-  }
 
   group('ActiveWorkoutController unit stickiness', () {
     test('unitFor defaults to kg for an Entry with no remembered unit', () {

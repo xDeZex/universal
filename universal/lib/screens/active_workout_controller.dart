@@ -99,8 +99,6 @@ class ActiveWorkoutController extends ChangeNotifier {
   }
 
   void finish() {
-    final current = workout;
-    if (current == null || !hasLoggedSets(current)) return;
     _repository.finishWorkout(workoutId);
   }
 
