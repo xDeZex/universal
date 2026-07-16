@@ -1,9 +1,9 @@
 ## 1. RepsTarget represents a fixed rep count or a min/max range
 
-- [ ] 1.1 `FixedReps` and `RangeReps` each round-trip through `toJson`/`fromJson`
-- [ ] 1.2 `RepsTarget.fromJson` throws on an unrecognized discriminator value
-- [ ] 1.3 Range validation returns no error for `min < max`
-- [ ] 1.4 Range validation returns an invalid-range error for `min >= max`
+- [x] 1.1 `FixedReps` and `RangeReps` each round-trip through `toJson`/`fromJson`
+- [x] 1.2 `RepsTarget.fromJson` throws on an unrecognized discriminator value
+- [x] 1.3 Range validation returns no error for `min < max`
+- [x] 1.4 Range validation returns an invalid-range error for `min >= max`
 
 ## 2. PlannedWeight bundles a value with its unit
 
