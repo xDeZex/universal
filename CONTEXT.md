@@ -84,7 +84,7 @@ _Avoid_: returning plain text, hardcoded version strings
 ### Gym
 
 **Workout**:
-One visit to the gym, start to finish — the top-level thing a user logs. Carries a start timestamp (set when the user starts it) and an end timestamp (set when the user finishes it, equal to its last logged Set's timestamp — not the moment Finish is pressed, see ADR-0016). In progress from creation until finished — no separate status field, just `endTime == null`; finishing requires at least one logged Set, since there'd otherwise be nothing to derive an end timestamp from (an empty in-progress Workout can only be abandoned via Discard). Only one Workout can be in progress at a time. Finishing a Workout makes it Locked (see below). When a Schedule is due, the app pre-creates a Workout with Exercise Entries and Sets pre-filled from the Routine's Planned Exercises, which the user then logs against (editing values as actually performed).
+One visit to the gym, start to finish — the top-level thing a user logs. Carries a start timestamp (set when the user starts it) and an end timestamp (set when the user finishes it, equal to its last logged Set's timestamp — not the moment Finish is pressed, see ADR-0016). In progress from creation until finished — no separate status field, just `endTime == null`; finishing requires at least one logged Set, since there'd otherwise be nothing to derive an end timestamp from (an empty in-progress Workout can only be abandoned via Discard). Only one Workout can be in progress at a time. Finishing a Workout makes it Locked (see below). Optionally carries a `routineId` linking back to the Routine it was started from (`null` for a Workout started without one) — set once at creation and never changed afterward, always resolvable since a Routine can never be hard-deleted (see below). Starting a Workout from a Routine — manually, or automatically when a Schedule is due — pre-fills its Exercise Entries from the Routine's Planned Exercises; no Sets are pre-created, only target rows the user logs against (editing values as actually performed) to turn into real Sets.
 _Avoid_: session, workout session (session is overloaded — HTTP/auth sessions, this CLI's own sessions)
 
 **Locked** (a Workout):
@@ -108,8 +108,8 @@ One performance of an Exercise Entry's Exercise at a given weight for a given re
 _Avoid_: rep (a rep is not tracked individually — it's a count on a Set)
 
 **Routine**:
-A named, reusable template (e.g. "Push Day") prescribing which Exercises to do and their target Sets/reps/weights — distinct from a Workout, which is the actual logged occurrence.
-_Avoid_: plan (kept as the general idea of planning, not a concrete noun), program (reserved for an ordered sequence of Routines over a time period), template
+A named, reusable template (e.g. "Push Day") prescribing which Exercises to do and their target Sets/reps/weights via an ordered list of Planned Exercises (which can be empty) — distinct from a Workout, which is the actual logged occurrence. Identified by a stable id with a unique (case-insensitive) name, mirroring Exercise's identity pattern (ADR-0015). Can be archived (`archivedAt`, nullable, reversible) but never hard-deleted — archiving is the only way to retire one — and an archived Routine is locked: no editing its Planned Exercises and no starting a new Workout from it, until unarchived.
+_Avoid_: plan (kept as the general idea of planning, not a concrete noun), program (reserved for an ordered sequence of Routines over a time period), template, delete (a Routine can only be archived, never removed outright)
 
 **Program**:
 An ordered sequence of Routines repeated over a specified time period (e.g. Push/Pull/Legs rotated across an 8-week block). Owns the Schedule that assigns Routines to occurrences — a Routine is never scheduled standalone.
@@ -120,7 +120,7 @@ The recurrence rule on a Program that determines when each Routine comes up next
 _Avoid_: recurrence (kept as the general concept; Schedule is the concrete noun for a Program's rule)
 
 **Planned Exercise**:
-The planned counterpart to an Exercise Entry — an Exercise prescribed within a Routine along with its target sets/reps/weights, before any Workout logs it. References the Exercise by id, so renaming the Exercise later doesn't orphan the reference.
+The planned counterpart to an Exercise Entry — an Exercise prescribed within a Routine along with its target sets/reps/weights, before any Workout logs it. Identified by its own stable id and references the Exercise by id, so renaming the Exercise later doesn't orphan the reference; the same Exercise can appear in more than one Planned Exercise within a Routine. Holds an ordered list of planned rows — row count *is* the target sets count, there's no separate count field — where each row's reps is a fixed integer or a min/max range, and weight is a fixed value only, optional (a row can prescribe reps without a weight target).
 _Avoid_: exercise entry (reserved for the logged occurrence within an actual Workout)
 
 ## Example dialogue
