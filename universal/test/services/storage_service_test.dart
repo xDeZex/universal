@@ -209,6 +209,15 @@ void main() {
       expect(routines, isEmpty);
     });
 
+    test('loadRoutines handles corrupted JSON gracefully', () async {
+      SharedPreferences.setMockInitialValues({'routines': 'not valid json'});
+      storageService = StorageService();
+
+      final routines = await storageService.loadRoutines();
+
+      expect(routines, isEmpty);
+    });
+
     test('saveRoutines and loadRoutines round-trip works', () async {
       final routines = [
         Routine(id: 'routine-1', name: 'Push Day'),
