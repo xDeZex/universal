@@ -95,3 +95,42 @@ class PlannedExerciseRow {
     );
   }
 }
+
+class PlannedExercise {
+  final String id;
+  final String exerciseId;
+  final List<PlannedExerciseRow> rows;
+
+  const PlannedExercise({
+    required this.id,
+    required this.exerciseId,
+    this.rows = const [],
+  });
+
+  PlannedExercise copyWith({
+    String? exerciseId,
+    List<PlannedExerciseRow>? rows,
+  }) {
+    return PlannedExercise(
+      id: id,
+      exerciseId: exerciseId ?? this.exerciseId,
+      rows: rows ?? this.rows,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'exerciseId': exerciseId,
+    'rows': rows.map((row) => row.toJson()).toList(),
+  };
+
+  factory PlannedExercise.fromJson(Map<String, dynamic> json) {
+    return PlannedExercise(
+      id: json['id'] as String,
+      exerciseId: json['exerciseId'] as String,
+      rows: (json['rows'] as List)
+          .map((row) => PlannedExerciseRow.fromJson(row as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+}

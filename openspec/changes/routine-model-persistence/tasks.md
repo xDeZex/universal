@@ -18,9 +18,9 @@
 
 ## 4. PlannedExercise construction and serialization
 
-- [ ] 4.1 A PlannedExercise with nested rows round-trips through JSON
-- [ ] 4.2 `PlannedExercise.fromJson` throws on a map missing `id` or `exerciseId`
-- [ ] 4.3 A PlannedExercise with zero rows round-trips as a valid, non-error state
+- [x] 4.1 A PlannedExercise with nested rows round-trips through JSON
+- [x] 4.2 `PlannedExercise.fromJson` throws on a map missing `id` or `exerciseId`
+- [x] 4.3 A PlannedExercise with zero rows round-trips as a valid, non-error state
 
 ## 5. Routine construction, identity, and archive lifecycle
 
