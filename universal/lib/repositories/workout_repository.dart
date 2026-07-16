@@ -39,21 +39,16 @@ class WorkoutRepository extends ChangeNotifier {
 
   Routine? addRoutine(String name) {
     final trimmed = name.trim();
-    if (trimmed.isEmpty) return null;
-
-    final collides = routines.any(
-      (r) => r.name.toLowerCase() == trimmed.toLowerCase(),
-    );
-    if (collides) return null;
-
-    final routine = Routine(
+    final candidate = Routine(
       id: DateTime.now().microsecondsSinceEpoch.toString(),
       name: trimmed,
     );
-    _routines = [...routines, routine];
+    if (candidate.validateRename(trimmed, routines) != null) return null;
+
+    _routines = [...routines, candidate];
     _storage.saveRoutines(routines);
     notifyListeners();
-    return routine;
+    return candidate;
   }
 
   void startWorkout({String? routineId}) {

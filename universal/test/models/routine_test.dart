@@ -48,6 +48,12 @@ void main() {
       expect(() => Routine.fromJson(json), throwsA(anything));
     });
 
+    test('fromJson throws when plannedExercises key is missing', () {
+      final json = {'id': 'routine-1', 'name': 'Push Day'};
+
+      expect(() => Routine.fromJson(json), throwsA(anything));
+    });
+
     test('validateRename accepts a non-blank, non-colliding name', () {
       const routine = Routine(id: 'routine-1', name: 'Push Day');
       const existing = [routine, Routine(id: 'routine-2', name: 'Pull Day')];

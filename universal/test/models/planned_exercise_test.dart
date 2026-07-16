@@ -40,6 +40,12 @@ void main() {
       expect(() => PlannedExercise.fromJson(json), throwsA(anything));
     });
 
+    test('fromJson throws when rows key is missing', () {
+      final json = {'id': 'pe-1', 'exerciseId': 'ex-1'};
+
+      expect(() => PlannedExercise.fromJson(json), throwsA(anything));
+    });
+
     test('a PlannedExercise with zero rows round-trips as a valid, non-error state', () {
       const exercise = PlannedExercise(id: 'pe-1', exerciseId: 'ex-1');
 
