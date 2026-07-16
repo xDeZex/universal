@@ -41,9 +41,9 @@
 
 ## 7. Routines persist via StorageService under their own key
 
-- [ ] 7.1 `StorageService.loadRoutines` returns a previously saved Routine list, reconstructed from JSON
-- [ ] 7.2 `StorageService.loadRoutines` returns an empty list when nothing is stored
-- [ ] 7.3 `StorageService.saveRoutines` writes to a key distinct from Checklists, Workouts, and Exercises
+- [x] 7.1 `StorageService.loadRoutines` returns a previously saved Routine list, reconstructed from JSON
+- [x] 7.2 `StorageService.loadRoutines` returns an empty list when nothing is stored
+- [x] 7.3 `StorageService.saveRoutines` writes to a key distinct from Checklists, Workouts, and Exercises
 
 ## 8. WorkoutRepository loads and creates Routines
 
