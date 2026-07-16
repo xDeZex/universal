@@ -134,3 +134,81 @@ class PlannedExercise {
     );
   }
 }
+
+enum RoutineRenameError { blank, duplicate }
+
+/// Sentinel distinguishing "archivedAt not passed" from "archivedAt passed
+/// as null" in [Routine.copyWith], since the field must be explicitly
+/// clearable to unarchive a Routine.
+class _Unset {
+  const _Unset();
+}
+
+const _unset = _Unset();
+
+class Routine {
+  final String id;
+  final String name;
+  final List<PlannedExercise> plannedExercises;
+  final DateTime? archivedAt;
+
+  const Routine({
+    required this.id,
+    required this.name,
+    this.plannedExercises = const [],
+    this.archivedAt,
+  });
+
+  bool get isLocked => archivedAt != null;
+
+  RoutineRenameError? validateRename(String newName, List<Routine> existing) {
+    final trimmed = newName.trim();
+    if (trimmed.isEmpty) {
+      return RoutineRenameError.blank;
+    }
+
+    final collides = existing.any(
+      (r) => r.id != id && r.name.toLowerCase() == trimmed.toLowerCase(),
+    );
+    if (collides) {
+      return RoutineRenameError.duplicate;
+    }
+
+    return null;
+  }
+
+  Routine copyWith({
+    String? name,
+    List<PlannedExercise>? plannedExercises,
+    Object? archivedAt = _unset,
+  }) {
+    return Routine(
+      id: id,
+      name: name ?? this.name,
+      plannedExercises: plannedExercises ?? this.plannedExercises,
+      archivedAt: identical(archivedAt, _unset)
+          ? this.archivedAt
+          : archivedAt as DateTime?,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'plannedExercises': plannedExercises.map((pe) => pe.toJson()).toList(),
+    'archivedAt': archivedAt?.toIso8601String(),
+  };
+
+  factory Routine.fromJson(Map<String, dynamic> json) {
+    return Routine(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      plannedExercises: (json['plannedExercises'] as List)
+          .map((pe) => PlannedExercise.fromJson(pe as Map<String, dynamic>))
+          .toList(),
+      archivedAt: json['archivedAt'] == null
+          ? null
+          : DateTime.parse(json['archivedAt'] as String),
+    );
+  }
+}

@@ -24,13 +24,13 @@
 
 ## 5. Routine construction, identity, and archive lifecycle
 
-- [ ] 5.1 A Routine with nested PlannedExercises round-trips through JSON
-- [ ] 5.2 `Routine.fromJson` throws on a map missing `id` or `name`
-- [ ] 5.3 `validateRename` accepts a non-blank, non-colliding name
-- [ ] 5.4 `validateRename` rejects a blank name
-- [ ] 5.5 `validateRename` rejects a name colliding case-insensitively with another Routine, but not with the Routine's own current name
-- [ ] 5.6 Setting `archivedAt` via `copyWith` archives the Routine; clearing it unarchives
-- [ ] 5.7 An active Routine reports itself as not locked; an archived Routine reports itself as locked
+- [x] 5.1 A Routine with nested PlannedExercises round-trips through JSON
+- [x] 5.2 `Routine.fromJson` throws on a map missing `id` or `name`
+- [x] 5.3 `validateRename` accepts a non-blank, non-colliding name
+- [x] 5.4 `validateRename` rejects a blank name
+- [x] 5.5 `validateRename` rejects a name colliding case-insensitively with another Routine, but not with the Routine's own current name
+- [x] 5.6 Setting `archivedAt` via `copyWith` archives the Routine; clearing it unarchives
+- [x] 5.7 An active Routine reports itself as not locked; an archived Routine reports itself as locked
 
 ## 6. Workout gains a nullable, set-once routineId
 

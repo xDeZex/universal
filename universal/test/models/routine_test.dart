@@ -1,202 +1,133 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:universal/models/routine.dart';
-import 'package:universal/models/workout.dart';
 
 void main() {
-  group('RepsTarget', () {
-    test('FixedReps round-trips through toJson/fromJson', () {
-      const target = FixedReps(12);
-
-      final restored = RepsTarget.fromJson(target.toJson());
-
-      expect(restored, isA<FixedReps>());
-      expect((restored as FixedReps).reps, 12);
-    });
-
-    test('RangeReps round-trips through toJson/fromJson', () {
-      const target = RangeReps(min: 8, max: 12);
-
-      final restored = RepsTarget.fromJson(target.toJson());
-
-      expect(restored, isA<RangeReps>());
-      restored as RangeReps;
-      expect(restored.min, 8);
-      expect(restored.max, 12);
-    });
-
-    test('fromJson throws on an unrecognized discriminator value', () {
-      final json = {'type': 'unknown', 'reps': 12};
-
-      expect(() => RepsTarget.fromJson(json), throwsA(anything));
-    });
-  });
-
-  group('RangeReps.validate', () {
-    test('returns no error for min < max', () {
-      expect(RangeReps.validate(min: 8, max: 12), isNull);
-    });
-
-    test('returns an invalid-range error for min == max', () {
-      expect(
-        RangeReps.validate(min: 10, max: 10),
-        RangeRepsError.invalidRange,
-      );
-    });
-
-    test('returns an invalid-range error for min > max', () {
-      expect(
-        RangeReps.validate(min: 12, max: 8),
-        RangeRepsError.invalidRange,
-      );
-    });
-  });
-
-  group('PlannedWeight', () {
-    test('round-trips through toJson/fromJson', () {
-      const weight = PlannedWeight(value: 60, unit: WeightUnit.lbs);
-
-      final restored = PlannedWeight.fromJson(weight.toJson());
-
-      expect(restored.value, 60);
-      expect(restored.unit, WeightUnit.lbs);
-    });
-
-    test('fromJson throws when unit key is missing', () {
-      final json = {'value': 60};
-
-      expect(() => PlannedWeight.fromJson(json), throwsA(anything));
-    });
-  });
-
-  group('PlannedExerciseRow', () {
-    test('a row with FixedReps and weight: null round-trips through JSON', () {
-      const row = PlannedExerciseRow(reps: FixedReps(10), weight: null);
-
-      final restored = PlannedExerciseRow.fromJson(row.toJson());
-
-      expect(restored.reps, isA<FixedReps>());
-      expect((restored.reps as FixedReps).reps, 10);
-      expect(restored.weight, isNull);
-    });
-
-    test('a row with RangeReps and a non-null weight round-trips through JSON', () {
-      const row = PlannedExerciseRow(
-        reps: RangeReps(min: 8, max: 12),
-        weight: PlannedWeight(value: 60, unit: WeightUnit.kg),
-      );
-
-      final restored = PlannedExerciseRow.fromJson(row.toJson());
-
-      expect(restored.reps, isA<RangeReps>());
-      final restoredReps = restored.reps as RangeReps;
-      expect(restoredReps.min, 8);
-      expect(restoredReps.max, 12);
-      expect(restored.weight?.value, 60);
-      expect(restored.weight?.unit, WeightUnit.kg);
-    });
-
-    test('fromJson throws when reps key is missing', () {
-      final json = {'weight': null};
-
-      expect(() => PlannedExerciseRow.fromJson(json), throwsA(anything));
-    });
-
-    test('copyWith returns a new row with updated fields', () {
-      const row = PlannedExerciseRow(reps: FixedReps(10), weight: null);
-
-      final updated = row.copyWith(
-        reps: const RangeReps(min: 8, max: 12),
-        weight: const PlannedWeight(value: 60, unit: WeightUnit.kg),
-      );
-
-      expect(updated.reps, isA<RangeReps>());
-      expect(updated.weight?.value, 60);
-      expect(updated.weight?.unit, WeightUnit.kg);
-    });
-
-    test('copyWith with no arguments returns an identical row', () {
-      const row = PlannedExerciseRow(
-        reps: FixedReps(10),
-        weight: PlannedWeight(value: 60, unit: WeightUnit.kg),
-      );
-
-      final copy = row.copyWith();
-
-      expect(copy.reps, row.reps);
-      expect(copy.weight?.value, row.weight?.value);
-      expect(copy.weight?.unit, row.weight?.unit);
-    });
-  });
-
-  group('PlannedExercise', () {
-    test('a PlannedExercise with nested rows round-trips through JSON', () {
-      const exercise = PlannedExercise(
-        id: 'pe-1',
-        exerciseId: 'ex-1',
-        rows: [
-          PlannedExerciseRow(reps: FixedReps(10), weight: null),
-          PlannedExerciseRow(
-            reps: RangeReps(min: 8, max: 12),
-            weight: PlannedWeight(value: 60, unit: WeightUnit.kg),
-          ),
+  group('Routine', () {
+    test('a Routine with nested PlannedExercises round-trips through JSON', () {
+      const routine = Routine(
+        id: 'routine-1',
+        name: 'Push Day',
+        plannedExercises: [
+          PlannedExercise(id: 'pe-1', exerciseId: 'ex-1'),
+          PlannedExercise(id: 'pe-2', exerciseId: 'ex-2'),
         ],
       );
 
-      final restored = PlannedExercise.fromJson(exercise.toJson());
+      final restored = Routine.fromJson(routine.toJson());
 
-      expect(restored.id, 'pe-1');
-      expect(restored.exerciseId, 'ex-1');
-      expect(restored.rows.length, 2);
-      expect(restored.rows[0].reps, isA<FixedReps>());
-      expect(restored.rows[0].weight, isNull);
-      expect(restored.rows[1].reps, isA<RangeReps>());
-      expect(restored.rows[1].weight?.value, 60);
+      expect(restored.id, 'routine-1');
+      expect(restored.name, 'Push Day');
+      expect(restored.plannedExercises.length, 2);
+      expect(restored.plannedExercises[0].id, 'pe-1');
+      expect(restored.plannedExercises[1].id, 'pe-2');
+      expect(restored.archivedAt, isNull);
+    });
+
+    test('an archived Routine round-trips through JSON with archivedAt intact', () {
+      final archivedAt = DateTime(2026, 7, 10);
+      final routine = Routine(
+        id: 'routine-1',
+        name: 'Push Day',
+        archivedAt: archivedAt,
+      );
+
+      final restored = Routine.fromJson(routine.toJson());
+
+      expect(restored.archivedAt, archivedAt);
     });
 
     test('fromJson throws when id key is missing', () {
-      final json = {'exerciseId': 'ex-1', 'rows': []};
+      final json = {'name': 'Push Day', 'plannedExercises': []};
 
-      expect(() => PlannedExercise.fromJson(json), throwsA(anything));
+      expect(() => Routine.fromJson(json), throwsA(anything));
     });
 
-    test('fromJson throws when exerciseId key is missing', () {
-      final json = {'id': 'pe-1', 'rows': []};
+    test('fromJson throws when name key is missing', () {
+      final json = {'id': 'routine-1', 'plannedExercises': []};
 
-      expect(() => PlannedExercise.fromJson(json), throwsA(anything));
+      expect(() => Routine.fromJson(json), throwsA(anything));
     });
 
-    test('a PlannedExercise with zero rows round-trips as a valid, non-error state', () {
-      const exercise = PlannedExercise(id: 'pe-1', exerciseId: 'ex-1');
+    test('validateRename accepts a non-blank, non-colliding name', () {
+      const routine = Routine(id: 'routine-1', name: 'Push Day');
+      const existing = [routine, Routine(id: 'routine-2', name: 'Pull Day')];
 
-      final restored = PlannedExercise.fromJson(exercise.toJson());
-
-      expect(restored.rows, isEmpty);
+      expect(routine.validateRename('Leg Day', existing), isNull);
     });
 
-    test('copyWith returns a new PlannedExercise with updated fields', () {
-      const exercise = PlannedExercise(id: 'pe-1', exerciseId: 'ex-1');
-      const row = PlannedExerciseRow(reps: FixedReps(10));
+    test('validateRename rejects a blank name', () {
+      const routine = Routine(id: 'routine-1', name: 'Push Day');
+      const existing = [routine];
 
-      final updated = exercise.copyWith(exerciseId: 'ex-2', rows: [row]);
-
-      expect(updated.id, 'pe-1');
-      expect(updated.exerciseId, 'ex-2');
-      expect(updated.rows, [row]);
+      expect(
+        routine.validateRename('   ', existing),
+        RoutineRenameError.blank,
+      );
     });
 
-    test('copyWith with no arguments returns an identical PlannedExercise', () {
-      const row = PlannedExerciseRow(reps: FixedReps(10));
-      const exercise = PlannedExercise(
-        id: 'pe-1',
-        exerciseId: 'ex-1',
-        rows: [row],
+    test(
+      'validateRename rejects a name colliding case-insensitively with '
+      'another Routine, but not with the Routine\'s own current name',
+      () {
+        const routine = Routine(id: 'routine-1', name: 'Push Day');
+        const existing = [routine, Routine(id: 'routine-2', name: 'Pull Day')];
+
+        expect(
+          routine.validateRename('pull day', existing),
+          RoutineRenameError.duplicate,
+        );
+        expect(routine.validateRename('Push Day', existing), isNull);
+        expect(routine.validateRename('push day', existing), isNull);
+      },
+    );
+
+    test('setting archivedAt via copyWith archives the Routine', () {
+      const routine = Routine(id: 'routine-1', name: 'Push Day');
+      final archivedAt = DateTime(2026, 7, 10);
+
+      final archived = routine.copyWith(archivedAt: archivedAt);
+
+      expect(archived.archivedAt, archivedAt);
+    });
+
+    test('clearing archivedAt via copyWith unarchives the Routine', () {
+      final routine = Routine(
+        id: 'routine-1',
+        name: 'Push Day',
+        archivedAt: DateTime(2026, 7, 10),
       );
 
-      final copy = exercise.copyWith();
+      final unarchived = routine.copyWith(archivedAt: null);
 
-      expect(copy.id, exercise.id);
-      expect(copy.exerciseId, exercise.exerciseId);
-      expect(copy.rows, exercise.rows);
+      expect(unarchived.archivedAt, isNull);
+    });
+
+    test('copyWith with no archivedAt argument preserves the current value', () {
+      final routine = Routine(
+        id: 'routine-1',
+        name: 'Push Day',
+        archivedAt: DateTime(2026, 7, 10),
+      );
+
+      final copy = routine.copyWith(name: 'Push Day Updated');
+
+      expect(copy.archivedAt, routine.archivedAt);
+    });
+
+    test('an active Routine (archivedAt == null) reports itself as not locked', () {
+      const routine = Routine(id: 'routine-1', name: 'Push Day');
+
+      expect(routine.isLocked, isFalse);
+    });
+
+    test('an archived Routine (non-null archivedAt) reports itself as locked', () {
+      final routine = Routine(
+        id: 'routine-1',
+        name: 'Push Day',
+        archivedAt: DateTime(2026, 7, 10),
+      );
+
+      expect(routine.isLocked, isTrue);
     });
   });
 }
