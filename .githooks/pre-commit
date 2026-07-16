@@ -35,8 +35,27 @@ if [ -n "$staged_flutter" ]; then
   # detection doesn't clear them before shelling out to git, so it reads
   # this repo's HEAD instead of ~/flutter's and corrupts the shared, global
   # bin/cache/flutter.version.json with it — unset them before invoking it.
-  (cd universal && unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE && flutter test --concurrency=4 --reporter=compact --coverage) || exit 1
-  (cd universal && unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE && flutter analyze) || exit 1
+  #
+  # Both commands are captured to a shared log instead of printing straight
+  # to the terminal: `flutter test`/`analyze` re-print their full pub-get
+  # dependency resolution (every package, every run) plus, for test, a
+  # scrolling per-test line — none of it useful for a passing commit. Only
+  # dump the log when a command actually fails.
+  flutter_log=$(mktemp)
+  trap 'rm -f "$flutter_log"' EXIT INT TERM
+  run_flutter() {
+    label=$1
+    shift
+    if ! (cd universal && unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE && "$@") >"$flutter_log" 2>&1; then
+      cat "$flutter_log"
+      exit 1
+    fi
+    echo "$label"
+  }
+  run_flutter "flutter test: passed" flutter test --concurrency=4 --reporter=failures-only --coverage
+  run_flutter "flutter analyze: no issues found" flutter analyze
+  rm -f "$flutter_log"
+  trap - EXIT INT TERM
 
   command -v diff-cover >/dev/null 2>&1 || {
     echo "ERROR: diff-cover not found. Install it with: pipx install diff-cover"
@@ -102,14 +121,26 @@ PYEOF
   # don't stack) if a single commit touched both Dart and deploy/ files. The
   # trap is still set for the duration of the diff-cover call itself, to
   # cover the SIGINT/SIGTERM window, then cleared right after.
+  #
+  # diff-cover's own --quiet suppresses the --show-uncovered report
+  # unconditionally, including on failure, leaving nothing to act on — so
+  # the report is captured to a log and only dumped when the check fails,
+  # same as the flutter commands above.
   lcov_root=$(mktemp --suffix=.info)
+  diff_cover_log=$(mktemp)
   sed 's/^SF:/SF:universal\//' universal/coverage/lcov.info > "$lcov_root"
-  trap 'rm -f "$lcov_root"' EXIT INT TERM
+  trap 'rm -f "$lcov_root" "$diff_cover_log"' EXIT INT TERM
   diff-cover "$lcov_root" \
     --compare-branch=HEAD --ignore-unstaged \
-    --fail-under=100 --show-uncovered
+    --fail-under=100 --show-uncovered >"$diff_cover_log" 2>&1
   diff_cover_status=$?
   rm -f "$lcov_root"
+  if [ $diff_cover_status -eq 0 ]; then
+    echo "diff-cover: all changed lines covered"
+  else
+    cat "$diff_cover_log"
+  fi
+  rm -f "$diff_cover_log"
   trap - EXIT INT TERM
   [ $diff_cover_status -eq 0 ] || exit 1
 fi
