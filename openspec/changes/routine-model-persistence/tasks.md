@@ -47,8 +47,8 @@
 
 ## 8. WorkoutRepository loads and creates Routines
 
-- [ ] 8.1 `WorkoutRepository.load()` populates `routines` alongside `workouts` and `exercises`
-- [ ] 8.2 `addRoutine` with a unique name creates and returns a new active Routine with no Planned Exercises
-- [ ] 8.3 `addRoutine` with a blank name returns `null` and leaves the Routine list unchanged
-- [ ] 8.4 `addRoutine` with a name colliding case-insensitively with an existing Routine returns `null` and creates no second Routine
-- [ ] 8.5 A successful `addRoutine` call persists the updated Routine list via `StorageService` and calls `notifyListeners()`
+- [x] 8.1 `WorkoutRepository.load()` populates `routines` alongside `workouts` and `exercises`
+- [x] 8.2 `addRoutine` with a unique name creates and returns a new active Routine with no Planned Exercises
+- [x] 8.3 `addRoutine` with a blank name returns `null` and leaves the Routine list unchanged
+- [x] 8.4 `addRoutine` with a name colliding case-insensitively with an existing Routine returns `null` and creates no second Routine
+- [x] 8.5 A successful `addRoutine` call persists the updated Routine list via `StorageService` and calls `notifyListeners()`
