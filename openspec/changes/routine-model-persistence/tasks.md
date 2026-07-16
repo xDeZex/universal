@@ -7,14 +7,14 @@
 
 ## 2. PlannedWeight bundles a value with its unit
 
-- [ ] 2.1 `PlannedWeight` round-trips through `toJson`/`fromJson`
-- [ ] 2.2 `PlannedWeight.fromJson` throws on a map missing the `unit` key
+- [x] 2.1 `PlannedWeight` round-trips through `toJson`/`fromJson`
+- [x] 2.2 `PlannedWeight.fromJson` throws on a map missing the `unit` key
 
 ## 3. PlannedExerciseRow construction and serialization
 
-- [ ] 3.1 A row with `FixedReps` and `weight: null` round-trips through JSON
-- [ ] 3.2 A row with `RangeReps` and a non-null `weight` round-trips through JSON
-- [ ] 3.3 `PlannedExerciseRow.fromJson` throws on a map missing the `reps` key
+- [x] 3.1 A row with `FixedReps` and `weight: null` round-trips through JSON
+- [x] 3.2 A row with `RangeReps` and a non-null `weight` round-trips through JSON
+- [x] 3.3 `PlannedExerciseRow.fromJson` throws on a map missing the `reps` key
 
 ## 4. PlannedExercise construction and serialization
 
