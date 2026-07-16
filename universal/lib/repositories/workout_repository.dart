@@ -30,10 +30,11 @@ class WorkoutRepository extends ChangeNotifier {
     notifyListeners();
   }
 
-  void startWorkout() {
+  void startWorkout({String? routineId}) {
     final workout = Workout(
       id: DateTime.now().microsecondsSinceEpoch.toString(),
       startTime: DateTime.now(),
+      routineId: routineId,
     );
     _workouts = [...workouts, workout];
     _storage.saveWorkouts(workouts);

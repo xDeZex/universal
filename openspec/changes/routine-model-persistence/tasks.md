@@ -34,10 +34,10 @@
 
 ## 6. Workout gains a nullable, set-once routineId
 
-- [ ] 6.1 A Workout constructed with a `routineId` round-trips through JSON with that `routineId` intact
-- [ ] 6.2 A Workout constructed without a `routineId` has `routineId == null` and round-trips as `null`
-- [ ] 6.3 `Workout.copyWith` has no parameter that can change `routineId`
-- [ ] 6.4 `WorkoutRepository.startWorkout` accepts an optional `routineId` and sets it on the created Workout; omitting it defaults to `null`
+- [x] 6.1 A Workout constructed with a `routineId` round-trips through JSON with that `routineId` intact
+- [x] 6.2 A Workout constructed without a `routineId` has `routineId == null` and round-trips as `null`
+- [x] 6.3 `Workout.copyWith` has no parameter that can change `routineId`
+- [x] 6.4 `WorkoutRepository.startWorkout` accepts an optional `routineId` and sets it on the created Workout; omitting it defaults to `null`
 
 ## 7. Routines persist via StorageService under their own key
 
