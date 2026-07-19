@@ -89,6 +89,7 @@ class RoutineScreen extends StatelessWidget {
               ),
             ),
           PlannedExerciseAddField(
+            exercises: exercises,
             onAdd: (name) => repo.addPlannedExercise(routine.id, name),
           ),
           Expanded(

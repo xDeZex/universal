@@ -26,11 +26,11 @@
 
 ## 4. Add field shows an autocomplete dropdown
 
-- [ ] 4.1 Typing text with a case-insensitive substring match against an existing Exercise name shows a dropdown of matches, alphabetically ordered
-- [ ] 4.2 The dropdown never shows an "add as new" row
-- [ ] 4.3 Typing text with no matches hides the dropdown
-- [ ] 4.4 Tapping a suggestion fills the field with that Exercise's full name and does not submit
-- [ ] 4.5 A long list of matches scrolls within the dropdown rather than being capped
+- [x] 4.1 Typing text with a case-insensitive substring match against an existing Exercise name shows a dropdown of matches, alphabetically ordered
+- [x] 4.2 The dropdown never shows an "add as new" row
+- [x] 4.3 Typing text with no matches hides the dropdown
+- [x] 4.4 Tapping a suggestion fills the field with that Exercise's full name and does not submit
+- [x] 4.5 A long list of matches scrolls within the dropdown rather than being capped
 
 ## 5. User can remove a Planned Exercise
 
