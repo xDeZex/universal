@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../repositories/workout_repository.dart';
 import 'active_workout_screen.dart';
 import 'manage_exercises_screen.dart';
+import 'manage_routines_screen.dart';
 import 'navigation_helpers.dart';
 import 'past_workouts_screen.dart';
 
@@ -40,6 +41,14 @@ class WorkoutHomeScreen extends StatelessWidget {
       context,
       context.read<WorkoutRepository>(),
       (context) => const ManageExercisesScreen(),
+    );
+  }
+
+  void _openManageRoutines(BuildContext context) {
+    pushWithRepository(
+      context,
+      context.read<WorkoutRepository>(),
+      (context) => const ManageRoutinesScreen(),
     );
   }
 
@@ -82,6 +91,10 @@ class WorkoutHomeScreen extends StatelessWidget {
                       TextButton(
                         onPressed: () => _openManageExercises(context),
                         child: const Text('Manage Exercises'),
+                      ),
+                      TextButton(
+                        onPressed: () => _openManageRoutines(context),
+                        child: const Text('Manage Routines'),
                       ),
                     ],
                   ),

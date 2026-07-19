@@ -125,4 +125,100 @@ void main() {
       },
     );
   });
+
+  group('WorkoutRepository.renameRoutine', () {
+    test('with a unique name, renames the target Routine, persists the '
+        'updated list, and notifies listeners', () async {
+      final target = Routine(id: 'routine-1', name: 'Push Day');
+      final other = Routine(id: 'routine-2', name: 'Pull Day');
+      final repository = WorkoutRepository(
+        initialWorkouts: const [],
+        initialExercises: const [],
+        initialRoutines: [target, other],
+      );
+      var notified = false;
+      repository.addListener(() => notified = true);
+
+      repository.renameRoutine('routine-1', 'Upper Body');
+
+      expect(
+        repository.routines.firstWhere((r) => r.id == 'routine-1').name,
+        'Upper Body',
+      );
+      expect(notified, isTrue);
+
+      await Future<void>.delayed(Duration.zero);
+      final stored = await StorageService().loadRoutines();
+      expect(stored.firstWhere((r) => r.id == 'routine-1').name, 'Upper Body');
+    });
+
+    test(
+      'with a blank name, leaves the Routine list unchanged and persists nothing',
+      () async {
+        final target = Routine(id: 'routine-1', name: 'Push Day');
+        final repository = WorkoutRepository(
+          initialWorkouts: const [],
+          initialExercises: const [],
+          initialRoutines: [target],
+        );
+        await StorageService().saveRoutines([target]);
+        var notified = false;
+        repository.addListener(() => notified = true);
+
+        repository.renameRoutine('routine-1', '   ');
+
+        expect(
+          repository.routines.firstWhere((r) => r.id == 'routine-1').name,
+          'Push Day',
+        );
+        expect(notified, isFalse);
+
+        await Future<void>.delayed(Duration.zero);
+        final stored = await StorageService().loadRoutines();
+        expect(stored.firstWhere((r) => r.id == 'routine-1').name, 'Push Day');
+      },
+    );
+
+    test('with a name colliding case-insensitively with another Routine, '
+        'leaves the Routine list unchanged and persists nothing', () async {
+      final target = Routine(id: 'routine-1', name: 'Push Day');
+      final other = Routine(id: 'routine-2', name: 'Pull Day');
+      final repository = WorkoutRepository(
+        initialWorkouts: const [],
+        initialExercises: const [],
+        initialRoutines: [target, other],
+      );
+      await StorageService().saveRoutines([target, other]);
+      var notified = false;
+      repository.addListener(() => notified = true);
+
+      repository.renameRoutine('routine-1', 'pull day');
+
+      expect(
+        repository.routines.firstWhere((r) => r.id == 'routine-1').name,
+        'Push Day',
+      );
+      expect(notified, isFalse);
+
+      await Future<void>.delayed(Duration.zero);
+      final stored = await StorageService().loadRoutines();
+      expect(stored.firstWhere((r) => r.id == 'routine-1').name, 'Push Day');
+    });
+
+    test('is a no-op for a routineId that matches no Routine', () {
+      final target = Routine(id: 'routine-1', name: 'Push Day');
+      final repository = WorkoutRepository(
+        initialWorkouts: const [],
+        initialExercises: const [],
+        initialRoutines: [target],
+      );
+      var notified = false;
+      repository.addListener(() => notified = true);
+
+      repository.renameRoutine('missing-routine', 'Upper Body');
+
+      expect(repository.routines.single.name, 'Push Day');
+      expect(notified, isFalse);
+    });
+  });
 }
