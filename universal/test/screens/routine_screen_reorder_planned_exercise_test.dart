@@ -9,31 +9,37 @@ import 'package:universal/widgets/planned_exercise_card.dart';
 
 import 'routine_screen_test_helpers.dart';
 
-Future<void> _dragCardThroughOffsets(
-  WidgetTester tester,
-  Key cardKey,
-  List<double> totalDySegments,
-) async {
+Future<TestGesture> _startCardDrag(WidgetTester tester, Key cardKey) async {
   final gesture = await tester.startGesture(
     tester.getCenter(find.byKey(cardKey)),
   );
   await tester.pump(kLongPressTimeout + kPressTimeout);
+  return gesture;
+}
 
+Future<void> _moveDragBy(
+  WidgetTester tester,
+  TestGesture gesture,
+  double totalDy,
+) async {
   const stepsPerSegment = 10;
-  for (final totalDy in totalDySegments) {
-    final step = totalDy / stepsPerSegment;
-    for (var i = 0; i < stepsPerSegment; i++) {
-      await gesture.moveBy(Offset(0, step));
-      await tester.pump(const Duration(milliseconds: 16));
-    }
+  final step = totalDy / stepsPerSegment;
+  for (var i = 0; i < stepsPerSegment; i++) {
+    await gesture.moveBy(Offset(0, step));
+    await tester.pump(const Duration(milliseconds: 16));
   }
+}
 
+Future<void> _dropCard(WidgetTester tester, TestGesture gesture) async {
   await gesture.up();
   await tester.pumpAndSettle();
 }
 
-Future<void> _dragCard(WidgetTester tester, Key cardKey, double totalDy) =>
-    _dragCardThroughOffsets(tester, cardKey, [totalDy]);
+Future<void> _dragCard(WidgetTester tester, Key cardKey, double totalDy) async {
+  final gesture = await _startCardDrag(tester, cardKey);
+  await _moveDragBy(tester, gesture, totalDy);
+  await _dropCard(tester, gesture);
+}
 
 void main() {
   setUp(() {
@@ -124,10 +130,14 @@ void main() {
               .height;
           final downDy = cardHeight * 1.5;
 
-          await _dragCardThroughOffsets(tester, const ValueKey('pe-1'), [
-            downDy,
-            -downDy,
-          ]);
+          await _dragCard(tester, const ValueKey('pe-1'), downDy);
+
+          final afterFirstDrop = repository.routines.single.plannedExercises
+              .map((pe) => pe.id)
+              .toList();
+          expect(afterFirstDrop.first, isNot('pe-1'));
+
+          await _dragCard(tester, const ValueKey('pe-1'), -downDy);
 
           final order = repository.routines.single.plannedExercises
               .map((pe) => pe.id)
