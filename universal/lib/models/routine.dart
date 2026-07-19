@@ -1,3 +1,4 @@
+import 'unique_name.dart';
 import 'workout.dart';
 
 sealed class RepsTarget {
@@ -162,9 +163,13 @@ class Routine {
   bool get isLocked => archivedAt != null;
 
   RoutineRenameError? validateRename(String newName, List<Routine> existing) {
-    return Routine.validateNewName(
-      newName,
-      existing.where((r) => r.id != id).toList(),
+    return _toRenameError(
+      validateUniqueName<Routine>(
+        candidate: newName,
+        existing: existing,
+        nameOf: (r) => r.name,
+        excludeWhere: (r) => r.id == id,
+      ),
     );
   }
 
@@ -174,19 +179,21 @@ class Routine {
     String name,
     List<Routine> existing,
   ) {
-    final trimmed = name.trim();
-    if (trimmed.isEmpty) {
-      return RoutineRenameError.blank;
-    }
-
-    final collides = existing.any(
-      (r) => r.name.toLowerCase() == trimmed.toLowerCase(),
+    return _toRenameError(
+      validateUniqueName<Routine>(
+        candidate: name,
+        existing: existing,
+        nameOf: (r) => r.name,
+      ),
     );
-    if (collides) {
-      return RoutineRenameError.duplicate;
-    }
+  }
 
-    return null;
+  static RoutineRenameError? _toRenameError(UniqueNameError? error) {
+    return switch (error) {
+      UniqueNameError.blank => RoutineRenameError.blank,
+      UniqueNameError.duplicate => RoutineRenameError.duplicate,
+      null => null,
+    };
   }
 
   Routine copyWith({
