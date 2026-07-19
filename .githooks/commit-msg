@@ -1,0 +1,25 @@
+#!/bin/sh
+# Enforce commit title format: either an OpenSpec-style "[temporary]" tag
+# (see AGENTS.md — squashed before a PR) or Conventional Commits.
+commit_msg_file=$1
+title=$(head -n1 "$commit_msg_file")
+
+# Let git-generated merge commits through untouched.
+case "$title" in
+  "Merge "*) exit 0 ;;
+esac
+
+if echo "$title" | grep -q '\[temporary\]'; then
+  exit 0
+fi
+
+conventional_regex='^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([a-zA-Z0-9_./,-]+\))?!?: .+'
+if echo "$title" | grep -qE "$conventional_regex"; then
+  exit 0
+fi
+
+echo "ERROR: commit title must either contain [temporary] or follow Conventional Commits format."
+echo "  Title was: $title"
+echo "  Conventional Commits: <type>(<scope>)?: <description>, e.g. \"fix(auth): handle expired token\""
+echo "  Allowed types: feat fix docs style refactor perf test build ci chore revert"
+exit 1
