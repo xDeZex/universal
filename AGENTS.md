@@ -37,6 +37,7 @@ deploy/     # Kubernetes manifests synced by ArgoCD
 ## Git & Environment
 
 - After cloning, activate shared git hooks: `git config core.hooksPath .githooks`
+- Never run the git hooks manually (e.g. invoking `.githooks/pre-commit` directly). Just `git commit` and let them run automatically.
 
 ## Infrastructure Access
 
