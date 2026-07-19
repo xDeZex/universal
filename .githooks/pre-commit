@@ -18,7 +18,7 @@ if [ -n "$staged_code" ]; then
     head_lines=$(git show "HEAD:$f" 2>/dev/null | wc -l)
     if [ "$staged_lines" -gt "$size_limit" ] && [ "$staged_lines" -gt "$head_lines" ]; then
       echo "ERROR: $f is $staged_lines lines (limit $size_limit) and grew from $head_lines lines at HEAD."
-      echo "  Split the file, or commit with --no-verify if the growth is intentional."
+      echo "  Split the file, it must be smaller than $size_limit lines"
       exit 1
     fi
   done <<EOF
