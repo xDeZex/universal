@@ -138,6 +138,10 @@ class Workout {
     required WeightUnit unit,
     required int reps,
   }) {
+    if (reps <= 0) {
+      throw ArgumentError.value(reps, 'reps', 'Reps must be > 0');
+    }
+
     final newSet = ExerciseSet(
       id: DateTime.now().microsecondsSinceEpoch.toString(),
       weight: weight,
@@ -159,6 +163,10 @@ class Workout {
     required WeightUnit unit,
     required int reps,
   }) {
+    if (reps <= 0) {
+      throw ArgumentError.value(reps, 'reps', 'Reps must be > 0');
+    }
+
     return _withEntry(entryId, (entry) {
       if (!entry.sets.any((set) => set.id == setId)) {
         throw ArgumentError.value(setId, 'setId', 'No Set with this id');

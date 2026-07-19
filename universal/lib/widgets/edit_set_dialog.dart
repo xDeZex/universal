@@ -43,7 +43,6 @@ class _EditSetDialogState extends State<EditSetDialog> {
   }
 
   void _submit() {
-    if (_reps <= 0) return;
     Navigator.pop(
       context,
       EditSetSubmitted(weight: _weight, unit: _unit, reps: _reps),
