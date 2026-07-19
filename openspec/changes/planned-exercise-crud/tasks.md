@@ -12,10 +12,10 @@
 
 ## 2. Routine screen renders Planned Exercises as cards
 
-- [ ] 2.1 A Routine with no Planned Exercises shows the "No Planned Exercises yet" empty state (active and archived)
-- [ ] 2.2 A Routine with Planned Exercises renders each as a card, in stored order, instead of the empty state
-- [ ] 2.3 Each card header shows the referenced Exercise's current name (reflecting renames, not a stale copy)
-- [ ] 2.4 Each card's rows render as a simple read-only line per row (no tap interaction, no grouping)
+- [x] 2.1 A Routine with no Planned Exercises shows the "No Planned Exercises yet" empty state (active and archived)
+- [x] 2.2 A Routine with Planned Exercises renders each as a card, in stored order, instead of the empty state
+- [x] 2.3 Each card header shows the referenced Exercise's current name (reflecting renames, not a stale copy)
+- [x] 2.4 Each card's rows render as a simple read-only line per row (no tap interaction, no grouping)
 
 ## 3. User can add a Planned Exercise via the freeform field
 

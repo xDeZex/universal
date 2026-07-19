@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../models/exercise.dart';
 import '../models/routine.dart';
 import '../repositories/workout_repository.dart';
+import '../widgets/planned_exercise_card.dart';
 import '../widgets/routine_name_dialog.dart';
 
 class RoutineScreen extends StatelessWidget {
@@ -39,12 +41,25 @@ class RoutineScreen extends StatelessWidget {
     }
   }
 
+  Widget _buildList(List<PlannedExercise> plannedExercises, List<Exercise> exercises) {
+    return ListView.builder(
+      itemCount: plannedExercises.length,
+      itemBuilder: (context, index) {
+        final plannedExercise = plannedExercises[index];
+        return PlannedExerciseCard(
+          key: ValueKey(plannedExercise.id),
+          plannedExercise: plannedExercise,
+          exerciseName: Exercise.nameFor(plannedExercise.exerciseId, exercises),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final routine = context
-        .watch<WorkoutRepository>()
-        .routines
-        .firstWhere((r) => r.id == routineId);
+    final repo = context.watch<WorkoutRepository>();
+    final routine = repo.routines.firstWhere((r) => r.id == routineId);
+    final exercises = repo.exercises;
 
     return Scaffold(
       appBar: AppBar(
@@ -72,11 +87,13 @@ class RoutineScreen extends StatelessWidget {
                 'Archived — unarchive to edit Planned Exercises',
               ),
             ),
-          const Expanded(
-            child: Center(
-              key: ValueKey('routine-empty-state'),
-              child: Text('No Planned Exercises yet'),
-            ),
+          Expanded(
+            child: routine.plannedExercises.isEmpty
+                ? const Center(
+                    key: ValueKey('routine-empty-state'),
+                    child: Text('No Planned Exercises yet'),
+                  )
+                : _buildList(routine.plannedExercises, exercises),
           ),
         ],
       ),
