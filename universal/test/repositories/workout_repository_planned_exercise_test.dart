@@ -112,6 +112,30 @@ void main() {
       expect(stored.single.plannedExercises.map((pe) => pe.id), ['pe-1']);
     });
 
+    test('with a plannedExerciseId that matches no Planned Exercise, is a '
+        'no-op and persists nothing', () async {
+      final planned = PlannedExercise(id: 'pe-1', exerciseId: 'exercise-1');
+      final routine = Routine(
+        id: 'routine-1',
+        name: 'Push Day',
+        plannedExercises: [planned],
+      );
+      final repository = WorkoutRepository(
+        initialWorkouts: const [],
+        initialExercises: const [],
+        initialRoutines: [routine],
+      );
+      final wasNotified = trackNotifications(repository);
+
+      repository.removePlannedExercise('routine-1', 'missing-pe');
+
+      expect(
+        repository.routines.single.plannedExercises.map((pe) => pe.id),
+        ['pe-1'],
+      );
+      expect(wasNotified(), isFalse);
+    });
+
     test('on an archived Routine, leaves the Routine list unchanged and '
         'persists nothing', () async {
       final planned = PlannedExercise(id: 'pe-1', exerciseId: 'exercise-1');
@@ -172,6 +196,31 @@ void main() {
         stored.single.plannedExercises.map((pe) => pe.id),
         ['pe-2', 'pe-3', 'pe-1'],
       );
+    });
+
+    test('with an out-of-range oldIndex or newIndex, is a no-op and '
+        'persists nothing', () async {
+      final first = PlannedExercise(id: 'pe-1', exerciseId: 'exercise-1');
+      final second = PlannedExercise(id: 'pe-2', exerciseId: 'exercise-2');
+      final routine = Routine(
+        id: 'routine-1',
+        name: 'Push Day',
+        plannedExercises: [first, second],
+      );
+      final repository = WorkoutRepository(
+        initialWorkouts: const [],
+        initialExercises: const [],
+        initialRoutines: [routine],
+      );
+      final wasNotified = trackNotifications(repository);
+
+      repository.reorderPlannedExercises('routine-1', 0, 5);
+
+      expect(
+        repository.routines.single.plannedExercises.map((pe) => pe.id),
+        ['pe-1', 'pe-2'],
+      );
+      expect(wasNotified(), isFalse);
     });
 
     test('on an archived Routine, leaves the Routine list unchanged and '

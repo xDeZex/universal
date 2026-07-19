@@ -5,6 +5,8 @@ import '../models/routine.dart';
 import '../models/workout.dart';
 import '../services/storage_service.dart';
 
+part 'workout_repository_planned_exercises.dart';
+
 /// Owns the in-memory Workout, Exercise, and Routine lists, wrapping
 /// [StorageService] for load/save, mirroring the [ChangeNotifier] shape of
 /// `UpdateService`.
@@ -193,78 +195,6 @@ class WorkoutRepository extends ChangeNotifier {
     notifyListeners();
   }
 
-  PlannedExercise? addPlannedExercise(String routineId, String name) {
-    final index = routines.indexWhere((r) => r.id == routineId);
-    if (index == -1) return null;
-    if (routines[index].isLocked) return null;
-
-    final exercise = Exercise.resolve(name, exercises);
-    if (exercise == null) return null;
-
-    final isNewExercise = !exercises.any((e) => e.id == exercise.id);
-    final plannedExercise = PlannedExercise(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
-      exerciseId: exercise.id,
-    );
-
-    _routines = routines
-        .map(
-          (r) => r.id == routineId
-              ? r.copyWith(
-                  plannedExercises: [...r.plannedExercises, plannedExercise],
-                )
-              : r,
-        )
-        .toList();
-    _storage.saveRoutines(routines);
-    if (isNewExercise) {
-      _exercises = [...exercises, exercise];
-      _storage.saveExercises(exercises);
-    }
-    notifyListeners();
-    return plannedExercise;
-  }
-
-  void removePlannedExercise(String routineId, String plannedExerciseId) {
-    final index = routines.indexWhere((r) => r.id == routineId);
-    if (index == -1) return;
-    if (routines[index].isLocked) return;
-
-    _routines = routines
-        .map(
-          (r) => r.id == routineId
-              ? r.copyWith(
-                  plannedExercises: r.plannedExercises
-                      .where((pe) => pe.id != plannedExerciseId)
-                      .toList(),
-                )
-              : r,
-        )
-        .toList();
-    _storage.saveRoutines(routines);
-    notifyListeners();
-  }
-
-  void reorderPlannedExercises(String routineId, int oldIndex, int newIndex) {
-    final index = routines.indexWhere((r) => r.id == routineId);
-    if (index == -1) return;
-    if (routines[index].isLocked) return;
-
-    final reordered = routines[index].plannedExercises.toList();
-    final plannedExercise = reordered.removeAt(oldIndex);
-    reordered.insert(newIndex, plannedExercise);
-
-    _routines = routines
-        .map(
-          (r) => r.id == routineId
-              ? r.copyWith(plannedExercises: reordered)
-              : r,
-        )
-        .toList();
-    _storage.saveRoutines(routines);
-    notifyListeners();
-  }
-
   void renameExercise(String exerciseId, String newName) {
     final index = exercises.indexWhere((e) => e.id == exerciseId);
     if (index == -1) return;
@@ -276,6 +206,11 @@ class WorkoutRepository extends ChangeNotifier {
     _storage.saveExercises(exercises);
     notifyListeners();
   }
+
+  /// Forwards to the `@protected` [notifyListeners] so the Planned Exercise
+  /// mutators — split into a part file to keep this file under the repo's
+  /// line-count limit — can trigger a notification.
+  void _notifyPlannedExercisesChanged() => notifyListeners();
 
   /// Replaces the Workout matching [workoutId] via [_replaceWorkout] and
   /// notifies listeners only if a match was found.
