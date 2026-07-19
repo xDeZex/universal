@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../models/exercise.dart';
 import '../models/routine.dart';
 import '../repositories/workout_repository.dart';
+import '../widgets/planned_exercise_add_field.dart';
 import '../widgets/planned_exercise_card.dart';
 import '../widgets/routine_name_dialog.dart';
 
@@ -87,6 +88,9 @@ class RoutineScreen extends StatelessWidget {
                 'Archived — unarchive to edit Planned Exercises',
               ),
             ),
+          PlannedExerciseAddField(
+            onAdd: (name) => repo.addPlannedExercise(routine.id, name),
+          ),
           Expanded(
             child: routine.plannedExercises.isEmpty
                 ? const Center(

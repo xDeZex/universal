@@ -19,10 +19,10 @@
 
 ## 3. User can add a Planned Exercise via the freeform field
 
-- [ ] 3.1 Submitting a name matching an existing Exercise case-insensitively adds a Planned Exercise referencing that Exercise's id
-- [ ] 3.2 Submitting an unmatched name creates a new Exercise and adds a Planned Exercise referencing it
-- [ ] 3.3 Submitting a blank/whitespace-only name adds nothing
-- [ ] 3.4 New Planned Exercise appears at the end of the list, matching repository order
+- [x] 3.1 Submitting a name matching an existing Exercise case-insensitively adds a Planned Exercise referencing that Exercise's id
+- [x] 3.2 Submitting an unmatched name creates a new Exercise and adds a Planned Exercise referencing it
+- [x] 3.3 Submitting a blank/whitespace-only name adds nothing
+- [x] 3.4 New Planned Exercise appears at the end of the list, matching repository order
 
 ## 4. Add field shows an autocomplete dropdown
 
