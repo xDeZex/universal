@@ -47,8 +47,10 @@ class RoutineScreen extends StatelessWidget {
     Routine routine,
     List<Exercise> exercises,
   ) {
-    return ListView.builder(
+    return ReorderableListView.builder(
       itemCount: routine.plannedExercises.length,
+      onReorderItem: (oldIndex, newIndex) =>
+          repo.reorderPlannedExercises(routine.id, oldIndex, newIndex),
       itemBuilder: (context, index) {
         final plannedExercise = routine.plannedExercises[index];
         return PlannedExerciseCard(

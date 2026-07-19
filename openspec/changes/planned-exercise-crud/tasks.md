@@ -39,9 +39,9 @@
 
 ## 6. User can reorder Planned Exercises
 
-- [ ] 6.1 Long-press-dragging a card to a new position updates the Routine's Planned Exercise order and persists it
-- [ ] 6.2 Dropping a card back in its original position leaves the order unchanged
-- [ ] 6.3 Cards are keyed by Planned Exercise id (not list index) so reordering behaves correctly alongside add/remove
+- [x] 6.1 Long-press-dragging a card to a new position updates the Routine's Planned Exercise order and persists it
+- [x] 6.2 Dropping a card back in its original position leaves the order unchanged
+- [x] 6.3 Cards are keyed by Planned Exercise id (not list index) so reordering behaves correctly alongside add/remove
 
 ## 7. Planned Exercise editing is blocked while archived
 
