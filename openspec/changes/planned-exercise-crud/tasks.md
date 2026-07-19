@@ -1,14 +1,14 @@
 ## 1. Repository gains Planned Exercise mutators
 
-- [ ] 1.1 `WorkoutRepository.addPlannedExercise(routineId, name)` resolves the name via `Exercise.resolve`, appends a new Planned Exercise referencing the resolved Exercise's id, persists, and notifies listeners on an active Routine
-- [ ] 1.2 `addPlannedExercise` on an archived Routine leaves the Routine list unchanged and persists nothing
-- [ ] 1.3 `addPlannedExercise` persists the updated Routine list before the next frame
-- [ ] 1.4 `WorkoutRepository.removePlannedExercise(routineId, plannedExerciseId)` removes the matching Planned Exercise, persists, and notifies listeners on an active Routine
-- [ ] 1.5 `removePlannedExercise` on an archived Routine leaves the Routine list unchanged and persists nothing
-- [ ] 1.6 `removePlannedExercise` persists the updated Routine list before the next frame
-- [ ] 1.7 `WorkoutRepository.reorderPlannedExercises(routineId, oldIndex, newIndex)` reorders the list, persists, and notifies listeners on an active Routine
-- [ ] 1.8 `reorderPlannedExercises` on an archived Routine leaves the Routine list unchanged and persists nothing
-- [ ] 1.9 `reorderPlannedExercises` persists the updated Routine list before the next frame
+- [x] 1.1 `WorkoutRepository.addPlannedExercise(routineId, name)` resolves the name via `Exercise.resolve`, appends a new Planned Exercise referencing the resolved Exercise's id, persists, and notifies listeners on an active Routine
+- [x] 1.2 `addPlannedExercise` on an archived Routine leaves the Routine list unchanged and persists nothing
+- [x] 1.3 `addPlannedExercise` persists the updated Routine list before the next frame
+- [x] 1.4 `WorkoutRepository.removePlannedExercise(routineId, plannedExerciseId)` removes the matching Planned Exercise, persists, and notifies listeners on an active Routine
+- [x] 1.5 `removePlannedExercise` on an archived Routine leaves the Routine list unchanged and persists nothing
+- [x] 1.6 `removePlannedExercise` persists the updated Routine list before the next frame
+- [x] 1.7 `WorkoutRepository.reorderPlannedExercises(routineId, oldIndex, newIndex)` reorders the list, persists, and notifies listeners on an active Routine
+- [x] 1.8 `reorderPlannedExercises` on an archived Routine leaves the Routine list unchanged and persists nothing
+- [x] 1.9 `reorderPlannedExercises` persists the updated Routine list before the next frame
 
 ## 2. Routine screen renders Planned Exercises as cards
 
