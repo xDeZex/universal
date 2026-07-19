@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:universal/models/checklist.dart';
 import 'package:universal/models/exercise.dart';
+import 'package:universal/models/routine.dart';
 import 'package:universal/models/workout.dart';
 import 'package:universal/services/storage_service.dart';
 
@@ -196,6 +197,65 @@ void main() {
         final loadedWorkouts = await storageService.loadWorkouts();
         final loadedChecklists = await storageService.loadChecklists();
 
+        expect(loadedExercises.length, 1);
+        expect(loadedWorkouts.length, 1);
+        expect(loadedChecklists.length, 1);
+      },
+    );
+
+    test('loadRoutines returns empty list when no data', () async {
+      final routines = await storageService.loadRoutines();
+
+      expect(routines, isEmpty);
+    });
+
+    test('loadRoutines handles corrupted JSON gracefully', () async {
+      SharedPreferences.setMockInitialValues({'routines': 'not valid json'});
+      storageService = StorageService();
+
+      final routines = await storageService.loadRoutines();
+
+      expect(routines, isEmpty);
+    });
+
+    test('saveRoutines and loadRoutines round-trip works', () async {
+      final routines = [
+        Routine(id: 'routine-1', name: 'Push Day'),
+        Routine(id: 'routine-2', name: 'Pull Day'),
+      ];
+
+      await storageService.saveRoutines(routines);
+      final loaded = await storageService.loadRoutines();
+
+      expect(loaded.length, 2);
+      expect(loaded[0].id, 'routine-1');
+      expect(loaded[0].name, 'Push Day');
+      expect(loaded[1].id, 'routine-2');
+      expect(loaded[1].name, 'Pull Day');
+    });
+
+    test(
+      'saveRoutines writes under a key separate from checklists, workouts, '
+      'and exercises',
+      () async {
+        final routines = [Routine(id: 'routine-1', name: 'Push Day')];
+        final exercises = [Exercise(id: 'exercise-1', name: 'Bench Press')];
+        final workouts = [
+          Workout(id: 'workout-1', startTime: DateTime(2026, 1, 1)),
+        ];
+        final checklists = [Checklist(name: 'Groceries')];
+
+        await storageService.saveRoutines(routines);
+        await storageService.saveExercises(exercises);
+        await storageService.saveWorkouts(workouts);
+        await storageService.saveChecklists(checklists);
+
+        final loadedRoutines = await storageService.loadRoutines();
+        final loadedExercises = await storageService.loadExercises();
+        final loadedWorkouts = await storageService.loadWorkouts();
+        final loadedChecklists = await storageService.loadChecklists();
+
+        expect(loadedRoutines.length, 1);
         expect(loadedExercises.length, 1);
         expect(loadedWorkouts.length, 1);
         expect(loadedChecklists.length, 1);

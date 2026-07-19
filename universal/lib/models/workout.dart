@@ -93,12 +93,14 @@ class Workout {
   final String id;
   final DateTime startTime;
   final DateTime? endTime;
+  final String? routineId;
   final List<ExerciseEntry> exerciseEntries;
 
   const Workout({
     required this.id,
     required this.startTime,
     this.endTime,
+    this.routineId,
     this.exerciseEntries = const [],
   });
 
@@ -211,6 +213,7 @@ class Workout {
       id: id,
       startTime: startTime,
       endTime: endTime ?? this.endTime,
+      routineId: routineId,
       exerciseEntries: exerciseEntries ?? this.exerciseEntries,
     );
   }
@@ -220,6 +223,7 @@ class Workout {
       'id': id,
       'startTime': startTime.toIso8601String(),
       'endTime': endTime?.toIso8601String(),
+      'routineId': routineId,
       'exerciseEntries': exerciseEntries.map((e) => e.toJson()).toList(),
     };
   }
@@ -231,6 +235,7 @@ class Workout {
       endTime: json['endTime'] == null
           ? null
           : DateTime.parse(json['endTime'] as String),
+      routineId: json['routineId'] as String?,
       exerciseEntries: (json['exerciseEntries'] as List)
           .map((e) => ExerciseEntry.fromJson(e as Map<String, dynamic>))
           .toList(),

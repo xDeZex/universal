@@ -4,12 +4,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/checklist.dart';
 import '../models/exercise.dart';
+import '../models/routine.dart';
 import '../models/workout.dart';
 
 class StorageService {
   static const String _checklistsKey = 'checklists';
   static const String _workoutsKey = 'workouts';
   static const String _exercisesKey = 'exercises';
+  static const String _routinesKey = 'routines';
 
   Future<List<T>> _loadList<T>(
     String key,
@@ -57,4 +59,10 @@ class StorageService {
 
   Future<void> saveExercises(List<Exercise> exercises) =>
       _saveList(_exercisesKey, exercises, (e) => e.toJson());
+
+  Future<List<Routine>> loadRoutines() =>
+      _loadList(_routinesKey, Routine.fromJson);
+
+  Future<void> saveRoutines(List<Routine> routines) =>
+      _saveList(_routinesKey, routines, (r) => r.toJson());
 }

@@ -1,39 +1,61 @@
 import 'package:flutter/foundation.dart';
 
 import '../models/exercise.dart';
+import '../models/routine.dart';
 import '../models/workout.dart';
 import '../services/storage_service.dart';
 
-/// Owns the in-memory Workout and Exercise lists, wrapping [StorageService]
-/// for load/save, mirroring the [ChangeNotifier] shape of `UpdateService`.
+/// Owns the in-memory Workout, Exercise, and Routine lists, wrapping
+/// [StorageService] for load/save, mirroring the [ChangeNotifier] shape of
+/// `UpdateService`.
 class WorkoutRepository extends ChangeNotifier {
   WorkoutRepository({
     StorageService? storage,
     List<Workout>? initialWorkouts,
     List<Exercise>? initialExercises,
+    List<Routine>? initialRoutines,
   }) : _storage = storage ?? StorageService(),
        _workouts = initialWorkouts,
-       _exercises = initialExercises;
+       _exercises = initialExercises,
+       _routines = initialRoutines;
 
   final StorageService _storage;
   List<Workout>? _workouts;
   List<Exercise>? _exercises;
+  List<Routine>? _routines;
 
   List<Workout> get workouts => _workouts ?? [];
   List<Exercise> get exercises => _exercises ?? [];
+  List<Routine> get routines => _routines ?? [];
   bool get isLoaded => _workouts != null;
 
   Future<void> load() async {
     if (_workouts != null) return;
     _workouts = await _storage.loadWorkouts();
     _exercises = await _storage.loadExercises();
+    _routines = await _storage.loadRoutines();
     notifyListeners();
   }
 
-  void startWorkout() {
+  Routine? addRoutine(String name) {
+    final trimmed = name.trim();
+    final candidate = Routine(
+      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      name: trimmed,
+    );
+    if (candidate.validateRename(trimmed, routines) != null) return null;
+
+    _routines = [...routines, candidate];
+    _storage.saveRoutines(routines);
+    notifyListeners();
+    return candidate;
+  }
+
+  void startWorkout({String? routineId}) {
     final workout = Workout(
       id: DateTime.now().microsecondsSinceEpoch.toString(),
       startTime: DateTime.now(),
+      routineId: routineId,
     );
     _workouts = [...workouts, workout];
     _storage.saveWorkouts(workouts);
