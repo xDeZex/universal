@@ -34,8 +34,8 @@
 
 ## 5. User can remove a Planned Exercise
 
-- [ ] 5.1 Tapping a card's delete icon removes that Planned Exercise and its rows immediately, no confirmation dialog
-- [ ] 5.2 Deleting the only remaining Planned Exercise returns the screen to the empty state
+- [x] 5.1 Tapping a card's delete icon removes that Planned Exercise and its rows immediately, no confirmation dialog
+- [x] 5.2 Deleting the only remaining Planned Exercise returns the screen to the empty state
 
 ## 6. User can reorder Planned Exercises
 

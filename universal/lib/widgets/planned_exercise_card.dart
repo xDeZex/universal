@@ -5,11 +5,13 @@ import '../models/routine.dart';
 class PlannedExerciseCard extends StatelessWidget {
   final PlannedExercise plannedExercise;
   final String exerciseName;
+  final VoidCallback onDelete;
 
   const PlannedExerciseCard({
     super.key,
     required this.plannedExercise,
     required this.exerciseName,
+    required this.onDelete,
   });
 
   String _formatReps(RepsTarget reps) {
@@ -47,6 +49,13 @@ class PlannedExerciseCard extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                ),
+                IconButton(
+                  key: ValueKey(
+                    'delete-planned-exercise-${plannedExercise.id}',
+                  ),
+                  icon: const Icon(Icons.delete),
+                  onPressed: onDelete,
                 ),
               ],
             ),

@@ -42,15 +42,21 @@ class RoutineScreen extends StatelessWidget {
     }
   }
 
-  Widget _buildList(List<PlannedExercise> plannedExercises, List<Exercise> exercises) {
+  Widget _buildList(
+    WorkoutRepository repo,
+    Routine routine,
+    List<Exercise> exercises,
+  ) {
     return ListView.builder(
-      itemCount: plannedExercises.length,
+      itemCount: routine.plannedExercises.length,
       itemBuilder: (context, index) {
-        final plannedExercise = plannedExercises[index];
+        final plannedExercise = routine.plannedExercises[index];
         return PlannedExerciseCard(
           key: ValueKey(plannedExercise.id),
           plannedExercise: plannedExercise,
           exerciseName: Exercise.nameFor(plannedExercise.exerciseId, exercises),
+          onDelete: () =>
+              repo.removePlannedExercise(routine.id, plannedExercise.id),
         );
       },
     );
@@ -98,7 +104,7 @@ class RoutineScreen extends StatelessWidget {
                     key: ValueKey('routine-empty-state'),
                     child: Text('No Planned Exercises yet'),
                   )
-                : _buildList(routine.plannedExercises, exercises),
+                : _buildList(repo, routine, exercises),
           ),
         ],
       ),
