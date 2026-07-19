@@ -12,6 +12,10 @@ Never `git push` unless explicitly told to.
 
 Before running `/opsx:explore`, `/opsx:propose`, or `/opsx:apply` — or starting any other fresh implementation — create a new branch (`git checkout -b <name>`), then run `git fetch origin && git rebase origin/main` to ensure it is up to date with main. For continuing work on an existing branch, just rebase. Never explore, propose, or apply on `main`.
 
+### Background agents
+
+Background jobs in this repo must not auto-ship: after making code changes, stop once the work is committed locally in the worktree — do not `git push` and do not open a draft PR, even though the harness default for background jobs is to commit, push, and open a draft PR automatically. This overrides that default here. Leave the branch and worktree in place and report where the work is; the user will push and open the PR themselves. Otherwise, follow the existing instructions and conventions already documented in this file (research, branching, commit/squash, and review workflow above).
+
 ### Research
 
 Investigate questions against primary sources — prefer official docs, specs, and first-party APIs over source code — don't use any secondary write-ups of them. Follow every claim back to the source that owns it.
