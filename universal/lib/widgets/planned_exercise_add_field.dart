@@ -19,6 +19,7 @@ class PlannedExerciseAddField extends StatefulWidget {
 
 class _PlannedExerciseAddFieldState extends State<PlannedExerciseAddField> {
   final TextEditingController _controller = TextEditingController();
+  bool _suggestionsDismissed = false;
 
   @override
   void dispose() {
@@ -27,14 +28,16 @@ class _PlannedExerciseAddFieldState extends State<PlannedExerciseAddField> {
   }
 
   List<Exercise> get _suggestions {
+    if (_suggestionsDismissed) return const [];
     final query = _controller.text.trim().toLowerCase();
     if (query.isEmpty) return const [];
-    final matches = widget.exercises
-        .where((exercise) => exercise.name.toLowerCase().contains(query))
-        .toList()
-      ..sort(
-        (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
-      );
+    final matches =
+        widget.exercises
+            .where((exercise) => exercise.name.toLowerCase().contains(query))
+            .toList()
+          ..sort(
+            (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+          );
     return matches;
   }
 
@@ -51,6 +54,7 @@ class _PlannedExerciseAddFieldState extends State<PlannedExerciseAddField> {
       _controller.selection = TextSelection.collapsed(
         offset: exercise.name.length,
       );
+      _suggestionsDismissed = true;
     });
   }
 
@@ -69,7 +73,8 @@ class _PlannedExerciseAddFieldState extends State<PlannedExerciseAddField> {
                   key: const ValueKey('add-planned-exercise-field'),
                   controller: _controller,
                   decoration: const InputDecoration(hintText: 'Exercise name'),
-                  onChanged: (_) => setState(() {}),
+                  onChanged: (_) =>
+                      setState(() => _suggestionsDismissed = false),
                   onSubmitted: (_) => _submit(),
                 ),
               ),

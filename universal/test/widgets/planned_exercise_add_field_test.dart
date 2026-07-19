@@ -62,9 +62,7 @@ void main() {
       },
     );
 
-    testWidgets('the dropdown never shows an "add as new" row', (
-      tester,
-    ) async {
+    testWidgets('the dropdown never shows an "add as new" row', (tester) async {
       await pumpField(
         tester,
         exercises: [Exercise(id: 'ex-1', name: 'Bench Press')],
@@ -130,6 +128,10 @@ void main() {
         );
         expect(textField.controller!.text, 'Bench Press');
         expect(addCalls, 0);
+        expect(
+          find.byKey(const ValueKey('add-planned-exercise-suggestions')),
+          findsNothing,
+        );
       },
     );
 
@@ -139,8 +141,10 @@ void main() {
       (tester) async {
         final exercises = List.generate(
           20,
-          (i) =>
-              Exercise(id: 'ex-$i', name: 'Exercise ${String.fromCharCode(65 + i)}'),
+          (i) => Exercise(
+            id: 'ex-$i',
+            name: 'Exercise ${String.fromCharCode(65 + i)}',
+          ),
         );
         await pumpField(tester, exercises: exercises);
 
