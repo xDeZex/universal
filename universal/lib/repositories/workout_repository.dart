@@ -39,12 +39,12 @@ class WorkoutRepository extends ChangeNotifier {
 
   Routine? addRoutine(String name) {
     final trimmed = name.trim();
+    if (Routine.validateNewName(trimmed, routines) != null) return null;
+
     final candidate = Routine(
       id: DateTime.now().microsecondsSinceEpoch.toString(),
       name: trimmed,
     );
-    if (candidate.validateRename(trimmed, routines) != null) return null;
-
     _routines = [...routines, candidate];
     _storage.saveRoutines(routines);
     notifyListeners();
@@ -97,8 +97,12 @@ class WorkoutRepository extends ChangeNotifier {
   }) {
     _mutateWorkout(
       workoutId,
-      (workout) =>
-          workout.addSet(entryId: entryId, weight: weight, unit: unit, reps: reps),
+      (workout) => workout.addSet(
+        entryId: entryId,
+        weight: weight,
+        unit: unit,
+        reps: reps,
+      ),
     );
   }
 
@@ -159,6 +163,33 @@ class WorkoutRepository extends ChangeNotifier {
 
     _workouts = workouts.where((w) => w.id != workoutId).toList();
     _storage.saveWorkouts(workouts);
+    notifyListeners();
+  }
+
+  void renameRoutine(String routineId, String newName) {
+    final index = routines.indexWhere((r) => r.id == routineId);
+    if (index == -1) return;
+    if (routines[index].validateRename(newName, routines) != null) return;
+
+    _routines = routines
+        .map((r) => r.id == routineId ? r.copyWith(name: newName.trim()) : r)
+        .toList();
+    _storage.saveRoutines(routines);
+    notifyListeners();
+  }
+
+  void archiveRoutine(String routineId) =>
+      _setArchivedAt(routineId, DateTime.now());
+
+  void unarchiveRoutine(String routineId) => _setArchivedAt(routineId, null);
+
+  void _setArchivedAt(String routineId, DateTime? archivedAt) {
+    if (!routines.any((r) => r.id == routineId)) return;
+
+    _routines = routines
+        .map((r) => r.id == routineId ? r.copyWith(archivedAt: archivedAt) : r)
+        .toList();
+    _storage.saveRoutines(routines);
     notifyListeners();
   }
 

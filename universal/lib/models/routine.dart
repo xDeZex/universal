@@ -162,13 +162,25 @@ class Routine {
   bool get isLocked => archivedAt != null;
 
   RoutineRenameError? validateRename(String newName, List<Routine> existing) {
-    final trimmed = newName.trim();
+    return Routine.validateNewName(
+      newName,
+      existing.where((r) => r.id != id).toList(),
+    );
+  }
+
+  /// Validates a name for a not-yet-created Routine, with no id of its own
+  /// to exclude from the collision check.
+  static RoutineRenameError? validateNewName(
+    String name,
+    List<Routine> existing,
+  ) {
+    final trimmed = name.trim();
     if (trimmed.isEmpty) {
       return RoutineRenameError.blank;
     }
 
     final collides = existing.any(
-      (r) => r.id != id && r.name.toLowerCase() == trimmed.toLowerCase(),
+      (r) => r.name.toLowerCase() == trimmed.toLowerCase(),
     );
     if (collides) {
       return RoutineRenameError.duplicate;
