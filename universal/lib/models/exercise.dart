@@ -1,3 +1,5 @@
+import 'unique_name.dart';
+
 enum ExerciseRenameError { blank, duplicate }
 
 class Exercise {
@@ -33,19 +35,17 @@ class Exercise {
   }
 
   ExerciseRenameError? validateRename(String newName, List<Exercise> existing) {
-    final trimmed = newName.trim();
-    if (trimmed.isEmpty) {
-      return ExerciseRenameError.blank;
-    }
-
-    final collides = existing.any(
-      (e) => e.id != id && e.name.toLowerCase() == trimmed.toLowerCase(),
+    final error = validateUniqueName<Exercise>(
+      candidate: newName,
+      existing: existing,
+      nameOf: (e) => e.name,
+      excludeWhere: (e) => e.id == id,
     );
-    if (collides) {
-      return ExerciseRenameError.duplicate;
-    }
-
-    return null;
+    return switch (error) {
+      UniqueNameError.blank => ExerciseRenameError.blank,
+      UniqueNameError.duplicate => ExerciseRenameError.duplicate,
+      null => null,
+    };
   }
 
   static Exercise? resolve(String name, List<Exercise> existing) {
