@@ -31,7 +31,6 @@ class PlannedExerciseCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      key: ValueKey('planned-exercise-${plannedExercise.id}'),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
