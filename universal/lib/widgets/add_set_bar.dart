@@ -36,7 +36,6 @@ class _AddSetBarState extends State<AddSetBar> {
   }
 
   void _submit() {
-    if (_reps <= 0) return;
     widget.onAddSet(_weight, _unit, _reps);
     setState(() {
       _weight = 0;
