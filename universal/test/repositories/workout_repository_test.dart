@@ -5,6 +5,8 @@ import 'package:universal/models/workout.dart';
 import 'package:universal/repositories/workout_repository.dart';
 import 'package:universal/services/storage_service.dart';
 
+import 'workout_repository_test_helpers.dart';
+
 /// Returns fixed, storage-independent data so tests can prove a
 /// [WorkoutRepository] reads through *this* instance rather than a
 /// `StorageService()` it silently constructed itself.
@@ -42,12 +44,11 @@ void main() {
         expect(repository.workouts, isEmpty);
         expect(repository.exercises, isEmpty);
 
-        var notified = false;
-        repository.addListener(() => notified = true);
+        final wasNotified = trackNotifications(repository);
 
         await repository.load();
 
-        expect(notified, isTrue);
+        expect(wasNotified(), isTrue);
         expect(repository.workouts.map((w) => w.id), ['workout-1']);
         expect(repository.exercises.map((e) => e.name), ['Bench Press']);
       },
@@ -123,17 +124,15 @@ void main() {
         initialWorkouts: const [],
         initialExercises: const [],
       );
-      var notified = false;
-      repository.addListener(() => notified = true);
+      final wasNotified = trackNotifications(repository);
 
       repository.startWorkout();
 
       expect(repository.workouts.length, 1);
       expect(repository.workouts[0].isInProgress, isTrue);
-      expect(notified, isTrue);
+      expect(wasNotified(), isTrue);
 
-      await Future<void>.delayed(Duration.zero);
-      final stored = await StorageService().loadWorkouts();
+      final stored = await flushAndLoadWorkouts();
       expect(stored.length, 1);
       expect(stored[0].id, repository.workouts[0].id);
     });
@@ -147,8 +146,7 @@ void main() {
         initialWorkouts: [workout],
         initialExercises: const [],
       );
-      var notified = false;
-      repository.addListener(() => notified = true);
+      final wasNotified = trackNotifications(repository);
 
       repository.addExerciseEntry('workout-1', 'Bench Press');
 
@@ -158,14 +156,10 @@ void main() {
         updated.exerciseEntries.single.exerciseId,
         repository.exercises.single.id,
       );
-      expect(notified, isTrue);
+      expect(wasNotified(), isTrue);
 
-      await Future<void>.delayed(Duration.zero);
-      expect((await StorageService().loadExercises()).length, 1);
-      expect(
-        (await StorageService().loadWorkouts())[0].exerciseEntries.length,
-        1,
-      );
+      expect((await flushAndLoadExercises()).length, 1);
+      expect((await flushAndLoadWorkouts())[0].exerciseEntries.length, 1);
     });
 
     test('resolving an existing Exercise name (case-insensitive) reuses it '
@@ -192,13 +186,12 @@ void main() {
         initialWorkouts: const [],
         initialExercises: const [],
       );
-      var notified = false;
-      repository.addListener(() => notified = true);
+      final wasNotified = trackNotifications(repository);
 
       repository.addExerciseEntry('missing-workout', 'Bench Press');
 
       expect(repository.exercises, isEmpty);
-      expect(notified, isFalse);
+      expect(wasNotified(), isFalse);
     });
   });
 
@@ -215,8 +208,7 @@ void main() {
         initialWorkouts: [workout],
         initialExercises: const [],
       );
-      var notified = false;
-      repository.addListener(() => notified = true);
+      final wasNotified = trackNotifications(repository);
 
       repository.addSet(
         workoutId: 'workout-1',
@@ -228,10 +220,9 @@ void main() {
 
       final updated = repository.workouts.single;
       expect(updated.exerciseEntries.single.sets.single.weight, 60);
-      expect(notified, isTrue);
+      expect(wasNotified(), isTrue);
 
-      await Future<void>.delayed(Duration.zero);
-      final stored = await StorageService().loadWorkouts();
+      final stored = await flushAndLoadWorkouts();
       expect(stored[0].exerciseEntries[0].sets.single.weight, 60);
     });
 
@@ -240,8 +231,7 @@ void main() {
         initialWorkouts: const [],
         initialExercises: const [],
       );
-      var notified = false;
-      repository.addListener(() => notified = true);
+      final wasNotified = trackNotifications(repository);
 
       repository.addSet(
         workoutId: 'missing-workout',
@@ -251,7 +241,7 @@ void main() {
         reps: 5,
       );
 
-      expect(notified, isFalse);
+      expect(wasNotified(), isFalse);
     });
   });
 
@@ -280,8 +270,7 @@ void main() {
           initialWorkouts: [workout],
           initialExercises: const [],
         );
-        var notified = false;
-        repository.addListener(() => notified = true);
+        final wasNotified = trackNotifications(repository);
 
         repository.editSet(
           workoutId: 'workout-1',
@@ -296,10 +285,9 @@ void main() {
             repository.workouts.single.exerciseEntries.single.sets.single;
         expect(updatedSet.weight, 99);
         expect(updatedSet.reps, 3);
-        expect(notified, isTrue);
+        expect(wasNotified(), isTrue);
 
-        await Future<void>.delayed(Duration.zero);
-        final stored = await StorageService().loadWorkouts();
+        final stored = await flushAndLoadWorkouts();
         expect(stored[0].exerciseEntries[0].sets[0].weight, 99);
       },
     );
@@ -309,8 +297,7 @@ void main() {
         initialWorkouts: const [],
         initialExercises: const [],
       );
-      var notified = false;
-      repository.addListener(() => notified = true);
+      final wasNotified = trackNotifications(repository);
 
       repository.editSet(
         workoutId: 'missing-workout',
@@ -321,7 +308,7 @@ void main() {
         reps: 3,
       );
 
-      expect(notified, isFalse);
+      expect(wasNotified(), isFalse);
     });
   });
 
@@ -350,8 +337,7 @@ void main() {
           initialWorkouts: [workout],
           initialExercises: const [],
         );
-        var notified = false;
-        repository.addListener(() => notified = true);
+        final wasNotified = trackNotifications(repository);
 
         repository.deleteSet(
           workoutId: 'workout-1',
@@ -360,10 +346,9 @@ void main() {
         );
 
         expect(repository.workouts.single.exerciseEntries.single.sets, isEmpty);
-        expect(notified, isTrue);
+        expect(wasNotified(), isTrue);
 
-        await Future<void>.delayed(Duration.zero);
-        final stored = await StorageService().loadWorkouts();
+        final stored = await flushAndLoadWorkouts();
         expect(stored[0].exerciseEntries[0].sets, isEmpty);
       },
     );
@@ -373,8 +358,7 @@ void main() {
         initialWorkouts: const [],
         initialExercises: const [],
       );
-      var notified = false;
-      repository.addListener(() => notified = true);
+      final wasNotified = trackNotifications(repository);
 
       repository.deleteSet(
         workoutId: 'missing-workout',
@@ -382,7 +366,7 @@ void main() {
         setId: 'set-1',
       );
 
-      expect(notified, isFalse);
+      expect(wasNotified(), isFalse);
     });
   });
 
@@ -399,8 +383,7 @@ void main() {
         initialWorkouts: [workout],
         initialExercises: const [],
       );
-      var notified = false;
-      repository.addListener(() => notified = true);
+      final wasNotified = trackNotifications(repository);
 
       repository.deleteExerciseEntry(
         workoutId: 'workout-1',
@@ -408,10 +391,9 @@ void main() {
       );
 
       expect(repository.workouts.single.exerciseEntries, isEmpty);
-      expect(notified, isTrue);
+      expect(wasNotified(), isTrue);
 
-      await Future<void>.delayed(Duration.zero);
-      final stored = await StorageService().loadWorkouts();
+      final stored = await flushAndLoadWorkouts();
       expect(stored[0].exerciseEntries, isEmpty);
     });
 
@@ -420,15 +402,14 @@ void main() {
         initialWorkouts: const [],
         initialExercises: const [],
       );
-      var notified = false;
-      repository.addListener(() => notified = true);
+      final wasNotified = trackNotifications(repository);
 
       repository.deleteExerciseEntry(
         workoutId: 'missing-workout',
         entryId: 'entry-1',
       );
 
-      expect(notified, isFalse);
+      expect(wasNotified(), isFalse);
     });
   });
 
@@ -458,17 +439,15 @@ void main() {
           initialWorkouts: [workout],
           initialExercises: const [],
         );
-        var notified = false;
-        repository.addListener(() => notified = true);
+        final wasNotified = trackNotifications(repository);
 
         repository.finishWorkout('workout-1');
 
         expect(repository.workouts.single.isInProgress, isFalse);
         expect(repository.workouts.single.endTime, loggedAt);
-        expect(notified, isTrue);
+        expect(wasNotified(), isTrue);
 
-        await Future<void>.delayed(Duration.zero);
-        final stored = await StorageService().loadWorkouts();
+        final stored = await flushAndLoadWorkouts();
         expect(stored[0].isInProgress, isFalse);
       },
     );
@@ -484,13 +463,12 @@ void main() {
           initialWorkouts: [workout],
           initialExercises: const [],
         );
-        var notified = false;
-        repository.addListener(() => notified = true);
+        final wasNotified = trackNotifications(repository);
 
         repository.finishWorkout('workout-1');
 
         expect(repository.workouts.single.isInProgress, isTrue);
-        expect(notified, isFalse);
+        expect(wasNotified(), isFalse);
       },
     );
 
@@ -499,12 +477,11 @@ void main() {
         initialWorkouts: const [],
         initialExercises: const [],
       );
-      var notified = false;
-      repository.addListener(() => notified = true);
+      final wasNotified = trackNotifications(repository);
 
       repository.finishWorkout('missing-workout');
 
-      expect(notified, isFalse);
+      expect(wasNotified(), isFalse);
     });
   });
 
@@ -516,16 +493,14 @@ void main() {
         initialWorkouts: [workout],
         initialExercises: const [],
       );
-      var notified = false;
-      repository.addListener(() => notified = true);
+      final wasNotified = trackNotifications(repository);
 
       repository.discardWorkout('workout-1');
 
       expect(repository.workouts, isEmpty);
-      expect(notified, isTrue);
+      expect(wasNotified(), isTrue);
 
-      await Future<void>.delayed(Duration.zero);
-      final stored = await StorageService().loadWorkouts();
+      final stored = await flushAndLoadWorkouts();
       expect(stored, isEmpty);
     });
 
@@ -535,38 +510,33 @@ void main() {
         initialWorkouts: [workout],
         initialExercises: const [],
       );
-      var notified = false;
-      repository.addListener(() => notified = true);
+      final wasNotified = trackNotifications(repository);
 
       repository.discardWorkout('missing-workout');
 
       expect(repository.workouts.map((w) => w.id), ['workout-1']);
-      expect(notified, isFalse);
+      expect(wasNotified(), isFalse);
     });
 
-    test(
-      'is a no-op for a Workout that is already finished, leaving it '
-      'unchanged (discard is unavailable on a finished Workout)',
-      () {
-        final finished = Workout(
-          id: 'workout-1',
-          startTime: DateTime(2026, 1, 1, 9, 0),
-          endTime: DateTime(2026, 1, 1, 9, 30),
-        );
-        final repository = WorkoutRepository(
-          initialWorkouts: [finished],
-          initialExercises: const [],
-        );
-        var notified = false;
-        repository.addListener(() => notified = true);
+    test('is a no-op for a Workout that is already finished, leaving it '
+        'unchanged (discard is unavailable on a finished Workout)', () {
+      final finished = Workout(
+        id: 'workout-1',
+        startTime: DateTime(2026, 1, 1, 9, 0),
+        endTime: DateTime(2026, 1, 1, 9, 30),
+      );
+      final repository = WorkoutRepository(
+        initialWorkouts: [finished],
+        initialExercises: const [],
+      );
+      final wasNotified = trackNotifications(repository);
 
-        repository.discardWorkout('workout-1');
+      repository.discardWorkout('workout-1');
 
-        expect(repository.workouts.map((w) => w.id), ['workout-1']);
-        expect(repository.workouts.single.isInProgress, isFalse);
-        expect(notified, isFalse);
-      },
-    );
+      expect(repository.workouts.map((w) => w.id), ['workout-1']);
+      expect(repository.workouts.single.isInProgress, isFalse);
+      expect(wasNotified(), isFalse);
+    });
   });
 
   group('WorkoutRepository.renameExercise', () {
@@ -577,16 +547,14 @@ void main() {
         initialWorkouts: const [],
         initialExercises: [exercise],
       );
-      var notified = false;
-      repository.addListener(() => notified = true);
+      final wasNotified = trackNotifications(repository);
 
       repository.renameExercise('exercise-1', 'Incline Bench Press');
 
       expect(repository.exercises.single.name, 'Incline Bench Press');
-      expect(notified, isTrue);
+      expect(wasNotified(), isTrue);
 
-      await Future<void>.delayed(Duration.zero);
-      final stored = await StorageService().loadExercises();
+      final stored = await flushAndLoadExercises();
       expect(stored[0].name, 'Incline Bench Press');
     });
 
@@ -596,13 +564,12 @@ void main() {
         initialWorkouts: const [],
         initialExercises: [exercise],
       );
-      var notified = false;
-      repository.addListener(() => notified = true);
+      final wasNotified = trackNotifications(repository);
 
       repository.renameExercise('exercise-1', '   ');
 
       expect(repository.exercises.single.name, 'Bench Press');
-      expect(notified, isFalse);
+      expect(wasNotified(), isFalse);
     });
 
     test('rejects a name colliding with another Exercise, leaving both '
@@ -615,8 +582,7 @@ void main() {
         initialWorkouts: const [],
         initialExercises: exercises,
       );
-      var notified = false;
-      repository.addListener(() => notified = true);
+      final wasNotified = trackNotifications(repository);
 
       repository.renameExercise('exercise-2', 'bench press');
 
@@ -624,7 +590,7 @@ void main() {
         repository.exercises.firstWhere((e) => e.id == 'exercise-2').name,
         'Squat',
       );
-      expect(notified, isFalse);
+      expect(wasNotified(), isFalse);
     });
 
     test('is a no-op for an exerciseId that matches no Exercise', () {
@@ -633,13 +599,12 @@ void main() {
         initialWorkouts: const [],
         initialExercises: [exercise],
       );
-      var notified = false;
-      repository.addListener(() => notified = true);
+      final wasNotified = trackNotifications(repository);
 
       repository.renameExercise('missing-exercise', 'New Name');
 
       expect(repository.exercises.single.name, 'Bench Press');
-      expect(notified, isFalse);
+      expect(wasNotified(), isFalse);
     });
   });
 }
