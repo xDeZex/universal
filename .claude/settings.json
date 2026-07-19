@@ -8,6 +8,11 @@
             "type": "command",
             "command": "python3 -c 'import json,sys; d=json.loads(sys.stdin.read()); cwd=d.get(\"cwd\") or \"\"; cmd=(d.get(\"tool_input\") or {}).get(\"command\") or \"\"; m=\"/.claude/worktrees/\"; i=cwd.find(m); root=cwd[:i] if i!=-1 else None; cleaned=cmd.replace(root+m,\"\") if root else \"\"; tokens=cmd.replace(\"&&\",\" \").replace(\";\",\" \").replace(\"|\",\" \").split(); bad = root is not None and bool(cmd) and root in cleaned and \"git\" in tokens; reason=\"This command references the main checkout (\" + str(root) + \") instead of your current worktree (\" + cwd + \"). Your worktree is a full, independent checkout with everything you need. Never cd or use git -C back into the main checkout from an isolated worktree, since that stages or commits against the wrong tree. Run the git command directly against your current directory instead.\"; print(json.dumps({\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"deny\",\"permissionDecisionReason\":reason}})) if bad else None'",
             "statusMessage": "Checking for cross-worktree git commands..."
+          },
+          {
+            "type": "command",
+            "command": "COMMAND=$(cat | jq -r '.tool_input.command // empty' 2>/dev/null); [ -z \"$COMMAND\" ] && exit 0; echo \"$COMMAND\" | grep -qE \"git (clean|reset|checkout --|stash drop)\" || exit 0; GITDIR=$(git rev-parse --git-dir 2>/dev/null); case \"$GITDIR\" in *worktrees*) GITCOMMONDIR=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null); MAIN_DIR=\"${GITCOMMONDIR%/.git}\"; MSG=\"Heads up: you are in a git worktree, and this command is a destructive git operation (clean/reset/checkout --/stash drop). Worktrees share one .git object store with the main tree at $MAIN_DIR, so this can affect the main tree too. Proceed only if you intend that.\"; jq -n --arg msg \"$MSG\" '{systemMessage: $msg, hookSpecificOutput: {hookEventName: \"PreToolUse\", additionalContext: $msg}}' ;; esac; exit 0",
+            "statusMessage": "Checking for destructive cross-tree git commands..."
           }
         ]
       },
