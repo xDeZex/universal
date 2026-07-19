@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../models/exercise.dart';
 import '../models/routine.dart';
 import '../repositories/workout_repository.dart';
+import '../widgets/planned_exercise_add_field.dart';
+import '../widgets/planned_exercise_card.dart';
 import '../widgets/routine_name_dialog.dart';
 
 class RoutineScreen extends StatelessWidget {
@@ -39,12 +42,49 @@ class RoutineScreen extends StatelessWidget {
     }
   }
 
+  PlannedExerciseCard _buildCard(
+    WorkoutRepository repo,
+    Routine routine,
+    List<Exercise> exercises,
+    int index,
+  ) {
+    final plannedExercise = routine.plannedExercises[index];
+    return PlannedExerciseCard(
+      key: ValueKey(plannedExercise.id),
+      plannedExercise: plannedExercise,
+      exerciseName: Exercise.nameFor(plannedExercise.exerciseId, exercises),
+      onDelete: routine.isLocked
+          ? null
+          : () => repo.removePlannedExercise(routine.id, plannedExercise.id),
+    );
+  }
+
+  Widget _buildList(
+    WorkoutRepository repo,
+    Routine routine,
+    List<Exercise> exercises,
+  ) {
+    if (routine.isLocked) {
+      return ListView.builder(
+        itemCount: routine.plannedExercises.length,
+        itemBuilder: (context, index) =>
+            _buildCard(repo, routine, exercises, index),
+      );
+    }
+    return ReorderableListView.builder(
+      itemCount: routine.plannedExercises.length,
+      onReorderItem: (oldIndex, newIndex) =>
+          repo.reorderPlannedExercises(routine.id, oldIndex, newIndex),
+      itemBuilder: (context, index) =>
+          _buildCard(repo, routine, exercises, index),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final routine = context
-        .watch<WorkoutRepository>()
-        .routines
-        .firstWhere((r) => r.id == routineId);
+    final repo = context.watch<WorkoutRepository>();
+    final routine = repo.routines.firstWhere((r) => r.id == routineId);
+    final exercises = repo.exercises;
 
     return Scaffold(
       appBar: AppBar(
@@ -72,11 +112,18 @@ class RoutineScreen extends StatelessWidget {
                 'Archived — unarchive to edit Planned Exercises',
               ),
             ),
-          const Expanded(
-            child: Center(
-              key: ValueKey('routine-empty-state'),
-              child: Text('No Planned Exercises yet'),
+          if (!routine.isLocked)
+            PlannedExerciseAddField(
+              exercises: exercises,
+              onAdd: (name) => repo.addPlannedExercise(routine.id, name),
             ),
+          Expanded(
+            child: routine.plannedExercises.isEmpty
+                ? const Center(
+                    key: ValueKey('routine-empty-state'),
+                    child: Text('No Planned Exercises yet'),
+                  )
+                : _buildList(repo, routine, exercises),
           ),
         ],
       ),

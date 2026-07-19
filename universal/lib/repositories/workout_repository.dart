@@ -5,6 +5,8 @@ import '../models/routine.dart';
 import '../models/workout.dart';
 import '../services/storage_service.dart';
 
+part 'workout_repository_planned_exercises.dart';
+
 /// Owns the in-memory Workout, Exercise, and Routine lists, wrapping
 /// [StorageService] for load/save, mirroring the [ChangeNotifier] shape of
 /// `UpdateService`.
@@ -204,6 +206,11 @@ class WorkoutRepository extends ChangeNotifier {
     _storage.saveExercises(exercises);
     notifyListeners();
   }
+
+  /// Forwards to the `@protected` [notifyListeners] so the Planned Exercise
+  /// mutators — split into a part file to keep this file under the repo's
+  /// line-count limit — can trigger a notification.
+  void _notifyPlannedExercisesChanged() => notifyListeners();
 
   /// Replaces the Workout matching [workoutId] via [_replaceWorkout] and
   /// notifies listeners only if a match was found.
