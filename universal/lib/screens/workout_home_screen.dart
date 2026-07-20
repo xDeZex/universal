@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../repositories/workout_repository.dart';
+import '../widgets/workout_home_actions.dart';
 import 'active_workout_screen.dart';
 import 'manage_exercises_screen.dart';
 import 'manage_routines_screen.dart';
@@ -69,36 +70,35 @@ class WorkoutHomeScreen extends StatelessWidget {
       appBar: AppBar(title: const Text('Workout')),
       body: !repo.isLoaded
           ? const Center(child: CircularProgressIndicator())
-          : Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ElevatedButton(
-                    onPressed: hasInProgress
-                        ? () => _continueWorkout(context)
-                        : () => _startWorkout(context),
-                    child: Text(
-                      hasInProgress ? 'Continue Workout' : 'Start Workout',
+          : Padding(
+              padding: const EdgeInsets.all(16),
+              child: Center(
+                child: WorkoutHomeActions(
+                  primaryLabel: hasInProgress
+                      ? 'Continue Workout'
+                      : 'Start Workout',
+                  primaryIcon: Icons.play_arrow,
+                  onPrimaryPressed: hasInProgress
+                      ? () => _continueWorkout(context)
+                      : () => _startWorkout(context),
+                  secondaryActions: [
+                    WorkoutHomeAction(
+                      label: 'Past Workouts',
+                      icon: Icons.history,
+                      onPressed: () => _openPastWorkouts(context),
                     ),
-                  ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      TextButton(
-                        onPressed: () => _openPastWorkouts(context),
-                        child: const Text('Past Workouts'),
-                      ),
-                      TextButton(
-                        onPressed: () => _openManageExercises(context),
-                        child: const Text('Manage Exercises'),
-                      ),
-                      TextButton(
-                        onPressed: () => _openManageRoutines(context),
-                        child: const Text('Manage Routines'),
-                      ),
-                    ],
-                  ),
-                ],
+                    WorkoutHomeAction(
+                      label: 'Manage Exercises',
+                      icon: Icons.fitness_center,
+                      onPressed: () => _openManageExercises(context),
+                    ),
+                    WorkoutHomeAction(
+                      label: 'Manage Routines',
+                      icon: Icons.list_alt,
+                      onPressed: () => _openManageRoutines(context),
+                    ),
+                  ],
+                ),
               ),
             ),
     );
