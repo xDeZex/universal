@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../models/exercise.dart';
 import '../models/workout.dart';
+import '../prototype/row_card_variant.dart';
 import '../repositories/workout_repository.dart';
 import '../widgets/add_set_bar.dart';
 import '../widgets/exercise_entry_tile.dart';
@@ -48,8 +49,17 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
     }
   }
 
-  List<Widget> _buildEntryRows(Workout workout, List<Exercise> exercises) {
+  List<Widget> _buildEntryRows(
+    Workout workout,
+    List<Exercise> exercises,
+    RowCardVariant variant,
+  ) {
     final entries = workout.exerciseEntries;
+    // PROTOTYPE — wayfinder #212: gapList/coplanarCards already carry
+    // their own rounded shape and margin, so a shared Divider between
+    // entries would fight that containment; current/accentBar keep it.
+    final divideEntries =
+        variant == RowCardVariant.current || variant == RowCardVariant.accentBar;
     final rows = <Widget>[];
     for (var i = 0; i < entries.length; i++) {
       final entry = entries[i];
@@ -76,7 +86,9 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
         ),
       );
       if (i != entries.length - 1) {
-        rows.add(const Divider(height: 1));
+        rows.add(
+          divideEntries ? const Divider(height: 1) : const SizedBox(height: 4),
+        );
       }
     }
     return rows;
@@ -130,7 +142,12 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                 ),
               ),
             Expanded(
-              child: ListView(children: _buildEntryRows(workout, exercises)),
+              child: ValueListenableBuilder<RowCardVariant>(
+                valueListenable: rowCardVariant,
+                builder: (context, variant, _) => ListView(
+                  children: _buildEntryRows(workout, exercises, variant),
+                ),
+              ),
             ),
             if (canAddNew && _controller.selectedEntryId != null) ...[
               AddSetBar(

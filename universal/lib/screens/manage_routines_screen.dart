@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/routine.dart';
+import '../prototype/row_card_variant.dart';
 import '../repositories/workout_repository.dart';
 import '../widgets/routine_name_dialog.dart';
 import '../widgets/routine_tile.dart';
@@ -80,23 +81,39 @@ class ManageRoutinesScreen extends StatelessWidget {
       ),
       body: routines.isEmpty
           ? const Center(child: Text('No Routines yet'))
-          : ListView(
-              children: [
-                ...active.map((routine) => _tile(context, routine)),
-                if (archived.isNotEmpty) ...[
-                  const Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: Text(
-                      'Archived',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+          // PROTOTYPE — wayfinder #212: interleaves a Divider between rows
+          // only for the accentBar variant, which is the one testing the
+          // "keep dividers, change selection" direction.
+          : ValueListenableBuilder<RowCardVariant>(
+              valueListenable: rowCardVariant,
+              builder: (context, variant, _) {
+                final divide = variant == RowCardVariant.accentBar;
+                List<Widget> section(List<Routine> section) => [
+                  for (var i = 0; i < section.length; i++) ...[
+                    _tile(context, section[i]),
+                    if (divide && i != section.length - 1)
+                      const Divider(height: 1, indent: 16, endIndent: 16),
+                  ],
+                ];
+                return ListView(
+                  children: [
+                    ...section(active),
+                    if (archived.isNotEmpty) ...[
+                      const Padding(
+                        padding: EdgeInsets.all(16.0),
+                        child: Text(
+                          'Archived',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                  ...archived.map((routine) => _tile(context, routine)),
-                ],
-              ],
+                      ...section(archived),
+                    ],
+                  ],
+                );
+              },
             ),
     );
   }
