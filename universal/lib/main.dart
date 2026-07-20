@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'prototype/input_control_variant.dart';
+import 'prototype/workout_home_variant.dart';
 import 'screens/app_shell.dart';
 import 'services/update_service.dart';
 import 'theme/app_theme.dart';
@@ -27,8 +27,8 @@ class UniversalApp extends StatelessWidget {
         title: 'Universal',
         theme: AppTheme.dark,
         home: const AppShell(),
-        // PROTOTYPE — wayfinder #213: floating switcher persists across
-        // every pushed route. Strip along with input_control_variant.dart.
+        // PROTOTYPE — wayfinder #214: floating switcher persists across
+        // every pushed route. Strip along with workout_home_variant.dart.
         // SafeArea's `minimum` reserves the switcher's own footprint at the
         // bottom of every screen so it never sits on top of (and blocks
         // taps on) real content — e.g. a "+ Add row" button on the last
@@ -51,7 +51,7 @@ class UniversalApp extends StatelessWidget {
                   minimum: const EdgeInsets.only(bottom: 72),
                   child: child,
                 ),
-              const InputControlVariantSwitcher(),
+              const WorkoutHomeVariantSwitcher(),
             ],
           ),
         ),
