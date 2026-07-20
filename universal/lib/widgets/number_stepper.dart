@@ -40,34 +40,50 @@ class NumberStepper extends StatelessWidget {
 
   bool get _canIncrement => max == null || value < max!;
 
+  static const double _iconSize = 18;
+  static const VisualDensity _iconDensity = VisualDensity.compact;
+  static const double _valueLabelWidth = 36;
+
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        IconButton(
-          key: ValueKey('$keyPrefix-decrement'),
-          icon: const Icon(Icons.remove),
-          onPressed: _canDecrement
-              ? () => onChanged(normalizeStepValue(value - step))
-              : null,
-        ),
-        SizedBox(
-          width: 40,
-          child: Text(
-            '${normalizeStepValue(value)}',
-            key: ValueKey('$keyPrefix-value'),
-            textAlign: TextAlign.center,
+    final theme = Theme.of(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton.filledTonal(
+            key: ValueKey('$keyPrefix-decrement'),
+            icon: const Icon(Icons.remove),
+            iconSize: _iconSize,
+            visualDensity: _iconDensity,
+            onPressed: _canDecrement
+                ? () => onChanged(normalizeStepValue(value - step))
+                : null,
           ),
-        ),
-        IconButton(
-          key: ValueKey('$keyPrefix-increment'),
-          icon: const Icon(Icons.add),
-          onPressed: _canIncrement
-              ? () => onChanged(normalizeStepValue(value + step))
-              : null,
-        ),
-      ],
+          SizedBox(
+            width: _valueLabelWidth,
+            child: Text(
+              '${normalizeStepValue(value)}',
+              key: ValueKey('$keyPrefix-value'),
+              textAlign: TextAlign.center,
+              style: theme.textTheme.titleSmall,
+            ),
+          ),
+          IconButton.filledTonal(
+            key: ValueKey('$keyPrefix-increment'),
+            icon: const Icon(Icons.add),
+            iconSize: _iconSize,
+            visualDensity: _iconDensity,
+            onPressed: _canIncrement
+                ? () => onChanged(normalizeStepValue(value + step))
+                : null,
+          ),
+        ],
+      ),
     );
   }
 }
