@@ -109,17 +109,20 @@ Widget buildAccentBarEntryTile(
   required void Function(ExerciseSet set) onSetTap,
 }) {
   // Selection = a left accent bar, so it never competes with the
-  // full-width dividers this variant keeps between set rows.
+  // full-width dividers this variant keeps between set rows. The border
+  // is always present (transparent when unselected) so its auto-padding
+  // never changes and content never shifts on toggle.
   return Container(
     key: ValueKey('entry-${entry.id}'),
-    decoration: selected
-        ? BoxDecoration(
-            border: Border(
-              left: BorderSide(color: theme.colorScheme.primary, width: 4),
-            ),
-            color: theme.colorScheme.surfaceContainerLow,
-          )
-        : null,
+    decoration: BoxDecoration(
+      border: Border(
+        left: BorderSide(
+          color: selected ? theme.colorScheme.primary : Colors.transparent,
+          width: 4,
+        ),
+      ),
+      color: selected ? theme.colorScheme.surfaceContainerLow : null,
+    ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -153,39 +156,55 @@ Widget buildCoplanarCardEntryTile(
   required VoidCallback onDeleteEntry,
   required void Function(ExerciseSet set) onSetTap,
 }) {
-  // Coplanar card; header tint + check icon signal selection, and set
-  // rows are separated by an inset divider (inside one card) rather
-  // than a full-width one.
+  // Coplanar card; selection = a left accent bar (matches the B variant's
+  // treatment, not a tonal fill + icon). Set rows are zebra-shaded instead
+  // of divider-separated — dividers inside the card read as too subtle.
   return Card(
     key: ValueKey('entry-${entry.id}'),
     margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-    color: selected ? theme.colorScheme.primaryContainer : null,
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        entryHeader(
-          theme,
-          key: ValueKey('entry-header-${entry.id}'),
-          exerciseName: exerciseName,
-          locked: locked,
-          onSelect: onSelect,
-          onDeleteEntry: onDeleteEntry,
-          deleteKey: ValueKey('delete-entry-${entry.id}'),
-          tint: selected ? theme.colorScheme.onPrimaryContainer : null,
-        ),
-        if (entry.sets.isNotEmpty) columnHeaderRow(theme, locked: locked),
-        for (var i = 0; i < entry.sets.length; i++) ...[
-          Divider(
-            height: 1,
-            indent: setColumnWidth + 16,
-            endIndent: 16,
-            color: selected
-                ? theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.3)
-                : null,
+    clipBehavior: Clip.antiAlias,
+    child: Container(
+      // The border is always present (transparent when unselected) so its
+      // auto-generated left padding never changes — otherwise toggling
+      // selection shifts every child sideways by the border width.
+      decoration: BoxDecoration(
+        border: Border(
+          left: BorderSide(
+            color: selected ? theme.colorScheme.primary : Colors.transparent,
+            width: 4,
           ),
-          setRow(theme, context, i, entry.sets[i], locked: locked, onTap: onSetTap),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          entryHeader(
+            theme,
+            key: ValueKey('entry-header-${entry.id}'),
+            exerciseName: exerciseName,
+            locked: locked,
+            onSelect: onSelect,
+            onDeleteEntry: onDeleteEntry,
+            deleteKey: ValueKey('delete-entry-${entry.id}'),
+          ),
+          if (entry.sets.isNotEmpty) columnHeaderRow(theme, locked: locked),
+          for (var i = 0; i < entry.sets.length; i++)
+            setRow(
+              theme,
+              context,
+              i,
+              entry.sets[i],
+              locked: locked,
+              onTap: onSetTap,
+              bg: i.isOdd
+                  ? theme.colorScheme.surfaceContainerHighest.withValues(
+                      alpha: 0.5,
+                    )
+                  : null,
+            ),
+          const SizedBox(height: 4),
         ],
-      ],
+      ),
     ),
   );
 }

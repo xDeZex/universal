@@ -110,6 +110,19 @@ class PlannedExerciseCard extends StatelessWidget {
         : KeyedSubtree(key: ValueKey(rowKey), child: _rowContent(index, row));
 
     if (!isOpen) {
+      if (variant == RowCardVariant.coplanarCards) {
+        // Zebra-shade rows for separation instead of dividers — dividers
+        // inside a card read as too subtle.
+        return Container(
+          color: index.isOdd
+              ? theme.colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.5,
+                )
+              : null,
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+          child: rowLine,
+        );
+      }
       return Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
         child: rowLine,
@@ -203,22 +216,14 @@ class PlannedExerciseCard extends StatelessWidget {
               ),
             );
           case RowCardVariant.coplanarCards:
-            // Coplanar card with an inset divider between the always-
-            // visible header and the expandable row list (M3: "use inset
-            // dividers to separate related content" within one card).
+            // Coplanar card — no inset divider between header and rows;
+            // the header's own padding is enough separation.
             return Card(
               margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   header,
-                  if (rows.isNotEmpty)
-                    Divider(
-                      height: 1,
-                      indent: 16,
-                      endIndent: 16,
-                      color: theme.colorScheme.outlineVariant,
-                    ),
                   ...rows,
                   if (onAddRow != null) _addRow(),
                 ],

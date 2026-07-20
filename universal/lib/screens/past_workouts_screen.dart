@@ -62,10 +62,16 @@ class PastWorkoutsScreen extends StatelessWidget {
         );
       case RowCardVariant.coplanarCards:
         return Padding(
-          padding: const EdgeInsets.fromLTRB(12, 6, 12, 6),
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
           child: Card(
             key: ValueKey('past-workout-${workout.id}'),
             margin: EdgeInsets.zero,
+            color: theme.colorScheme.surfaceContainerHigh,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: theme.colorScheme.outlineVariant),
+            ),
             child: ListTile(title: title, subtitle: subtitle, onTap: onTap),
           ),
         );

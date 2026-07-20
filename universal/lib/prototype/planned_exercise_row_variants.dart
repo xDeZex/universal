@@ -60,10 +60,12 @@ Widget buildOpenPlannedExerciseRow(
         ),
       );
     case RowCardVariant.accentBar:
-      // Selection = a left accent bar, so it never has to compete with
-      // the row dividers this variant keeps.
+      // Selection = a left accent bar. `BoxDecoration.border` auto-adds
+      // padding equal to its own width, so margin alone (12 + the 4 the
+      // border contributes = 16) lands content at the same x as the
+      // closed row — no extra manual padding, or it'd double up.
       return Container(
-        margin: const EdgeInsets.only(bottom: 8),
+        margin: const EdgeInsets.fromLTRB(12, 0, 16, 8),
         decoration: BoxDecoration(
           border: Border(
             left: BorderSide(color: theme.colorScheme.primary, width: 4),
@@ -71,52 +73,25 @@ Widget buildOpenPlannedExerciseRow(
         ),
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 0, 16, 8),
-              child: rowLine,
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 0, 16, 8),
-              child: editor,
-            ),
+            Padding(padding: const EdgeInsets.only(bottom: 8), child: rowLine),
+            editor,
           ],
         ),
       );
     case RowCardVariant.coplanarCards:
-      // Selection = tonal background + a leading check icon (icon +
-      // color, not color alone), per M3 selection indicators.
+      // Selection = a left accent bar (matches the B variant's treatment,
+      // not a tonal fill + check icon). Same auto-padding math as above.
       return Container(
-        margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-        padding: const EdgeInsets.all(8),
+        margin: const EdgeInsets.fromLTRB(12, 0, 16, 8),
         decoration: BoxDecoration(
-          color: theme.colorScheme.primaryContainer,
-          borderRadius: BorderRadius.circular(12),
+          border: Border(
+            left: BorderSide(color: theme.colorScheme.primary, width: 4),
+          ),
         ),
         child: Column(
           children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.check_circle,
-                  size: 18,
-                  color: theme.colorScheme.onPrimaryContainer,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: DefaultTextStyle.merge(
-                    style: TextStyle(color: theme.colorScheme.onPrimaryContainer),
-                    child: IconTheme.merge(
-                      data: IconThemeData(color: theme.colorScheme.onPrimaryContainer),
-                      child: rowLine,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: editor,
-            ),
+            Padding(padding: const EdgeInsets.only(bottom: 4), child: rowLine),
+            editor,
           ],
         ),
       );

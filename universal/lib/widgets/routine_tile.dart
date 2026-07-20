@@ -40,9 +40,15 @@ class RoutineTile extends StatelessWidget {
             ),
           ),
           RowCardVariant.coplanarCards => Padding(
-            padding: const EdgeInsets.fromLTRB(12, 6, 12, 6),
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
             child: Card(
               margin: EdgeInsets.zero,
+              color: theme.colorScheme.surfaceContainerHigh,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: theme.colorScheme.outlineVariant),
+              ),
               child: ListTile(title: Text(routine.name), onTap: onTap),
             ),
           ),
