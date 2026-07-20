@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 // PROTOTYPE — throwaway. Answers wayfinder issue #214 (Workout home screen
@@ -17,63 +16,9 @@ enum WorkoutHomeVariant {
   const WorkoutHomeVariant(this.shortLabel, this.description);
 }
 
+// Frozen to the direction #214 picked (see its resolution comment) — the
+// last of this map's live prototype tickets, so no further switcher
+// replaces this one on the floating bar. No longer switchable.
 final ValueNotifier<WorkoutHomeVariant> workoutHomeVariant = ValueNotifier(
-  WorkoutHomeVariant.current,
+  WorkoutHomeVariant.tonalWrap,
 );
-
-class WorkoutHomeVariantSwitcher extends StatelessWidget {
-  const WorkoutHomeVariantSwitcher({super.key});
-
-  void _cycle(int delta) {
-    final values = WorkoutHomeVariant.values;
-    final i = values.indexOf(workoutHomeVariant.value);
-    workoutHomeVariant.value =
-        values[(i + delta + values.length) % values.length];
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (kReleaseMode) return const SizedBox.shrink();
-    return ValueListenableBuilder<WorkoutHomeVariant>(
-      valueListenable: workoutHomeVariant,
-      builder: (context, variant, _) => Align(
-        alignment: Alignment.bottomCenter,
-        child: SafeArea(
-          child: Container(
-            margin: const EdgeInsets.only(bottom: 8),
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            decoration: BoxDecoration(
-              color: const Color(0xE6000000),
-              borderRadius: BorderRadius.circular(999),
-              boxShadow: const [
-                BoxShadow(color: Colors.black54, blurRadius: 10),
-              ],
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  key: const ValueKey('workout-home-variant-prev'),
-                  icon: const Icon(Icons.chevron_left, color: Colors.white),
-                  onPressed: () => _cycle(-1),
-                ),
-                Flexible(
-                  child: Text(
-                    '${variant.shortLabel} — ${variant.description}',
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: Colors.white, fontSize: 12),
-                  ),
-                ),
-                IconButton(
-                  key: const ValueKey('workout-home-variant-next'),
-                  icon: const Icon(Icons.chevron_right, color: Colors.white),
-                  onPressed: () => _cycle(1),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
