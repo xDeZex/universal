@@ -1,0 +1,47 @@
+import 'dart:ui';
+
+import 'package:flutter_test/flutter_test.dart';
+import 'package:universal/models/routine.dart';
+import 'package:universal/models/workout.dart';
+
+import 'planned_exercise_row_editor_test_helpers.dart';
+
+void main() {
+  group('PlannedExerciseRowEditor layout', () {
+    testWidgets('does not overflow at a real phone width for a fixed row', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(375, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await pumpEditor(
+        tester,
+        row: const PlannedExerciseRow(
+          reps: FixedReps(8),
+          weight: PlannedWeight(value: 60, unit: WeightUnit.kg),
+        ),
+      );
+
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('does not overflow at a real phone width for a ranged row', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(375, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await pumpEditor(
+        tester,
+        row: const PlannedExerciseRow(
+          reps: RangeReps(min: 8, max: 12),
+          weight: PlannedWeight(value: 60, unit: WeightUnit.kg),
+        ),
+      );
+
+      expect(tester.takeException(), isNull);
+    });
+  });
+}

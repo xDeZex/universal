@@ -70,10 +70,12 @@ class PlannedWeight {
 }
 
 class PlannedExerciseRow {
-  final RepsTarget reps;
-  final PlannedWeight? weight;
+  static const defaultWeight = PlannedWeight(value: 0, unit: WeightUnit.kg);
 
-  const PlannedExerciseRow({required this.reps, this.weight});
+  final RepsTarget reps;
+  final PlannedWeight weight;
+
+  const PlannedExerciseRow({required this.reps, required this.weight});
 
   PlannedExerciseRow copyWith({RepsTarget? reps, PlannedWeight? weight}) {
     return PlannedExerciseRow(
@@ -84,14 +86,14 @@ class PlannedExerciseRow {
 
   Map<String, dynamic> toJson() => {
     'reps': reps.toJson(),
-    'weight': weight?.toJson(),
+    'weight': weight.toJson(),
   };
 
   factory PlannedExerciseRow.fromJson(Map<String, dynamic> json) {
     return PlannedExerciseRow(
       reps: RepsTarget.fromJson(json['reps'] as Map<String, dynamic>),
       weight: json['weight'] == null
-          ? null
+          ? defaultWeight
           : PlannedWeight.fromJson(json['weight'] as Map<String, dynamic>),
     );
   }
@@ -130,7 +132,9 @@ class PlannedExercise {
       id: json['id'] as String,
       exerciseId: json['exerciseId'] as String,
       rows: (json['rows'] as List)
-          .map((row) => PlannedExerciseRow.fromJson(row as Map<String, dynamic>))
+          .map(
+            (row) => PlannedExerciseRow.fromJson(row as Map<String, dynamic>),
+          )
           .toList(),
     );
   }

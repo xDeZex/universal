@@ -120,7 +120,7 @@ The recurrence rule on a Program that determines when each Routine comes up next
 _Avoid_: recurrence (kept as the general concept; Schedule is the concrete noun for a Program's rule)
 
 **Planned Exercise**:
-The planned counterpart to an Exercise Entry — an Exercise prescribed within a Routine along with its target sets/reps/weights, before any Workout logs it. Identified by its own stable id and references the Exercise by id, so renaming the Exercise later doesn't orphan the reference; the same Exercise can appear in more than one Planned Exercise within a Routine. Holds an ordered list of planned rows — row count *is* the target sets count, there's no separate count field — where each row's reps is a fixed integer or a min/max range, and weight is a fixed value only, optional (a row can prescribe reps without a weight target).
+The planned counterpart to an Exercise Entry — an Exercise prescribed within a Routine along with its target sets/reps/weights, before any Workout logs it. Identified by its own stable id and references the Exercise by id, so renaming the Exercise later doesn't orphan the reference; the same Exercise can appear in more than one Planned Exercise within a Routine. Holds an ordered list of planned rows — row count *is* the target sets count, there's no separate count field — where each row's reps is a fixed integer or a min/max range, and weight is a fixed value, always required (no "no target" state) — a new row defaults to 0 kg, matching the app's kg default-unit precedent.
 _Avoid_: exercise entry (reserved for the logged occurrence within an actual Workout)
 
 ## Example dialogue

@@ -68,37 +68,33 @@ void main() {
       },
     );
 
-    testWidgets(
-      "card header shows the referenced Exercise's current name, "
-      'reflecting a rename rather than a stale copy',
-      (tester) async {
-        final planned = PlannedExercise(id: 'pe-1', exerciseId: 'exercise-1');
-        final repository = await _pumpRoutineScreen(
-          tester,
-          routines: [
-            Routine(
-              id: 'routine-1',
-              name: 'Push Day',
-              plannedExercises: [planned],
-            ),
-          ],
-          exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
-          routineId: 'routine-1',
-        );
+    testWidgets("card header shows the referenced Exercise's current name, "
+        'reflecting a rename rather than a stale copy', (tester) async {
+      final planned = PlannedExercise(id: 'pe-1', exerciseId: 'exercise-1');
+      final repository = await _pumpRoutineScreen(
+        tester,
+        routines: [
+          Routine(
+            id: 'routine-1',
+            name: 'Push Day',
+            plannedExercises: [planned],
+          ),
+        ],
+        exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
+        routineId: 'routine-1',
+      );
 
-        expect(find.text('Bench Press'), findsOneWidget);
+      expect(find.text('Bench Press'), findsOneWidget);
 
-        repository.renameExercise('exercise-1', 'Barbell Bench Press');
-        await tester.pump();
+      repository.renameExercise('exercise-1', 'Barbell Bench Press');
+      await tester.pump();
 
-        expect(find.text('Bench Press'), findsNothing);
-        expect(find.text('Barbell Bench Press'), findsOneWidget);
-      },
-    );
+      expect(find.text('Bench Press'), findsNothing);
+      expect(find.text('Barbell Bench Press'), findsOneWidget);
+    });
 
     testWidgets(
-      "a card's rows render as a read-only line per row, with no tap "
-      'interaction',
+      "a card's rows render as editable lines, one per row, each tappable",
       (tester) async {
         final planned = PlannedExercise(
           id: 'pe-1',
@@ -108,7 +104,10 @@ void main() {
               reps: RangeReps(min: 8, max: 12),
               weight: PlannedWeight(value: 60, unit: WeightUnit.kg),
             ),
-            PlannedExerciseRow(reps: FixedReps(6)),
+            PlannedExerciseRow(
+              reps: FixedReps(6),
+              weight: PlannedWeight(value: 0, unit: WeightUnit.kg),
+            ),
           ],
         );
         await _pumpRoutineScreen(
@@ -125,20 +124,21 @@ void main() {
         );
 
         expect(find.text('8–12 reps @ 60 kg'), findsOneWidget);
-        expect(find.text('6 reps · no weight'), findsOneWidget);
+        expect(find.text('6 reps @ 0 kg'), findsOneWidget);
         expect(
           find.ancestor(
             of: find.text('8–12 reps @ 60 kg'),
             matching: find.byType(InkWell),
           ),
-          findsNothing,
+          findsOneWidget,
         );
         expect(
-          find.ancestor(
-            of: find.text('8–12 reps @ 60 kg'),
-            matching: find.byType(GestureDetector),
-          ),
-          findsNothing,
+          find.byKey(const ValueKey('delete-planned-exercise-row-pe-1-0')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const ValueKey('delete-planned-exercise-row-pe-1-1')),
+          findsOneWidget,
         );
       },
     );

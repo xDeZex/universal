@@ -8,10 +8,17 @@ import '../widgets/planned_exercise_add_field.dart';
 import '../widgets/planned_exercise_card.dart';
 import '../widgets/routine_name_dialog.dart';
 
-class RoutineScreen extends StatelessWidget {
+class RoutineScreen extends StatefulWidget {
   final String routineId;
 
   const RoutineScreen({super.key, required this.routineId});
+
+  @override
+  State<RoutineScreen> createState() => _RoutineScreenState();
+}
+
+class _RoutineScreenState extends State<RoutineScreen> {
+  ({String plannedExerciseId, int rowIndex})? _openRow;
 
   Future<void> _rename(BuildContext context, Routine routine) async {
     final repo = context.read<WorkoutRepository>();
@@ -39,6 +46,47 @@ class RoutineScreen extends StatelessWidget {
       repo.unarchiveRoutine(routine.id);
     } else {
       repo.archiveRoutine(routine.id);
+      setState(() => _openRow = null);
+    }
+  }
+
+  void _addRow(
+    WorkoutRepository repo,
+    Routine routine,
+    PlannedExercise plannedExercise,
+  ) {
+    final newIndex = plannedExercise.rows.length;
+    repo.addPlannedExerciseRow(routine.id, plannedExercise.id);
+    setState(
+      () => _openRow = (
+        plannedExerciseId: plannedExercise.id,
+        rowIndex: newIndex,
+      ),
+    );
+  }
+
+  void _toggleRow(String plannedExerciseId, int rowIndex) {
+    setState(() {
+      final current = _openRow;
+      if (current != null &&
+          current.plannedExerciseId == plannedExerciseId &&
+          current.rowIndex == rowIndex) {
+        _openRow = null;
+      } else {
+        _openRow = (plannedExerciseId: plannedExerciseId, rowIndex: rowIndex);
+      }
+    });
+  }
+
+  void _deleteRow(
+    WorkoutRepository repo,
+    Routine routine,
+    String plannedExerciseId,
+    int rowIndex,
+  ) {
+    repo.removePlannedExerciseRow(routine.id, plannedExerciseId, rowIndex);
+    if (_openRow?.plannedExerciseId == plannedExerciseId) {
+      setState(() => _openRow = null);
     }
   }
 
@@ -49,13 +97,35 @@ class RoutineScreen extends StatelessWidget {
     int index,
   ) {
     final plannedExercise = routine.plannedExercises[index];
+    final openRow = _openRow;
+    final isLocked = routine.isLocked;
     return PlannedExerciseCard(
       key: ValueKey(plannedExercise.id),
       plannedExercise: plannedExercise,
       exerciseName: Exercise.nameFor(plannedExercise.exerciseId, exercises),
-      onDelete: routine.isLocked
+      onDelete: isLocked
           ? null
           : () => repo.removePlannedExercise(routine.id, plannedExercise.id),
+      onAddRow: isLocked ? null : () => _addRow(repo, routine, plannedExercise),
+      openRowIndex:
+          !isLocked && openRow?.plannedExerciseId == plannedExercise.id
+          ? openRow!.rowIndex
+          : null,
+      onRowTap: isLocked
+          ? null
+          : (rowIndex) => _toggleRow(plannedExercise.id, rowIndex),
+      onDeleteRow: isLocked
+          ? null
+          : (rowIndex) =>
+                _deleteRow(repo, routine, plannedExercise.id, rowIndex),
+      onRowChanged: isLocked
+          ? null
+          : (rowIndex, updated) => repo.updatePlannedExerciseRow(
+              routine.id,
+              plannedExercise.id,
+              rowIndex,
+              updated,
+            ),
     );
   }
 
@@ -83,7 +153,7 @@ class RoutineScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final repo = context.watch<WorkoutRepository>();
-    final routine = repo.routines.firstWhere((r) => r.id == routineId);
+    final routine = repo.routines.firstWhere((r) => r.id == widget.routineId);
     final exercises = repo.exercises;
 
     return Scaffold(
