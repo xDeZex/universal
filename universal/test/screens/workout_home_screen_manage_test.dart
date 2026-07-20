@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:universal/models/exercise.dart';
@@ -86,8 +87,8 @@ void main() {
 
   group('WorkoutHomeScreen Manage Routines entry point', () {
     testWidgets(
-      'shows a Manage Routines action next to Manage Exercises, at the same '
-      'vertical position',
+      'shows a Manage Routines action alongside Manage Exercises, wrapping '
+      'onto its own line without overlapping rather than overflowing',
       (tester) async {
         await pumpWorkoutHomeScreen(
           tester,
@@ -97,15 +98,25 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('Manage Routines'), findsOneWidget);
+        expect(tester.takeException(), isNull);
 
-        final manageExercisesPosition = tester.getCenter(
-          find.text('Manage Exercises'),
+        final manageExercisesRect = tester.getRect(
+          find
+              .ancestor(
+                of: find.text('Manage Exercises'),
+                matching: find.byType(FilledButton),
+              )
+              .first,
         );
-        final manageRoutinesPosition = tester.getCenter(
-          find.text('Manage Routines'),
+        final manageRoutinesRect = tester.getRect(
+          find
+              .ancestor(
+                of: find.text('Manage Routines'),
+                matching: find.byType(FilledButton),
+              )
+              .first,
         );
-        expect(manageRoutinesPosition.dy, manageExercisesPosition.dy);
-        expect(manageRoutinesPosition.dx, isNot(manageExercisesPosition.dx));
+        expect(manageExercisesRect.overlaps(manageRoutinesRect), isFalse);
       },
     );
 
