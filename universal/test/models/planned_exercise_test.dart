@@ -9,7 +9,10 @@ void main() {
         id: 'pe-1',
         exerciseId: 'ex-1',
         rows: [
-          PlannedExerciseRow(reps: FixedReps(10), weight: null),
+          PlannedExerciseRow(
+            reps: FixedReps(10),
+            weight: PlannedWeight(value: 0, unit: WeightUnit.kg),
+          ),
           PlannedExerciseRow(
             reps: RangeReps(min: 8, max: 12),
             weight: PlannedWeight(value: 60, unit: WeightUnit.kg),
@@ -23,9 +26,9 @@ void main() {
       expect(restored.exerciseId, 'ex-1');
       expect(restored.rows.length, 2);
       expect(restored.rows[0].reps, isA<FixedReps>());
-      expect(restored.rows[0].weight, isNull);
+      expect(restored.rows[0].weight.value, 0);
       expect(restored.rows[1].reps, isA<RangeReps>());
-      expect(restored.rows[1].weight?.value, 60);
+      expect(restored.rows[1].weight.value, 60);
     });
 
     test('fromJson throws when id key is missing', () {
@@ -46,17 +49,23 @@ void main() {
       expect(() => PlannedExercise.fromJson(json), throwsA(anything));
     });
 
-    test('a PlannedExercise with zero rows round-trips as a valid, non-error state', () {
-      const exercise = PlannedExercise(id: 'pe-1', exerciseId: 'ex-1');
+    test(
+      'a PlannedExercise with zero rows round-trips as a valid, non-error state',
+      () {
+        const exercise = PlannedExercise(id: 'pe-1', exerciseId: 'ex-1');
 
-      final restored = PlannedExercise.fromJson(exercise.toJson());
+        final restored = PlannedExercise.fromJson(exercise.toJson());
 
-      expect(restored.rows, isEmpty);
-    });
+        expect(restored.rows, isEmpty);
+      },
+    );
 
     test('copyWith returns a new PlannedExercise with updated fields', () {
       const exercise = PlannedExercise(id: 'pe-1', exerciseId: 'ex-1');
-      const row = PlannedExerciseRow(reps: FixedReps(10));
+      const row = PlannedExerciseRow(
+        reps: FixedReps(10),
+        weight: PlannedWeight(value: 0, unit: WeightUnit.kg),
+      );
 
       final updated = exercise.copyWith(exerciseId: 'ex-2', rows: [row]);
 
@@ -66,7 +75,10 @@ void main() {
     });
 
     test('copyWith with no arguments returns an identical PlannedExercise', () {
-      const row = PlannedExerciseRow(reps: FixedReps(10));
+      const row = PlannedExerciseRow(
+        reps: FixedReps(10),
+        weight: PlannedWeight(value: 0, unit: WeightUnit.kg),
+      );
       const exercise = PlannedExercise(
         id: 'pe-1',
         exerciseId: 'ex-1',

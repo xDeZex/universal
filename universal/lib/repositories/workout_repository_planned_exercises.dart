@@ -54,7 +54,10 @@ extension WorkoutRepositoryPlannedExercises on WorkoutRepository {
     final routineIndex = routines.indexWhere((r) => r.id == routineId);
     if (routineIndex == -1) return;
     final length = routines[routineIndex].plannedExercises.length;
-    if (oldIndex < 0 || oldIndex >= length || newIndex < 0 || newIndex >= length) {
+    if (oldIndex < 0 ||
+        oldIndex >= length ||
+        newIndex < 0 ||
+        newIndex >= length) {
       return;
     }
 
@@ -65,6 +68,101 @@ extension WorkoutRepositoryPlannedExercises on WorkoutRepository {
       return r.copyWith(plannedExercises: reordered);
     });
     if (applied) _notifyPlannedExercisesChanged();
+  }
+
+  PlannedExerciseRow? addPlannedExerciseRow(
+    String routineId,
+    String plannedExerciseId,
+  ) {
+    final plannedExercise = _findPlannedExercise(routineId, plannedExerciseId);
+    if (plannedExercise == null) return null;
+
+    final newRow = plannedExercise.rows.isEmpty
+        ? const PlannedExerciseRow(
+            reps: FixedReps(1),
+            weight: PlannedExerciseRow.defaultWeight,
+          )
+        : plannedExercise.rows.last;
+
+    final applied = _updatePlannedExerciseRows(
+      routineId,
+      plannedExerciseId,
+      (rows) => [...rows, newRow],
+    );
+    if (!applied) return null;
+
+    _notifyPlannedExercisesChanged();
+    return newRow;
+  }
+
+  void updatePlannedExerciseRow(
+    String routineId,
+    String plannedExerciseId,
+    int rowIndex,
+    PlannedExerciseRow updatedRow,
+  ) {
+    final plannedExercise = _findPlannedExercise(routineId, plannedExerciseId);
+    if (plannedExercise == null) return;
+    if (rowIndex < 0 || rowIndex >= plannedExercise.rows.length) return;
+
+    final applied = _updatePlannedExerciseRows(
+      routineId,
+      plannedExerciseId,
+      (rows) => rows.toList()..[rowIndex] = updatedRow,
+    );
+    if (applied) _notifyPlannedExercisesChanged();
+  }
+
+  void removePlannedExerciseRow(
+    String routineId,
+    String plannedExerciseId,
+    int rowIndex,
+  ) {
+    final plannedExercise = _findPlannedExercise(routineId, plannedExerciseId);
+    if (plannedExercise == null) return;
+    if (rowIndex < 0 || rowIndex >= plannedExercise.rows.length) return;
+
+    final applied = _updatePlannedExerciseRows(
+      routineId,
+      plannedExerciseId,
+      (rows) => rows.toList()..removeAt(rowIndex),
+    );
+    if (applied) _notifyPlannedExercisesChanged();
+  }
+
+  PlannedExercise? _findPlannedExercise(
+    String routineId,
+    String plannedExerciseId,
+  ) {
+    final routineIndex = routines.indexWhere((r) => r.id == routineId);
+    if (routineIndex == -1) return null;
+    final plannedExercises = routines[routineIndex].plannedExercises;
+    for (final pe in plannedExercises) {
+      if (pe.id == plannedExerciseId) return pe;
+    }
+    return null;
+  }
+
+  /// Replaces the Planned Exercise matching [plannedExerciseId] within the
+  /// Routine matching [routineId] by applying [update] to its row list,
+  /// via [_replacePlannedExercises]'s lock-check/persist behavior.
+  bool _updatePlannedExerciseRows(
+    String routineId,
+    String plannedExerciseId,
+    List<PlannedExerciseRow> Function(List<PlannedExerciseRow>) update,
+  ) {
+    return _replacePlannedExercises(
+      routineId,
+      (r) => r.copyWith(
+        plannedExercises: r.plannedExercises
+            .map(
+              (pe) => pe.id == plannedExerciseId
+                  ? pe.copyWith(rows: update(pe.rows))
+                  : pe,
+            )
+            .toList(),
+      ),
+    );
   }
 
   /// Replaces the Routine matching [routineId] via [update], persisting and

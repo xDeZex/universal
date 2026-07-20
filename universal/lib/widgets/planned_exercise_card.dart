@@ -1,17 +1,28 @@
 import 'package:flutter/material.dart';
 
 import '../models/routine.dart';
+import 'planned_exercise_row_editor.dart';
 
 class PlannedExerciseCard extends StatelessWidget {
   final PlannedExercise plannedExercise;
   final String exerciseName;
   final VoidCallback? onDelete;
+  final VoidCallback? onAddRow;
+  final int? openRowIndex;
+  final void Function(int rowIndex)? onRowTap;
+  final void Function(int rowIndex)? onDeleteRow;
+  final void Function(int rowIndex, PlannedExerciseRow updated)? onRowChanged;
 
   const PlannedExerciseCard({
     super.key,
     required this.plannedExercise,
     required this.exerciseName,
     required this.onDelete,
+    this.onAddRow,
+    this.openRowIndex,
+    this.onRowTap,
+    this.onDeleteRow,
+    this.onRowChanged,
   });
 
   String _formatReps(RepsTarget reps) {
@@ -23,11 +34,49 @@ class PlannedExerciseCard extends StatelessWidget {
 
   String _formatRow(PlannedExerciseRow row) {
     final repsText = _formatReps(row.reps);
-    final weight = row.weight;
-    if (weight == null) {
-      return '$repsText · no weight';
-    }
-    return '$repsText @ ${weight.value} ${weight.unit.name}';
+    return '$repsText @ ${row.weight.value} ${row.weight.unit.name}';
+  }
+
+  Widget _buildRow(int index, PlannedExerciseRow row) {
+    final rowKey = 'planned-exercise-row-${plannedExercise.id}-$index';
+    final rowContent = Row(
+      children: [
+        Expanded(child: Text(_formatRow(row))),
+        if (onDeleteRow != null)
+          IconButton(
+            key: ValueKey('delete-$rowKey'),
+            icon: const Icon(Icons.close),
+            onPressed: () => onDeleteRow!(index),
+          ),
+      ],
+    );
+
+    final rowLine = Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      child: onRowTap != null
+          ? InkWell(
+              key: ValueKey(rowKey),
+              onTap: () => onRowTap!(index),
+              child: rowContent,
+            )
+          : KeyedSubtree(key: ValueKey(rowKey), child: rowContent),
+    );
+
+    if (openRowIndex != index) return rowLine;
+
+    return Column(
+      children: [
+        rowLine,
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+          child: PlannedExerciseRowEditor(
+            keyPrefix: 'row-${plannedExercise.id}-$index',
+            row: row,
+            onChanged: (updated) => onRowChanged?.call(index, updated),
+          ),
+        ),
+      ],
+    );
   }
 
   @override
@@ -61,10 +110,16 @@ class PlannedExerciseCard extends StatelessWidget {
               ],
             ),
           ),
-          for (final row in plannedExercise.rows)
+          for (final entry in plannedExercise.rows.asMap().entries)
+            _buildRow(entry.key, entry.value),
+          if (onAddRow != null)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-              child: Text(_formatRow(row)),
+              child: TextButton(
+                key: ValueKey('add-planned-exercise-row-${plannedExercise.id}'),
+                onPressed: onAddRow,
+                child: const Text('+ Add row'),
+              ),
             ),
         ],
       ),
