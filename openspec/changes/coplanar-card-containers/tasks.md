@@ -32,4 +32,4 @@
 
 ## 6. No outline on any coplanar card, anywhere
 
-- [ ] 6.1 None of `RoutineTile`, the Past Workouts row, `PlannedExerciseCard`, or `ExerciseEntryTile` draws a border/outline on its `CoplanarCard` shape
+- [x] 6.1 None of `RoutineTile`, the Past Workouts row, `PlannedExerciseCard`, or `ExerciseEntryTile` draws a border/outline on its `CoplanarCard` shape
