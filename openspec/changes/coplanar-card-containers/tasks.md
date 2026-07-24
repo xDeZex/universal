@@ -6,9 +6,9 @@
 
 ## 2. `SelectionAccentBorder` exists and never shifts layout
 
-- [ ] 2.1 `SelectionAccentBorder` renders its child with a 4dp left border in `colorScheme.primary` when `selected` is true
-- [ ] 2.2 `SelectionAccentBorder` renders the same 4dp left border in `Colors.transparent` (not omitted) when `selected` is false
-- [ ] 2.3 Toggling `selected` does not change the widget's rendered size or the child's horizontal offset
+- [x] 2.1 `SelectionAccentBorder` renders its child with a 4dp left border in `colorScheme.primary` when `selected` is true
+- [x] 2.2 `SelectionAccentBorder` renders the same 4dp left border in `Colors.transparent` (not omitted) when `selected` is false
+- [x] 2.3 Toggling `selected` does not change the widget's rendered size or the child's horizontal offset
 
 ## 3. Manage Routines row and Past Workouts row render through `CoplanarCard`
 
