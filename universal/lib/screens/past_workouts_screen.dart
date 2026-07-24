@@ -35,8 +35,8 @@ class PastWorkoutsScreen extends StatelessWidget {
           : ListView(
               children: finished.map((workout) {
                 return CoplanarCard(
+                  key: ValueKey('past-workout-${workout.id}'),
                   child: ListTile(
-                    key: ValueKey('past-workout-${workout.id}'),
                     title: Text(
                       MaterialLocalizations.of(
                         context,

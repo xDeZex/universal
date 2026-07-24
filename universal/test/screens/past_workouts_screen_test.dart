@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:universal/models/exercise.dart';
 import 'package:universal/models/workout.dart';
 import 'package:universal/screens/active_workout_screen.dart';
+import 'package:universal/widgets/coplanar_card.dart';
 
 import 'past_workouts_screen_test_helpers.dart';
 
@@ -71,7 +72,7 @@ void main() {
       );
 
       final keys = find
-          .byType(ListTile)
+          .byType(CoplanarCard)
           .evaluate()
           .map((e) => e.widget.key)
           .toList();

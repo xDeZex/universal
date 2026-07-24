@@ -30,10 +30,7 @@ void main() {
             ),
           ],
         );
-        final zeroSets = ExerciseEntry(
-          id: 'entry-2',
-          exerciseId: 'exercise-2',
-        );
+        final zeroSets = ExerciseEntry(id: 'entry-2', exerciseId: 'exercise-2');
         final workout = Workout(
           id: 'w1',
           startTime: DateTime(2026, 3, 5, 9, 0),
@@ -91,36 +88,35 @@ void main() {
       },
     );
 
-    testWidgets(
-      'each row in the list renders inside a CoplanarCard',
-      (tester) async {
-        final first = Workout(
-          id: 'w-first',
-          startTime: DateTime(2026, 1, 1, 9, 0),
-          endTime: DateTime(2026, 1, 1, 9, 30),
-        );
-        final second = Workout(
-          id: 'w-second',
-          startTime: DateTime(2026, 1, 2, 9, 0),
-          endTime: DateTime(2026, 1, 2, 9, 30),
-        );
+    testWidgets('each row in the list renders inside a CoplanarCard', (
+      tester,
+    ) async {
+      final first = Workout(
+        id: 'w-first',
+        startTime: DateTime(2026, 1, 1, 9, 0),
+        endTime: DateTime(2026, 1, 1, 9, 30),
+      );
+      final second = Workout(
+        id: 'w-second',
+        startTime: DateTime(2026, 1, 2, 9, 0),
+        endTime: DateTime(2026, 1, 2, 9, 30),
+      );
 
-        await pumpPastWorkoutsScreen(
-          tester,
-          workouts: [first, second],
-          exercises: const [],
-        );
+      await pumpPastWorkoutsScreen(
+        tester,
+        workouts: [first, second],
+        exercises: const [],
+      );
 
-        expect(find.byType(CoplanarCard), findsNWidgets(2));
-        expect(
-          find.descendant(
-            of: find.byType(CoplanarCard),
-            matching: find.byType(ListTile),
-          ),
-          findsNWidgets(2),
-        );
-      },
-    );
+      expect(find.byType(CoplanarCard), findsNWidgets(2));
+      expect(
+        find.descendant(
+          of: find.byType(CoplanarCard),
+          matching: find.byType(ListTile),
+        ),
+        findsNWidgets(2),
+      );
+    });
 
     testWidgets(
       'row summary shows "Unknown Exercise" for an Exercise Entry whose '

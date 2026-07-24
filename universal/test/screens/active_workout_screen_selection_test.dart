@@ -3,27 +3,19 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:universal/models/exercise.dart';
 import 'package:universal/models/workout.dart';
+import 'package:universal/widgets/selection_accent_border.dart';
 
 import 'active_workout_screen_test_helpers.dart';
 
-Color _entryAccentBorderColor(WidgetTester tester, String entryId) {
-  final container = tester.widget<Container>(
-    find.descendant(
-      of: find.byKey(ValueKey('entry-$entryId')),
-      matching: find.byWidgetPredicate(
-        (widget) =>
-            widget is Container &&
-            widget.decoration is BoxDecoration &&
-            (widget.decoration as BoxDecoration).border is Border &&
-            ((widget.decoration as BoxDecoration).border as Border)
-                    .left
-                    .width ==
-                4,
-      ),
-    ),
-  );
-  final border = (container.decoration as BoxDecoration).border as Border;
-  return border.left.color;
+bool _entryIsSelected(WidgetTester tester, String entryId) {
+  return tester
+      .widget<SelectionAccentBorder>(
+        find.descendant(
+          of: find.byKey(ValueKey('entry-$entryId')),
+          matching: find.byType(SelectionAccentBorder),
+        ),
+      )
+      .selected;
 }
 
 void main() {
@@ -49,19 +41,12 @@ void main() {
           exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
         );
 
-        final expectedAccent = Theme.of(
-          tester.element(find.byType(Scaffold)),
-        ).colorScheme.primary;
-
-        expect(
-          _entryAccentBorderColor(tester, 'entry-1'),
-          isNot(expectedAccent),
-        );
+        expect(_entryIsSelected(tester, 'entry-1'), isFalse);
 
         await tester.tap(find.byKey(const ValueKey('entry-header-entry-1')));
         await tester.pumpAndSettle();
 
-        expect(_entryAccentBorderColor(tester, 'entry-1'), expectedAccent);
+        expect(_entryIsSelected(tester, 'entry-1'), isTrue);
       },
     );
 
@@ -86,20 +71,13 @@ void main() {
           ],
         );
 
-        final expectedAccent = Theme.of(
-          tester.element(find.byType(Scaffold)),
-        ).colorScheme.primary;
-
         await tester.tap(find.byKey(const ValueKey('entry-header-entry-1')));
         await tester.pumpAndSettle();
         await tester.tap(find.byKey(const ValueKey('entry-header-entry-2')));
         await tester.pumpAndSettle();
 
-        expect(
-          _entryAccentBorderColor(tester, 'entry-1'),
-          isNot(expectedAccent),
-        );
-        expect(_entryAccentBorderColor(tester, 'entry-2'), expectedAccent);
+        expect(_entryIsSelected(tester, 'entry-1'), isFalse);
+        expect(_entryIsSelected(tester, 'entry-2'), isTrue);
       },
     );
 
@@ -117,15 +95,12 @@ void main() {
         await tester.testTextInput.receiveAction(TextInputAction.done);
         await tester.pumpAndSettle();
 
-        final expectedAccent = Theme.of(
-          tester.element(find.byType(Scaffold)),
-        ).colorScheme.primary;
         final saved = repository.workouts.firstWhere(
           (w) => w.id == 'workout-1',
         );
         final newEntryId = saved.exerciseEntries[0].id;
 
-        expect(_entryAccentBorderColor(tester, newEntryId), expectedAccent);
+        expect(_entryIsSelected(tester, newEntryId), isTrue);
       },
     );
 
@@ -148,10 +123,6 @@ void main() {
         ],
       );
 
-      final expectedAccent = Theme.of(
-        tester.element(find.byType(Scaffold)),
-      ).colorScheme.primary;
-
       await tester.tap(find.byKey(const ValueKey('entry-header-entry-1')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('delete-entry-entry-1')));
@@ -159,7 +130,7 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('confirm-delete-confirm')));
       await tester.pumpAndSettle();
 
-      expect(_entryAccentBorderColor(tester, 'entry-2'), isNot(expectedAccent));
+      expect(_entryIsSelected(tester, 'entry-2'), isFalse);
     });
 
     testWidgets('deleting a non-selected Exercise Entry leaves the current '
@@ -181,10 +152,6 @@ void main() {
         ],
       );
 
-      final expectedAccent = Theme.of(
-        tester.element(find.byType(Scaffold)),
-      ).colorScheme.primary;
-
       await tester.tap(find.byKey(const ValueKey('entry-header-entry-1')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('delete-entry-entry-2')));
@@ -192,7 +159,7 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('confirm-delete-confirm')));
       await tester.pumpAndSettle();
 
-      expect(_entryAccentBorderColor(tester, 'entry-1'), expectedAccent);
+      expect(_entryIsSelected(tester, 'entry-1'), isTrue);
     });
 
     testWidgets(
@@ -226,18 +193,11 @@ void main() {
           exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
         );
 
-        final expectedAccent = Theme.of(
-          tester.element(find.byType(Scaffold)),
-        ).colorScheme.primary;
-
         await tester.tap(find.byKey(const ValueKey('entry-header-entry-1')));
         await tester.pumpAndSettle();
 
         expect(tester.takeException(), isNull);
-        expect(
-          _entryAccentBorderColor(tester, 'entry-1'),
-          isNot(expectedAccent),
-        );
+        expect(_entryIsSelected(tester, 'entry-1'), isFalse);
       },
     );
 
