@@ -60,6 +60,10 @@ void main() {
         findsOneWidget,
       );
 
+      await tester.ensureVisible(
+        find.byKey(const ValueKey('planned-exercise-row-pe-2-0')),
+      );
+      await tester.pumpAndSettle();
       await tester.tap(
         find.byKey(const ValueKey('planned-exercise-row-pe-2-0')),
       );

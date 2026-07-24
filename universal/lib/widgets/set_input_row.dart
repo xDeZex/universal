@@ -34,29 +34,27 @@ class SetInputRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          WeightInputControls(
-            weightStepperKey: weightStepperKey,
-            unitKgKey: unitKgKey,
-            unitLbsKey: unitLbsKey,
-            weight: weight,
-            unit: unit,
-            onWeightChanged: onWeightChanged,
-            onUnitChanged: onUnitChanged,
-          ),
-          const SizedBox(width: 8),
-          NumberStepper(
-            keyPrefix: repsStepperKey,
-            value: reps,
-            step: 1,
-            onChanged: (value) => onRepsChanged(value.toInt()),
-          ),
-        ],
-      ),
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        WeightInputControls(
+          weightStepperKey: weightStepperKey,
+          unitKgKey: unitKgKey,
+          unitLbsKey: unitLbsKey,
+          weight: weight,
+          unit: unit,
+          onWeightChanged: onWeightChanged,
+          onUnitChanged: onUnitChanged,
+        ),
+        NumberStepper(
+          keyPrefix: repsStepperKey,
+          value: reps,
+          step: 1,
+          onChanged: (value) => onRepsChanged(value.toInt()),
+        ),
+      ],
     );
   }
 }

@@ -7,7 +7,7 @@ import 'planned_exercise_row_editor_test_helpers.dart';
 
 void main() {
   group('PlannedExerciseRowEditor weight', () {
-    testWidgets('renders the shared weight stepper and unit chips', (
+    testWidgets('renders the shared weight stepper and unit toggle', (
       tester,
     ) async {
       await pumpEditor(
@@ -48,7 +48,7 @@ void main() {
       },
     );
 
-    testWidgets('tapping the lbs chip calls onChanged with the new unit', (
+    testWidgets('tapping the lbs segment calls onChanged with the new unit', (
       tester,
     ) async {
       await pumpEditor(
@@ -62,10 +62,13 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('row-unit-lbs')));
       await tester.pump();
 
-      final chip = tester.widget<ChoiceChip>(
-        find.byKey(const ValueKey('row-unit-lbs')),
+      final segmentedButton = tester.widget<SegmentedButton<WeightUnit>>(
+        find.ancestor(
+          of: find.byKey(const ValueKey('row-unit-lbs')),
+          matching: find.byType(SegmentedButton<WeightUnit>),
+        ),
       );
-      expect(chip.selected, isTrue);
+      expect(segmentedButton.selected, {WeightUnit.lbs});
     });
   });
 }

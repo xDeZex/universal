@@ -135,13 +135,8 @@ void main() {
         await tester.tap(find.byKey(const ValueKey('add-set')));
         await tester.pumpAndSettle();
 
-        // The unit chip should still read lbs without re-selecting it.
-        expect(
-          tester
-              .widget<ChoiceChip>(find.byKey(const ValueKey('unit-lbs')))
-              .selected,
-          isTrue,
-        );
+        // The unit toggle should still read lbs without re-selecting it.
+        expect(isUnitSelected(tester, 'unit-lbs', WeightUnit.lbs), isTrue);
 
         await tester.tap(
           find.byKey(const ValueKey('weight-stepper-increment')),

@@ -58,10 +58,10 @@ void main() {
             .data,
         '8',
       );
-      final kgChip = tester.widget<ChoiceChip>(
-        find.byKey(const ValueKey('edit-unit-kg-set-1')),
+      expect(
+        isUnitSelected(tester, 'edit-unit-kg-set-1', WeightUnit.kg),
+        isTrue,
       );
-      expect(kgChip.selected, isTrue);
     });
 
     testWidgets(
@@ -162,12 +162,7 @@ void main() {
         await tester.tap(find.byKey(const ValueKey('entry-header-entry-1')));
         await tester.pumpAndSettle();
 
-        expect(
-          tester
-              .widget<ChoiceChip>(find.byKey(const ValueKey('unit-lbs')))
-              .selected,
-          isTrue,
-        );
+        expect(isUnitSelected(tester, 'unit-lbs', WeightUnit.lbs), isTrue);
       },
     );
   });
