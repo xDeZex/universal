@@ -33,9 +33,3 @@
 ## 6. No outline on any coplanar card, anywhere
 
 - [ ] 6.1 None of `RoutineTile`, the Past Workouts row, `PlannedExerciseCard`, or `ExerciseEntryTile` draws a border/outline on its `CoplanarCard` shape
-
-## 7. Final verification
-
-- [ ] 7.1 `flutter analyze` is clean
-- [ ] 7.2 `flutter test` passes in full
-- [ ] 7.3 Visually verified on the emulator across Manage Routines, Routine, Active Workout, and Past Workouts (including selecting/deselecting an Exercise Entry and confirming no layout shift)
