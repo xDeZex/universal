@@ -80,16 +80,20 @@ The system SHALL clear the current selection when the selected Exercise Entry is
 - **WHEN** the user deletes an Exercise Entry other than the currently selected one
 - **THEN** the currently selected Exercise Entry SHALL remain selected, and the add-Set bar SHALL continue to target it
 
-### Requirement: Exercise Entries render as flat rows with a selected-state tint
-The system SHALL render each Exercise Entry as a flat row group (a bold header row, a column-header row labeling Set/Weight/Reps once Sets exist, then one numbered table row per Set — each preceded by a thin divider for readability — with a further divider before the next Exercise Entry) rather than as an elevated Card. Each Set row SHALL show a small numbered badge (its position within the Exercise Entry), its weight (with unit) and reps in their own columns, with no other per-row status indicator (e.g. no checkmark). On a Locked Workout, an additional column SHALL show each Set's logged time. On an in-progress Workout, the selected Exercise Entry's rows SHALL show a background tint that unselected Exercise Entries' rows do not have, and tapping an Exercise Entry's rows SHALL be the mechanism for selecting it.
+### Requirement: Exercise Entries render as a coplanar card with a selected-state accent border
+The system SHALL render each Exercise Entry inside a coplanar card (an elevated, gapped, rounded container consistent with the other gym-tracking rows/cards) containing a bold header row, a column-header row labeling Set/Weight/Reps once Sets exist, then one numbered table row per Set — each preceded by a thin divider for readability. Each Set row SHALL show a small numbered badge (its position within the Exercise Entry), its weight (with unit) and reps in their own columns, with no other per-row status indicator (e.g. no checkmark). On a Locked Workout, an additional column SHALL show each Set's logged time. On an in-progress Workout, the selected Exercise Entry SHALL show a 4dp left accent border in `colorScheme.primary` that unselected Exercise Entries do not have — always rendered, transparent when unselected, so its layout footprint never changes on select/deselect — and tapping an Exercise Entry's rows SHALL be the mechanism for selecting it.
 
-#### Scenario: Selected Exercise Entry is visually tinted
+#### Scenario: Selected Exercise Entry shows an accent border
 - **WHEN** an Exercise Entry is selected on an in-progress Workout
-- **THEN** that Exercise Entry's header row and Set rows SHALL show a background tint, and no other Exercise Entry's rows SHALL be tinted
+- **THEN** that Exercise Entry SHALL show a left accent border in `colorScheme.primary`, and no other Exercise Entry SHALL show the accent border
 
-#### Scenario: Locked Workout rows are not selectable or tintable
+#### Scenario: Locked Workout rows are not selectable and show no accent border
 - **WHEN** the user taps an Exercise Entry's rows on a Locked Workout
-- **THEN** no Exercise Entry SHALL become selected and no row SHALL show the selected-state tint
+- **THEN** no Exercise Entry SHALL become selected and no Exercise Entry SHALL show the accent border
+
+#### Scenario: Deselecting an Exercise Entry does not shift its content
+- **WHEN** the currently selected Exercise Entry becomes deselected (e.g. by selecting a different Exercise Entry)
+- **THEN** its accent border SHALL become transparent rather than being removed, so its content SHALL NOT shift horizontally
 
 ### Requirement: Finish action is disabled until the Workout has a logged Set
 The system SHALL disable the Finish action on the active Workout screen until at least one Set has been logged anywhere in the Workout, and SHALL return to the Workout home screen showing "Start Workout" after a successful finish.
