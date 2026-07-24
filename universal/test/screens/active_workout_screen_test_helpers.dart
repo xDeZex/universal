@@ -35,6 +35,15 @@ String weightStepperValue(WidgetTester tester) => tester
     .widget<Text>(find.byKey(const ValueKey('weight-stepper-value')))
     .data!;
 
-String repsStepperValue(WidgetTester tester) => tester
-    .widget<Text>(find.byKey(const ValueKey('reps-stepper-value')))
-    .data!;
+String repsStepperValue(WidgetTester tester) =>
+    tester.widget<Text>(find.byKey(const ValueKey('reps-stepper-value'))).data!;
+
+bool isUnitSelected(WidgetTester tester, String key, WeightUnit unit) {
+  final segmentedButton = tester.widget<SegmentedButton<WeightUnit>>(
+    find.ancestor(
+      of: find.byKey(ValueKey(key)),
+      matching: find.byType(SegmentedButton<WeightUnit>),
+    ),
+  );
+  return segmentedButton.selected.contains(unit);
+}

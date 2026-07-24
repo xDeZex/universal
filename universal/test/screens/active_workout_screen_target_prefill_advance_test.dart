@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:universal/models/exercise.dart';
@@ -13,7 +12,6 @@ void main() {
   });
 
   group('ActiveWorkoutScreen add-Set bar target prefill after logging', () {
-
     testWidgets(
       'logging a Set on a still-selected Exercise Entry re-prefills the '
       'bar from the newly-current target rather than resetting to zero',
@@ -83,13 +81,9 @@ void main() {
 
         await tapAndSettle(tester, 'entry-header-entry-1');
 
-        expect(
-          tester.widget<ChoiceChip>(find.byKey(const ValueKey('unit-lbs'))).selected,
-          isTrue,
-        );
+        expect(isUnitSelected(tester, 'unit-lbs', WeightUnit.lbs), isTrue);
         expect(weightStepperValue(tester), '135');
       },
     );
-
   });
 }

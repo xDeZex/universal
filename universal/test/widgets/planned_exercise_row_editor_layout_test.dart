@@ -1,5 +1,4 @@
-import 'dart:ui';
-
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:universal/models/routine.dart';
 import 'package:universal/models/workout.dart';
@@ -24,6 +23,8 @@ void main() {
       );
 
       expect(tester.takeException(), isNull);
+      expect(find.byType(SingleChildScrollView), findsNothing);
+      expect(find.byType(Spacer), findsOneWidget);
     });
 
     testWidgets('does not overflow at a real phone width for a ranged row', (
@@ -42,6 +43,8 @@ void main() {
       );
 
       expect(tester.takeException(), isNull);
+      expect(find.byType(SingleChildScrollView), findsNothing);
+      expect(find.byType(Spacer), findsOneWidget);
     });
   });
 }

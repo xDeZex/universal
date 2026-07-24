@@ -75,43 +75,46 @@ class PlannedExerciseRowEditor extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final reps = row.reps;
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          switch (reps) {
-            FixedReps() => _buildFixedReps(reps),
-            RangeReps() => _buildRangeReps(reps),
-          },
-          IconButton(
-            key: ValueKey('$keyPrefix-range-toggle'),
-            icon: Icon(reps is RangeReps ? Icons.height : Icons.swap_vert),
-            tooltip: reps is RangeReps
-                ? 'Use a fixed rep count'
-                : 'Use a rep range',
-            onPressed: _toggleRange,
-          ),
-          const SizedBox(width: 8),
-          WeightInputControls(
-            weightStepperKey: '$keyPrefix-weight-stepper',
-            unitKgKey: '$keyPrefix-unit-kg',
-            unitLbsKey: '$keyPrefix-unit-lbs',
-            weight: row.weight.value,
-            unit: row.weight.unit,
-            onWeightChanged: (value) => onChanged(
-              row.copyWith(
-                weight: PlannedWeight(value: value, unit: row.weight.unit),
-              ),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            switch (reps) {
+              FixedReps() => _buildFixedReps(reps),
+              RangeReps() => _buildRangeReps(reps),
+            },
+            const Spacer(),
+            IconButton(
+              key: ValueKey('$keyPrefix-range-toggle'),
+              icon: Icon(reps is RangeReps ? Icons.height : Icons.swap_vert),
+              tooltip: reps is RangeReps
+                  ? 'Use a fixed rep count'
+                  : 'Use a rep range',
+              onPressed: _toggleRange,
             ),
-            onUnitChanged: (unit) => onChanged(
-              row.copyWith(
-                weight: PlannedWeight(value: row.weight.value, unit: unit),
-              ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        WeightInputControls(
+          weightStepperKey: '$keyPrefix-weight-stepper',
+          unitKgKey: '$keyPrefix-unit-kg',
+          unitLbsKey: '$keyPrefix-unit-lbs',
+          weight: row.weight.value,
+          unit: row.weight.unit,
+          onWeightChanged: (value) => onChanged(
+            row.copyWith(
+              weight: PlannedWeight(value: value, unit: row.weight.unit),
             ),
           ),
-        ],
-      ),
+          onUnitChanged: (unit) => onChanged(
+            row.copyWith(
+              weight: PlannedWeight(value: row.weight.value, unit: unit),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

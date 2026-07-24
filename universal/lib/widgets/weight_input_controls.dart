@@ -40,20 +40,26 @@ class WeightInputControls extends StatelessWidget {
           onChanged: onWeightChanged,
         ),
         const SizedBox(width: 8),
-        ChoiceChip(
-          key: ValueKey(unitKgKey),
-          label: const Text('kg'),
-          showCheckmark: false,
-          selected: unit == WeightUnit.kg,
-          onSelected: (_) => onUnitChanged(WeightUnit.kg),
-        ),
-        const SizedBox(width: 8),
-        ChoiceChip(
-          key: ValueKey(unitLbsKey),
-          label: const Text('lbs'),
-          showCheckmark: false,
-          selected: unit == WeightUnit.lbs,
-          onSelected: (_) => onUnitChanged(WeightUnit.lbs),
+        SegmentedButton<WeightUnit>(
+          segments: [
+            ButtonSegment(
+              value: WeightUnit.kg,
+              label: Text('kg', key: ValueKey(unitKgKey)),
+            ),
+            ButtonSegment(
+              value: WeightUnit.lbs,
+              label: Text('lbs', key: ValueKey(unitLbsKey)),
+            ),
+          ],
+          selected: {unit},
+          showSelectedIcon: false,
+          onSelectionChanged: (selected) => onUnitChanged(selected.first),
+          style: ButtonStyle(
+            visualDensity: VisualDensity.compact,
+            shape: WidgetStateProperty.all(
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+            ),
+          ),
         ),
       ],
     );

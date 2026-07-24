@@ -456,10 +456,7 @@ void main() {
         await tester.tap(find.byKey(const ValueKey('entry-header-entry-1')));
         await tester.pumpAndSettle();
 
-        final kgChip = tester.widget<ChoiceChip>(
-          find.byKey(const ValueKey('unit-kg')),
-        );
-        expect(kgChip.selected, isTrue);
+        expect(isUnitSelected(tester, 'unit-kg', WeightUnit.kg), isTrue);
       },
     );
 
@@ -500,24 +497,14 @@ void main() {
 
         expect(weightStepperValue(tester), '0');
         expect(repsStepperValue(tester), '0');
-        expect(
-          tester
-              .widget<ChoiceChip>(find.byKey(const ValueKey('unit-kg')))
-              .selected,
-          isTrue,
-        );
+        expect(isUnitSelected(tester, 'unit-kg', WeightUnit.kg), isTrue);
 
         // Switch back to entry-2: unit is sticky lbs, steppers reset to zero.
         await tapAndSettle(tester, 'entry-header-entry-2');
 
         expect(weightStepperValue(tester), '0');
         expect(repsStepperValue(tester), '0');
-        expect(
-          tester
-              .widget<ChoiceChip>(find.byKey(const ValueKey('unit-lbs')))
-              .selected,
-          isTrue,
-        );
+        expect(isUnitSelected(tester, 'unit-lbs', WeightUnit.lbs), isTrue);
 
         final saved = repository.workouts.firstWhere(
           (w) => w.id == 'workout-1',

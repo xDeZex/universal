@@ -29,7 +29,7 @@ void main() {
   }
 
   group('WeightInputControls', () {
-    testWidgets('renders a weight stepper and kg/lbs choice chips', (
+    testWidgets('renders a weight stepper and a kg/lbs segmented toggle', (
       tester,
     ) async {
       await pumpControls(tester, weight: 60, unit: WeightUnit.kg);
@@ -39,8 +39,14 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('60'), findsOneWidget);
+      expect(find.byType(SegmentedButton<WeightUnit>), findsOneWidget);
       expect(find.byKey(const ValueKey('unit-kg')), findsOneWidget);
       expect(find.byKey(const ValueKey('unit-lbs')), findsOneWidget);
+
+      final segmentedButton = tester.widget<SegmentedButton<WeightUnit>>(
+        find.byType(SegmentedButton<WeightUnit>),
+      );
+      expect(segmentedButton.selected, {WeightUnit.kg});
     });
 
     testWidgets('incrementing the weight stepper calls onWeightChanged', (
@@ -60,7 +66,7 @@ void main() {
       expect(changed, 62.5);
     });
 
-    testWidgets('tapping the lbs chip calls onUnitChanged', (tester) async {
+    testWidgets('tapping the lbs segment calls onUnitChanged', (tester) async {
       WeightUnit? changed;
       await pumpControls(
         tester,

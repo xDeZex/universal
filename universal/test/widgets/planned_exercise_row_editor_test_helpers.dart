@@ -11,14 +11,19 @@ Future<PlannedExerciseRow> pumpEditor(
   await tester.pumpWidget(
     MaterialApp(
       home: Scaffold(
-        body: StatefulBuilder(
-          builder: (context, setState) {
-            return PlannedExerciseRowEditor(
-              keyPrefix: 'row',
-              row: current,
-              onChanged: (updated) => setState(() => current = updated),
-            );
-          },
+        body: Padding(
+          // Matches the horizontal padding PlannedExerciseCard._buildRow
+          // applies around this editor at its real call site.
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+          child: StatefulBuilder(
+            builder: (context, setState) {
+              return PlannedExerciseRowEditor(
+                keyPrefix: 'row',
+                row: current,
+                onChanged: (updated) => setState(() => current = updated),
+              );
+            },
+          ),
         ),
       ),
     ),
