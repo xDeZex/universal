@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/routine.dart';
+import 'coplanar_card.dart';
 import 'planned_exercise_row_editor.dart';
 
 class PlannedExerciseCard extends StatelessWidget {
@@ -81,7 +82,7 @@ class PlannedExerciseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return CoplanarCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

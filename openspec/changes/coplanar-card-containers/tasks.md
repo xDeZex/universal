@@ -18,8 +18,8 @@
 
 ## 4. `PlannedExerciseCard` renders through `CoplanarCard`
 
-- [ ] 4.1 `PlannedExerciseCard`'s outer `Card` is replaced with `CoplanarCard`, with no other change to its header/row/add-row content
-- [ ] 4.2 Existing `PlannedExerciseCard`-related tests (Routine screen, reorder, row editing) pass unchanged
+- [x] 4.1 `PlannedExerciseCard`'s outer `Card` is replaced with `CoplanarCard`, with no other change to its header/row/add-row content
+- [x] 4.2 Existing `PlannedExerciseCard`-related tests (Routine screen, reorder, row editing) pass unchanged
 
 ## 5. `ExerciseEntryTile` renders through `CoplanarCard` + `SelectionAccentBorder`
 
