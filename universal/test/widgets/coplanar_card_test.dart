@@ -43,7 +43,9 @@ void main() {
 
       final cardTheme = AppTheme.dark.cardTheme;
       final material = tester.widget<Material>(
-        find.descendant(of: find.byType(Card), matching: find.byType(Material)).first,
+        find
+            .descendant(of: find.byType(Card), matching: find.byType(Material))
+            .first,
       );
       expect(material.color, cardTheme.color);
       expect(material.elevation, cardTheme.elevation);
