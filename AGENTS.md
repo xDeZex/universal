@@ -10,7 +10,10 @@ See `CONTEXT.md` for the full domain vocabulary.
 
 Never `git push` unless explicitly told to.
 
-Before running `/opsx:explore`, `/opsx:propose`, or `/opsx:apply` — or starting any other fresh implementation — create a new branch (`git checkout -b <name>`), then run `git fetch origin && git rebase origin/main` to ensure it is up to date with main. For continuing work on an existing branch, just rebase. Never explore, propose, or apply on `main`.
+OpenSpec's `proposal → specs → design → tasks → apply` pipeline is for `services/`/`deploy/` work only. App work (`universal/`) uses `wayfinder`/`to-tickets` → `implement-ticket` instead — see `universal/CLAUDE.md`.
+
+Before starting any fresh implementation — `/opsx:explore`/`/opsx:propose`/`/opsx:apply`, `implement-ticket`, or anything else — create a new branch (`git checkout -b <name>`), then run `git fetch origin && git rebase origin/main` to ensure it is up to date with main. For continuing work on an existing branch, just rebase. Never explore, propose, apply, or implement on `main`.
+
 
 ### Background agents
 
@@ -22,7 +25,7 @@ Investigate questions against primary sources — prefer official docs, specs, a
 
 ### Commit and review workflow
 
-OpenSpec apply commits are marked `[temporary]` in their message. These are expected to be squashed before a PR.
+Commits made during implementation are marked `[temporary]` in their message. These are expected to be squashed before a PR.
 
 Each PR must have exactly one commit and must target `main`. Before creating a PR, squash all temporary commits into one: `git reset --soft origin/main`, recommit with the final message. If the branch contains multiple unrelated commits, first fetch and check whether any earlier PRs have already merged into `main` (`git fetch origin && git log origin/main..HEAD`) — the branch may look clean once main is up to date. Only if genuinely unrelated commits remain should you create a separate PR for each by cherry-picking onto a fresh branch from `main`.
 
