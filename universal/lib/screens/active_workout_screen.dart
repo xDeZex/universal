@@ -102,6 +102,15 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
     }
     final exercises = repo.exercises;
     final canAddNew = _controller.canAddNew(workout);
+    final selectedEntryId = _controller.selectedEntryId;
+    final selectedEntry = selectedEntryId == null
+        ? null
+        : workout.exerciseEntries.firstWhere(
+            (entry) => entry.id == selectedEntryId,
+          );
+    final prefill = selectedEntry == null
+        ? null
+        : _controller.prefillFor(selectedEntry);
 
     return Scaffold(
       appBar: AppBar(title: Text(_appBarTitle(context, workout))),
@@ -132,20 +141,23 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
             Expanded(
               child: ListView(children: _buildEntryRows(workout, exercises)),
             ),
-            if (canAddNew && _controller.selectedEntryId != null) ...[
+            if (canAddNew && selectedEntry != null) ...[
               AddSetBar(
-                key: ValueKey(_controller.selectedEntryId),
-                initialUnit: _controller.unitFor(_controller.selectedEntryId!),
+                key: ValueKey(
+                  '${selectedEntry.id}-${selectedEntry.sets.length}',
+                ),
+                initialUnit:
+                    prefill?.unit ?? _controller.unitFor(selectedEntry.id),
+                initialWeight: prefill?.weight ?? 0,
+                initialReps: prefill?.reps ?? 0,
                 onAddSet: (weight, unit, reps) => _controller.addSet(
-                  entryId: _controller.selectedEntryId!,
+                  entryId: selectedEntry.id,
                   weight: weight,
                   unit: unit,
                   reps: reps,
                 ),
-                onUnitChanged: (unit) => _controller.setEntryUnit(
-                  _controller.selectedEntryId!,
-                  unit,
-                ),
+                onUnitChanged: (unit) =>
+                    _controller.setEntryUnit(selectedEntry.id, unit),
               ),
               const Divider(height: 1),
             ],

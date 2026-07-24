@@ -1,5 +1,5 @@
 import 'unique_name.dart';
-import 'workout.dart';
+import 'weight_unit.dart';
 
 sealed class RepsTarget {
   const RepsTarget();

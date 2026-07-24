@@ -5,12 +5,16 @@ import 'set_input_row.dart';
 
 class AddSetBar extends StatefulWidget {
   final WeightUnit initialUnit;
+  final num initialWeight;
+  final int initialReps;
   final void Function(num weight, WeightUnit unit, int reps) onAddSet;
   final void Function(WeightUnit unit) onUnitChanged;
 
   const AddSetBar({
     super.key,
     required this.initialUnit,
+    this.initialWeight = 0,
+    this.initialReps = 0,
     required this.onAddSet,
     required this.onUnitChanged,
   });
@@ -21,13 +25,15 @@ class AddSetBar extends StatefulWidget {
 
 class _AddSetBarState extends State<AddSetBar> {
   late WeightUnit _unit;
-  num _weight = 0;
-  int _reps = 0;
+  late num _weight;
+  late int _reps;
 
   @override
   void initState() {
     super.initState();
     _unit = widget.initialUnit;
+    _weight = widget.initialWeight;
+    _reps = widget.initialReps;
   }
 
   void _setUnit(WeightUnit unit) {

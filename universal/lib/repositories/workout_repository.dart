@@ -54,14 +54,43 @@ class WorkoutRepository extends ChangeNotifier {
   }
 
   void startWorkout({String? routineId}) {
+    final routineIndex = routineId == null
+        ? -1
+        : routines.indexWhere((r) => r.id == routineId);
+    if (routineIndex != -1 && routines[routineIndex].isLocked) return;
+
+    final entries = routineIndex == -1
+        ? const <ExerciseEntry>[]
+        : _entriesFromPlannedExercises(
+            routines[routineIndex].plannedExercises,
+          );
+
     final workout = Workout(
       id: DateTime.now().microsecondsSinceEpoch.toString(),
       startTime: DateTime.now(),
       routineId: routineId,
+      exerciseEntries: entries,
     );
     _workouts = [...workouts, workout];
     _storage.saveWorkouts(workouts);
     notifyListeners();
+  }
+
+  /// Builds one [ExerciseEntry] per [plannedExercises] entry, each with an
+  /// empty `sets` list and `targets` set to a one-time snapshot of that
+  /// Planned Exercise's rows.
+  List<ExerciseEntry> _entriesFromPlannedExercises(
+    List<PlannedExercise> plannedExercises,
+  ) {
+    final baseId = DateTime.now().microsecondsSinceEpoch;
+    return [
+      for (var i = 0; i < plannedExercises.length; i++)
+        ExerciseEntry(
+          id: '$baseId-$i',
+          exerciseId: plannedExercises[i].exerciseId,
+          targets: plannedExercises[i].rows,
+        ),
+    ];
   }
 
   ExerciseEntry? addExerciseEntry(String workoutId, String name) {
