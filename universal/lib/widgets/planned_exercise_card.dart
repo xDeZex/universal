@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../models/routine.dart';
 import 'coplanar_card.dart';
 import 'planned_exercise_row_editor.dart';
+import 'selection_accent_border.dart';
+import 'zebra_row.dart';
 
 class PlannedExerciseCard extends StatelessWidget {
   final PlannedExercise plannedExercise;
@@ -52,31 +54,45 @@ class PlannedExerciseCard extends StatelessWidget {
       ],
     );
 
-    final rowLine = Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-      child: onRowTap != null
-          ? InkWell(
-              key: ValueKey(rowKey),
-              onTap: () => onRowTap!(index),
-              child: rowContent,
-            )
-          : KeyedSubtree(key: ValueKey(rowKey), child: rowContent),
-    );
+    final tappableRow = onRowTap != null
+        ? InkWell(
+            key: ValueKey(rowKey),
+            onTap: () => onRowTap!(index),
+            child: rowContent,
+          )
+        : KeyedSubtree(key: ValueKey(rowKey), child: rowContent);
 
-    if (openRowIndex != index) return rowLine;
-
-    return Column(
-      children: [
-        rowLine,
-        Padding(
+    if (openRowIndex != index) {
+      return ZebraRow(
+        index: index,
+        child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-          child: PlannedExerciseRowEditor(
-            keyPrefix: 'row-${plannedExercise.id}-$index',
-            row: row,
-            onChanged: (updated) => onRowChanged?.call(index, updated),
-          ),
+          child: tappableRow,
         ),
-      ],
+      );
+    }
+
+    // Left inset drops from 16 to 12 here because SelectionAccentBorder's
+    // 4dp border auto-adds the remaining 4dp of padding — keeping the row
+    // flush with the closed state's 16dp inset instead of shifting it.
+    return SelectionAccentBorder(
+      selected: true,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 0, 16, 8),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: tappableRow,
+            ),
+            PlannedExerciseRowEditor(
+              keyPrefix: 'row-${plannedExercise.id}-$index',
+              row: row,
+              onChanged: (updated) => onRowChanged?.call(index, updated),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
