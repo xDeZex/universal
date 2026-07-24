@@ -254,8 +254,8 @@ void main() {
     );
 
     testWidgets(
-      'Exercise Entries render as flat rows (no Card) with a Divider '
-      'between entries',
+      'Exercise Entries each render inside a Card with a Divider between '
+      'entries',
       (tester) async {
         final entry1 = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
         final entry2 = ExerciseEntry(id: 'entry-2', exerciseId: 'exercise-2');
@@ -274,7 +274,7 @@ void main() {
           ],
         );
 
-        expect(find.byType(Card), findsNothing);
+        expect(find.byType(Card), findsNWidgets(2));
         expect(find.byType(Divider), findsOneWidget);
       },
     );

@@ -23,12 +23,12 @@
 
 ## 5. `ExerciseEntryTile` renders through `CoplanarCard` + `SelectionAccentBorder`
 
-- [ ] 5.1 `ExerciseEntryTile`'s root becomes `CoplanarCard(child: SelectionAccentBorder(child: ...))`, removing the `Material(color: tint)` root and the `tint` variable entirely
-- [ ] 5.2 The entry's header row, column-header row, and per-Set rows (with their existing dividers) render unchanged inside the new structure
-- [ ] 5.3 On an in-progress Workout, selecting an Exercise Entry shows the left accent border in `colorScheme.primary`; no other entry shows it
-- [ ] 5.4 On a Locked Workout, tapping an Exercise Entry's rows does not select it and shows no accent border
-- [ ] 5.5 Deselecting a previously-selected Exercise Entry turns its border transparent without shifting its content
-- [ ] 5.6 `active_workout_screen_selection_test.dart`'s 5 selection tests are rewritten to assert `SelectionAccentBorder`'s border color at the existing `entry-{id}` keys instead of `Material.color`, and pass
+- [x] 5.1 `ExerciseEntryTile`'s root becomes `CoplanarCard(child: SelectionAccentBorder(child: ...))`, removing the `Material(color: tint)` root and the `tint` variable entirely
+- [x] 5.2 The entry's header row, column-header row, and per-Set rows (with their existing dividers) render unchanged inside the new structure
+- [x] 5.3 On an in-progress Workout, selecting an Exercise Entry shows the left accent border in `colorScheme.primary`; no other entry shows it
+- [x] 5.4 On a Locked Workout, tapping an Exercise Entry's rows does not select it and shows no accent border
+- [x] 5.5 Deselecting a previously-selected Exercise Entry turns its border transparent without shifting its content
+- [x] 5.6 `active_workout_screen_selection_test.dart`'s 5 selection tests are rewritten to assert `SelectionAccentBorder`'s border color at the existing `entry-{id}` keys instead of `Material.color`, and pass
 
 ## 6. No outline on any coplanar card, anywhere
 
