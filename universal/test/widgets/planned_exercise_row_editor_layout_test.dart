@@ -11,8 +11,8 @@ void main() {
     testWidgets('does not overflow at a real phone width for a fixed row', (
       tester,
     ) async {
-      tester.view.physicalSize = const Size(375, 800);
-      tester.view.devicePixelRatio = 1.0;
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 2.625;
       addTearDown(tester.view.reset);
 
       await pumpEditor(
@@ -29,8 +29,8 @@ void main() {
     testWidgets('does not overflow at a real phone width for a ranged row', (
       tester,
     ) async {
-      tester.view.physicalSize = const Size(375, 800);
-      tester.view.devicePixelRatio = 1.0;
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 2.625;
       addTearDown(tester.view.reset);
 
       await pumpEditor(
