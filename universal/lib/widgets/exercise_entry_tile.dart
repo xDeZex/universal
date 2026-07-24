@@ -9,6 +9,7 @@ import 'coplanar_card.dart';
 import 'dashed_circle_badge.dart';
 import 'edit_set_dialog.dart';
 import 'selection_accent_border.dart';
+import 'zebra_row.dart';
 
 class ExerciseEntryTile extends StatefulWidget {
   final ExerciseEntry entry;
@@ -112,9 +113,12 @@ class _ExerciseEntryTileState extends State<ExerciseEntryTile> {
             if (rowCount > 0) _columnHeaderRow(theme),
             for (var i = 0; i < rowCount; i++) ...[
               const Divider(height: 1, indent: _setColumnWidth + 16),
-              i < sets.length
-                  ? _setRow(theme, i, sets[i])
-                  : _targetRow(theme, i, targets![i]),
+              ZebraRow(
+                index: i,
+                child: i < sets.length
+                    ? _setRow(theme, i, sets[i])
+                    : _targetRow(theme, i, targets![i]),
+              ),
             ],
           ],
         ),
