@@ -50,6 +50,10 @@ void main() {
       expect(material.color, cardTheme.color);
       expect(material.elevation, cardTheme.elevation);
       expect(material.shape, cardTheme.shape);
+      expect(
+        (material.shape as RoundedRectangleBorder).side,
+        BorderSide.none,
+      );
     });
 
     testWidgets('sets clipBehavior: Clip.antiAlias', (tester) async {
