@@ -1,8 +1,8 @@
 ## 1. `CoplanarCard` exists and is theme-only
 
-- [ ] 1.1 `CoplanarCard` renders its child inside a `Card` with 12dp horizontal / 8dp vertical margin
-- [ ] 1.2 `CoplanarCard` sets no local color, elevation, or shape/border override — it renders identically to the app's global `CardThemeData` defaults
-- [ ] 1.3 `CoplanarCard` sets `clipBehavior: Clip.antiAlias`
+- [x] 1.1 `CoplanarCard` renders its child inside a `Card` with 12dp horizontal / 8dp vertical margin
+- [x] 1.2 `CoplanarCard` sets no local color, elevation, or shape/border override — it renders identically to the app's global `CardThemeData` defaults
+- [x] 1.3 `CoplanarCard` sets `clipBehavior: Clip.antiAlias`
 
 ## 2. `SelectionAccentBorder` exists and never shifts layout
 
