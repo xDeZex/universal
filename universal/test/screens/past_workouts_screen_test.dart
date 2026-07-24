@@ -1,32 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:universal/models/exercise.dart';
 import 'package:universal/models/workout.dart';
-import 'package:universal/repositories/workout_repository.dart';
 import 'package:universal/screens/active_workout_screen.dart';
-import 'package:universal/screens/past_workouts_screen.dart';
 
-Future<WorkoutRepository> _pumpPastWorkoutsScreen(
-  WidgetTester tester, {
-  required List<Workout> workouts,
-  required List<Exercise> exercises,
-}) async {
-  final repository = WorkoutRepository(
-    initialWorkouts: workouts,
-    initialExercises: exercises,
-  );
-  await tester.pumpWidget(
-    MaterialApp(
-      home: ChangeNotifierProvider<WorkoutRepository>.value(
-        value: repository,
-        child: const PastWorkoutsScreen(),
-      ),
-    ),
-  );
-  return repository;
-}
+import 'past_workouts_screen_test_helpers.dart';
 
 void main() {
   setUp(() {
@@ -47,7 +26,7 @@ void main() {
           startTime: DateTime(2026, 1, 2, 9, 0),
         );
 
-        await _pumpPastWorkoutsScreen(
+        await pumpPastWorkoutsScreen(
           tester,
           workouts: [finished, inProgress],
           exercises: const [],
@@ -83,7 +62,7 @@ void main() {
         endTime: DateTime(2026, 1, 2, 9, 30),
       );
 
-      await _pumpPastWorkoutsScreen(
+      await pumpPastWorkoutsScreen(
         tester,
         // Deliberately out of order, so the test can only pass if the
         // screen itself sorts rather than preserving input order.
@@ -105,84 +84,6 @@ void main() {
     });
 
     testWidgets(
-      'row shows the end date and a comma-joined list of Exercise Entry '
-      'names in entry order, including an entry with zero logged Sets',
-      (tester) async {
-        final withSets = ExerciseEntry(
-          id: 'entry-1',
-          exerciseId: 'exercise-1',
-          sets: [
-            ExerciseSet(
-              id: 'set-1',
-              weight: 60,
-              unit: WeightUnit.kg,
-              reps: 5,
-              loggedAt: DateTime(2026, 3, 5, 9, 20),
-            ),
-          ],
-        );
-        final zeroSets = ExerciseEntry(
-          id: 'entry-2',
-          exerciseId: 'exercise-2',
-        );
-        final workout = Workout(
-          id: 'w1',
-          startTime: DateTime(2026, 3, 5, 9, 0),
-          endTime: DateTime(2026, 3, 5, 9, 30),
-          exerciseEntries: [withSets, zeroSets],
-        );
-
-        await _pumpPastWorkoutsScreen(
-          tester,
-          workouts: [workout],
-          exercises: [
-            Exercise(id: 'exercise-1', name: 'Bench Press'),
-            Exercise(id: 'exercise-2', name: 'Squat'),
-          ],
-        );
-
-        expect(find.text('Mar 5, 2026'), findsOneWidget);
-        expect(find.text('Bench Press, Squat'), findsOneWidget);
-      },
-    );
-
-    testWidgets(
-      'truncates an overflowing exercise summary with an ellipsis instead '
-      'of wrapping or overflowing the row',
-      (tester) async {
-        final longNames = List.generate(
-          20,
-          (i) => Exercise(id: 'exercise-$i', name: 'Exercise Number $i'),
-        );
-        final entries = longNames
-            .map((e) => ExerciseEntry(id: 'entry-${e.id}', exerciseId: e.id))
-            .toList();
-        final workout = Workout(
-          id: 'w1',
-          startTime: DateTime(2026, 3, 5, 9, 0),
-          endTime: DateTime(2026, 3, 5, 9, 30),
-          exerciseEntries: entries,
-        );
-
-        await _pumpPastWorkoutsScreen(
-          tester,
-          workouts: [workout],
-          exercises: longNames,
-        );
-
-        final summaryText = tester.widget<Text>(
-          find.text(
-            longNames.map((e) => e.name).join(', '),
-            findRichText: false,
-          ),
-        );
-
-        expect(summaryText.maxLines, 1);
-        expect(summaryText.overflow, TextOverflow.ellipsis);
-      },
-    );
-
-    testWidgets(
       'shows a centered "No past workouts yet" message and no list rows '
       'when there are no finished Workouts',
       (tester) async {
@@ -191,7 +92,7 @@ void main() {
           startTime: DateTime(2026, 1, 1, 9, 0),
         );
 
-        await _pumpPastWorkoutsScreen(
+        await pumpPastWorkoutsScreen(
           tester,
           workouts: [inProgress],
           exercises: const [],
@@ -221,7 +122,7 @@ void main() {
           endTime: DateTime(2026, 1, 1, 9, 30),
         );
 
-        await _pumpPastWorkoutsScreen(
+        await pumpPastWorkoutsScreen(
           tester,
           workouts: [finished],
           exercises: const [],
@@ -260,7 +161,7 @@ void main() {
           exerciseEntries: [withSets, zeroSets],
         );
 
-        await _pumpPastWorkoutsScreen(
+        await pumpPastWorkoutsScreen(
           tester,
           workouts: [workout],
           exercises: [
@@ -312,7 +213,7 @@ void main() {
           exerciseEntries: [entry],
         );
 
-        final repository = await _pumpPastWorkoutsScreen(
+        final repository = await pumpPastWorkoutsScreen(
           tester,
           workouts: [workout],
           exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
@@ -334,28 +235,6 @@ void main() {
           (w) => w.id == 'w-finished',
         );
         expect(saved.exerciseEntries[0].sets[0].weight, 62.5);
-      },
-    );
-
-    testWidgets(
-      'row summary shows "Unknown Exercise" for an Exercise Entry whose '
-      'exerciseId has no matching Exercise',
-      (tester) async {
-        final entry = ExerciseEntry(id: 'entry-1', exerciseId: 'missing');
-        final workout = Workout(
-          id: 'w1',
-          startTime: DateTime(2026, 1, 1, 9, 0),
-          endTime: DateTime(2026, 1, 1, 9, 30),
-          exerciseEntries: [entry],
-        );
-
-        await _pumpPastWorkoutsScreen(
-          tester,
-          workouts: [workout],
-          exercises: const [],
-        );
-
-        expect(find.text('Unknown Exercise'), findsOneWidget);
       },
     );
   });

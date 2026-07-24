@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/routine.dart';
+import 'coplanar_card.dart';
 
 class RoutineTile extends StatelessWidget {
   final Routine routine;
@@ -10,6 +11,8 @@ class RoutineTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(title: Text(routine.name), onTap: onTap);
+    return CoplanarCard(
+      child: ListTile(title: Text(routine.name), onTap: onTap),
+    );
   }
 }

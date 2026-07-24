@@ -12,9 +12,9 @@
 
 ## 3. Manage Routines row and Past Workouts row render through `CoplanarCard`
 
-- [ ] 3.1 `RoutineTile` renders its `ListTile` inside a `CoplanarCard`
-- [ ] 3.2 Each row in the Past Workouts list renders inside a `CoplanarCard`
-- [ ] 3.3 `manage_routines_screen_test.dart` and `past_workouts_screen_test.dart` pass against the new structure
+- [x] 3.1 `RoutineTile` renders its `ListTile` inside a `CoplanarCard`
+- [x] 3.2 Each row in the Past Workouts list renders inside a `CoplanarCard`
+- [x] 3.3 `manage_routines_screen_test.dart` and `past_workouts_screen_test.dart` pass against the new structure
 
 ## 4. `PlannedExerciseCard` renders through `CoplanarCard`
 

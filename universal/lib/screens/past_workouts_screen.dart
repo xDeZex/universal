@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../models/exercise.dart';
 import '../models/workout.dart';
 import '../repositories/workout_repository.dart';
+import '../widgets/coplanar_card.dart';
 import 'active_workout_screen.dart';
 import 'navigation_helpers.dart';
 
@@ -33,22 +34,24 @@ class PastWorkoutsScreen extends StatelessWidget {
           ? const Center(child: Text('No past workouts yet'))
           : ListView(
               children: finished.map((workout) {
-                return ListTile(
-                  key: ValueKey('past-workout-${workout.id}'),
-                  title: Text(
-                    MaterialLocalizations.of(
+                return CoplanarCard(
+                  child: ListTile(
+                    key: ValueKey('past-workout-${workout.id}'),
+                    title: Text(
+                      MaterialLocalizations.of(
+                        context,
+                      ).formatShortDate(workout.endTime!),
+                    ),
+                    subtitle: Text(
+                      _exerciseSummary(workout, repo.exercises),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    onTap: () => pushWithRepository(
                       context,
-                    ).formatShortDate(workout.endTime!),
-                  ),
-                  subtitle: Text(
-                    _exerciseSummary(workout, repo.exercises),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  onTap: () => pushWithRepository(
-                    context,
-                    repo,
-                    (context) => ActiveWorkoutScreen(workoutId: workout.id),
+                      repo,
+                      (context) => ActiveWorkoutScreen(workoutId: workout.id),
+                    ),
                   ),
                 );
               }).toList(),
