@@ -151,10 +151,7 @@ void main() {
             ),
           ],
         );
-        final zeroSets = ExerciseEntry(
-          id: 'entry-2',
-          exerciseId: 'exercise-2',
-        );
+        final zeroSets = ExerciseEntry(id: 'entry-2', exerciseId: 'exercise-2');
         final workout = Workout(
           id: 'w-finished',
           startTime: DateTime(2026, 1, 1, 9, 0),
@@ -190,53 +187,48 @@ void main() {
       },
     );
 
-    testWidgets(
-      'editing a Set from a Past Workout\'s detail view persists the '
-      'change through WorkoutRepository, not a no-op',
-      (tester) async {
-        final entry = ExerciseEntry(
-          id: 'entry-1',
-          exerciseId: 'exercise-1',
-          sets: [
-            ExerciseSet(
-              id: 'set-1',
-              weight: 60,
-              unit: WeightUnit.kg,
-              reps: 5,
-              loggedAt: DateTime(2026, 1, 1, 9, 20),
-            ),
-          ],
-        );
-        final workout = Workout(
-          id: 'w-finished',
-          startTime: DateTime(2026, 1, 1, 9, 0),
-          endTime: DateTime(2026, 1, 1, 9, 30),
-          exerciseEntries: [entry],
-        );
+    testWidgets('editing a Set from a Past Workout\'s detail view persists the '
+        'change through WorkoutRepository, not a no-op', (tester) async {
+      final entry = ExerciseEntry(
+        id: 'entry-1',
+        exerciseId: 'exercise-1',
+        sets: [
+          ExerciseSet(
+            id: 'set-1',
+            weight: 60,
+            unit: WeightUnit.kg,
+            reps: 5,
+            loggedAt: DateTime(2026, 1, 1, 9, 20),
+          ),
+        ],
+      );
+      final workout = Workout(
+        id: 'w-finished',
+        startTime: DateTime(2026, 1, 1, 9, 0),
+        endTime: DateTime(2026, 1, 1, 9, 30),
+        exerciseEntries: [entry],
+      );
 
-        final repository = await pumpPastWorkoutsScreen(
-          tester,
-          workouts: [workout],
-          exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
-        );
+      final repository = await pumpPastWorkoutsScreen(
+        tester,
+        workouts: [workout],
+        exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
+      );
 
-        await tester.tap(find.byKey(const ValueKey('past-workout-w-finished')));
-        await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('past-workout-w-finished')));
+      await tester.pumpAndSettle();
 
-        await tester.tap(find.byKey(const ValueKey('set-set-1')));
-        await tester.pumpAndSettle();
-        await tester.tap(
-          find.byKey(const ValueKey('edit-weight-stepper-set-1-increment')),
-        );
-        await tester.pumpAndSettle();
-        await tester.tap(find.byKey(const ValueKey('edit-submit-set-1')));
-        await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('set-set-1')));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.byKey(const ValueKey('edit-weight-stepper-set-1-increment')),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('edit-submit-set-1')));
+      await tester.pumpAndSettle();
 
-        final saved = repository.workouts.firstWhere(
-          (w) => w.id == 'w-finished',
-        );
-        expect(saved.exerciseEntries[0].sets[0].weight, 62.5);
-      },
-    );
+      final saved = repository.workouts.firstWhere((w) => w.id == 'w-finished');
+      expect(saved.exerciseEntries[0].sets[0].weight, 62.5);
+    });
   });
 }
