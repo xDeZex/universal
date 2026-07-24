@@ -1,0 +1,30 @@
+#!/bin/sh
+# Reject a push whose commits (relative to main) still contain [temporary]
+# tags. OpenSpec apply commits are marked [temporary] and must be squashed
+# into a single final commit before a PR (see CLAUDE.md).
+
+z40=0000000000000000000000000000000000000000
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  # Skip branch deletions.
+  [ "$local_sha" = "$z40" ] && continue
+
+  # main only receives squashed, non-temporary commits via merged PRs.
+  case "$remote_ref" in
+    refs/heads/main) continue ;;
+  esac
+
+  base=$(git merge-base origin/main "$local_sha" 2>/dev/null) || \
+    base=$(git merge-base main "$local_sha" 2>/dev/null) || continue
+  [ -z "$base" ] && continue
+
+  temp_commits=$(git log --format='%h %s' "$base..$local_sha" | grep '\[temporary\]')
+  if [ -n "$temp_commits" ]; then
+    echo "ERROR: refusing to push $local_ref — it contains [temporary] commits that must be squashed before a PR."
+    echo "$temp_commits" | while IFS= read -r line; do echo "  $line"; done
+    echo "Squash with: git reset --soft origin/main && git commit -m \"<final message>\""
+    exit 1
+  fi
+done
+
+exit 0
