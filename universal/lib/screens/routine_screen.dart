@@ -7,6 +7,9 @@ import '../repositories/workout_repository.dart';
 import '../widgets/planned_exercise_add_field.dart';
 import '../widgets/planned_exercise_card.dart';
 import '../widgets/routine_name_dialog.dart';
+import '../widgets/start_workout_bar.dart';
+import 'active_workout_screen.dart';
+import 'navigation_helpers.dart';
 
 class RoutineScreen extends StatefulWidget {
   final String routineId;
@@ -90,6 +93,34 @@ class _RoutineScreenState extends State<RoutineScreen> {
     }
   }
 
+  void _startWorkout(
+    BuildContext context,
+    WorkoutRepository repo,
+    Routine routine,
+  ) {
+    if (repo.workouts.any((w) => w.isInProgress)) return;
+    repo.startWorkout(routineId: routine.id);
+    final workout = repo.workouts.firstWhere((w) => w.isInProgress);
+    _openActiveWorkout(context, repo, workout.id);
+  }
+
+  void _continueWorkout(BuildContext context, WorkoutRepository repo) {
+    final workout = repo.workouts.firstWhere((w) => w.isInProgress);
+    _openActiveWorkout(context, repo, workout.id);
+  }
+
+  void _openActiveWorkout(
+    BuildContext context,
+    WorkoutRepository repo,
+    String workoutId,
+  ) {
+    pushWithRepository(
+      context,
+      repo,
+      (context) => ActiveWorkoutScreen(workoutId: workoutId),
+    );
+  }
+
   PlannedExerciseCard _buildCard(
     WorkoutRepository repo,
     Routine routine,
@@ -155,6 +186,7 @@ class _RoutineScreenState extends State<RoutineScreen> {
     final repo = context.watch<WorkoutRepository>();
     final routine = repo.routines.firstWhere((r) => r.id == widget.routineId);
     final exercises = repo.exercises;
+    final hasInProgress = repo.workouts.any((w) => w.isInProgress);
 
     return Scaffold(
       appBar: AppBar(
@@ -195,6 +227,13 @@ class _RoutineScreenState extends State<RoutineScreen> {
                   )
                 : _buildList(repo, routine, exercises),
           ),
+          if (!routine.isLocked)
+            StartWorkoutBar(
+              hasInProgress: hasInProgress,
+              onPressed: hasInProgress
+                  ? () => _continueWorkout(context, repo)
+                  : () => _startWorkout(context, repo, routine),
+            ),
         ],
       ),
     );

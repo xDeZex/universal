@@ -1,8 +1,40 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:universal/models/routine.dart';
 import 'package:universal/models/workout.dart';
 
 void main() {
   group('Workout', () {
+    test(
+      "toJson/fromJson round-trip preserves a nested ExerciseEntry's non-null targets",
+      () {
+        final workout = Workout(
+          id: 'workout-1',
+          startTime: DateTime(2026, 7, 10, 10, 0),
+          exerciseEntries: [
+            ExerciseEntry(
+              id: 'entry-1',
+              exerciseId: 'ex-1',
+              targets: const [
+                PlannedExerciseRow(
+                  reps: FixedReps(10),
+                  weight: PlannedWeight(value: 60, unit: WeightUnit.kg),
+                ),
+              ],
+            ),
+          ],
+        );
+
+        final restored = Workout.fromJson(workout.toJson());
+
+        final restoredTargets = restored.exerciseEntries[0].targets;
+        expect(restoredTargets, isNotNull);
+        expect(restoredTargets!.length, 1);
+        expect((restoredTargets[0].reps as FixedReps).reps, 10);
+        expect(restoredTargets[0].weight.value, 60);
+        expect(restoredTargets[0].weight.unit, WeightUnit.kg);
+      },
+    );
+
     test('isInProgress is true when endTime is null', () {
       final workout = Workout(
         id: 'workout-1',

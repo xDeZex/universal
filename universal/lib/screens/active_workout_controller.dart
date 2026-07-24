@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../models/routine.dart';
 import '../models/workout.dart';
 import '../repositories/workout_repository.dart';
 
@@ -30,6 +31,21 @@ class ActiveWorkoutController extends ChangeNotifier {
       workout.exerciseEntries.any((entry) => entry.sets.isNotEmpty);
 
   WeightUnit unitFor(String entryId) => _entryUnits[entryId] ?? WeightUnit.kg;
+
+  /// The weight/unit/reps to prefill the add-Set bar with when [entry]'s
+  /// next unfilled target row is shown, taken from that target itself (the
+  /// low end of the range, for a ranged target), or `null` if there is none
+  /// to prefill from (reset to zero, sticky unit, instead).
+  ({num weight, WeightUnit unit, int reps})? prefillFor(ExerciseEntry entry) {
+    final targets = entry.targets;
+    if (targets == null || entry.sets.length >= targets.length) return null;
+    final target = targets[entry.sets.length];
+    final reps = switch (target.reps) {
+      FixedReps(reps: final r) => r,
+      RangeReps(min: final min) => min,
+    };
+    return (weight: target.weight.value, unit: target.weight.unit, reps: reps);
+  }
 
   ExerciseEntry? addExerciseEntry(String name) {
     final entry = _repository.addExerciseEntry(workoutId, name);

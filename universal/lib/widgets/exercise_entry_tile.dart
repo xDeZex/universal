@@ -1,8 +1,12 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
+import '../models/routine.dart';
 import '../models/workout.dart';
 import 'confirm_delete_dialog.dart';
 import 'coplanar_card.dart';
+import 'dashed_circle_badge.dart';
 import 'edit_set_dialog.dart';
 import 'selection_accent_border.dart';
 
@@ -68,6 +72,9 @@ class _ExerciseEntryTileState extends State<ExerciseEntryTile> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final sets = widget.entry.sets;
+    final targets = widget.entry.targets;
+    final rowCount = max(sets.length, targets?.length ?? 0);
     return CoplanarCard(
       key: ValueKey('entry-${widget.entry.id}'),
       child: SelectionAccentBorder(
@@ -102,10 +109,12 @@ class _ExerciseEntryTileState extends State<ExerciseEntryTile> {
                 ),
               ),
             ),
-            if (widget.entry.sets.isNotEmpty) _columnHeaderRow(theme),
-            for (var i = 0; i < widget.entry.sets.length; i++) ...[
+            if (rowCount > 0) _columnHeaderRow(theme),
+            for (var i = 0; i < rowCount; i++) ...[
               const Divider(height: 1, indent: _setColumnWidth + 16),
-              _setRow(theme, i, widget.entry.sets[i]),
+              i < sets.length
+                  ? _setRow(theme, i, sets[i])
+                  : _targetRow(theme, i, targets![i]),
             ],
           ],
         ),
@@ -192,6 +201,59 @@ class _ExerciseEntryTileState extends State<ExerciseEntryTile> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  String _formatTargetReps(RepsTarget reps) {
+    return switch (reps) {
+      FixedReps(reps: final r) => '$r',
+      RangeReps(min: final min, max: final max) => '$min–$max',
+    };
+  }
+
+  Widget _targetRow(ThemeData theme, int index, PlannedExerciseRow target) {
+    final mutedStyle = theme.textTheme.bodyMedium?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
+    );
+    return Padding(
+      key: ValueKey('target-$index-${widget.entry.id}'),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          SizedBox(
+            width: _setColumnWidth,
+            child: DashedCircleBadge(
+              key: ValueKey('target-badge-$index-${widget.entry.id}'),
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          Expanded(
+            child: Text(
+              '${target.weight.value} ${target.weight.unit.name}',
+              key: ValueKey('target-weight-$index-${widget.entry.id}'),
+              style: mutedStyle,
+            ),
+          ),
+          Expanded(
+            child: Text(
+              _formatTargetReps(target.reps),
+              key: ValueKey('target-reps-$index-${widget.entry.id}'),
+              style: mutedStyle,
+            ),
+          ),
+          SizedBox(
+            width: _timeColumnWidth,
+            child: widget.locked
+                ? Text(
+                    '--:--',
+                    key: ValueKey('target-time-$index-${widget.entry.id}'),
+                    textAlign: TextAlign.right,
+                    style: mutedStyle?.copyWith(fontSize: 12),
+                  )
+                : null,
+          ),
+        ],
       ),
     );
   }

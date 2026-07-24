@@ -1,4 +1,7 @@
-enum WeightUnit { kg, lbs }
+import 'routine.dart';
+import 'weight_unit.dart';
+
+export 'weight_unit.dart' show WeightUnit;
 
 class ExerciseSet {
   final String id;
@@ -55,18 +58,25 @@ class ExerciseEntry {
   final String id;
   final String exerciseId;
   final List<ExerciseSet> sets;
+  final List<PlannedExerciseRow>? targets;
 
   const ExerciseEntry({
     required this.id,
     required this.exerciseId,
     this.sets = const [],
+    this.targets,
   });
 
-  ExerciseEntry copyWith({String? exerciseId, List<ExerciseSet>? sets}) {
+  ExerciseEntry copyWith({
+    String? exerciseId,
+    List<ExerciseSet>? sets,
+    List<PlannedExerciseRow>? targets,
+  }) {
     return ExerciseEntry(
       id: id,
       exerciseId: exerciseId ?? this.exerciseId,
       sets: sets ?? this.sets,
+      targets: targets ?? this.targets,
     );
   }
 
@@ -75,6 +85,7 @@ class ExerciseEntry {
       'id': id,
       'exerciseId': exerciseId,
       'sets': sets.map((set) => set.toJson()).toList(),
+      'targets': targets?.map((row) => row.toJson()).toList(),
     };
   }
 
@@ -85,6 +96,14 @@ class ExerciseEntry {
       sets: (json['sets'] as List)
           .map((set) => ExerciseSet.fromJson(set as Map<String, dynamic>))
           .toList(),
+      targets: json['targets'] == null
+          ? null
+          : (json['targets'] as List)
+                .map(
+                  (row) =>
+                      PlannedExerciseRow.fromJson(row as Map<String, dynamic>),
+                )
+                .toList(),
     );
   }
 }

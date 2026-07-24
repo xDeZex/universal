@@ -1,0 +1,1 @@
+enum WeightUnit { kg, lbs }
