@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../models/workout.dart';
 import 'confirm_delete_dialog.dart';
+import 'coplanar_card.dart';
 import 'edit_set_dialog.dart';
+import 'selection_accent_border.dart';
 
 class ExerciseEntryTile extends StatefulWidget {
   final ExerciseEntry entry;
@@ -66,43 +68,47 @@ class _ExerciseEntryTileState extends State<ExerciseEntryTile> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final tint = widget.selected ? theme.colorScheme.secondaryContainer : null;
-    return Material(
+    return CoplanarCard(
       key: ValueKey('entry-${widget.entry.id}'),
-      color: tint ?? Colors.transparent,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          InkWell(
-            key: ValueKey('entry-header-${widget.entry.id}'),
-            onTap: widget.locked ? null : widget.onSelect,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      widget.exerciseName,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
+      child: SelectionAccentBorder(
+        selected: widget.selected,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            InkWell(
+              key: ValueKey('entry-header-${widget.entry.id}'),
+              onTap: widget.locked ? null : widget.onSelect,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        widget.exerciseName,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                  ),
-                  IconButton(
-                    key: ValueKey('delete-entry-${widget.entry.id}'),
-                    icon: const Icon(Icons.delete),
-                    onPressed: _deleteEntry,
-                  ),
-                ],
+                    IconButton(
+                      key: ValueKey('delete-entry-${widget.entry.id}'),
+                      icon: const Icon(Icons.delete),
+                      onPressed: _deleteEntry,
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-          if (widget.entry.sets.isNotEmpty) _columnHeaderRow(theme),
-          for (var i = 0; i < widget.entry.sets.length; i++) ...[
-            const Divider(height: 1, indent: _setColumnWidth + 16),
-            _setRow(theme, i, widget.entry.sets[i]),
+            if (widget.entry.sets.isNotEmpty) _columnHeaderRow(theme),
+            for (var i = 0; i < widget.entry.sets.length; i++) ...[
+              const Divider(height: 1, indent: _setColumnWidth + 16),
+              _setRow(theme, i, widget.entry.sets[i]),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

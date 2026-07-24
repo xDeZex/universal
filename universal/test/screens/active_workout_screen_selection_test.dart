@@ -3,8 +3,20 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:universal/models/exercise.dart';
 import 'package:universal/models/workout.dart';
+import 'package:universal/widgets/selection_accent_border.dart';
 
 import 'active_workout_screen_test_helpers.dart';
+
+bool _entryIsSelected(WidgetTester tester, String entryId) {
+  return tester
+      .widget<SelectionAccentBorder>(
+        find.descendant(
+          of: find.byKey(ValueKey('entry-$entryId')),
+          matching: find.byType(SelectionAccentBorder),
+        ),
+      )
+      .selected;
+}
 
 void main() {
   setUp(() {
@@ -12,9 +24,9 @@ void main() {
   });
 
   group('ActiveWorkoutScreen Exercise Entry selection and the add-Set bar', () {
-
     testWidgets(
-      'tapping an in-progress Exercise Entry selects it and tints its rows',
+      'tapping an in-progress Exercise Entry selects it and shows the '
+      'accent border on its rows',
       (tester) async {
         final entry = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
         final workout = Workout(
@@ -29,28 +41,18 @@ void main() {
           exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
         );
 
-        final expectedTint = Theme.of(
-          tester.element(find.byType(Scaffold)),
-        ).colorScheme.secondaryContainer;
-
-        expect(
-          tester.widget<Material>(find.byKey(const ValueKey('entry-entry-1'))).color,
-          isNot(expectedTint),
-        );
+        expect(_entryIsSelected(tester, 'entry-1'), isFalse);
 
         await tester.tap(find.byKey(const ValueKey('entry-header-entry-1')));
         await tester.pumpAndSettle();
 
-        expect(
-          tester.widget<Material>(find.byKey(const ValueKey('entry-entry-1'))).color,
-          expectedTint,
-        );
+        expect(_entryIsSelected(tester, 'entry-1'), isTrue);
       },
     );
 
     testWidgets(
-      'selecting a different Exercise Entry un-tints the previously '
-      'selected one',
+      'selecting a different Exercise Entry clears the accent border on '
+      'the previously selected one',
       (tester) async {
         final entry1 = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
         final entry2 = ExerciseEntry(id: 'entry-2', exerciseId: 'exercise-2');
@@ -69,28 +71,19 @@ void main() {
           ],
         );
 
-        final expectedTint = Theme.of(
-          tester.element(find.byType(Scaffold)),
-        ).colorScheme.secondaryContainer;
-
         await tester.tap(find.byKey(const ValueKey('entry-header-entry-1')));
         await tester.pumpAndSettle();
         await tester.tap(find.byKey(const ValueKey('entry-header-entry-2')));
         await tester.pumpAndSettle();
 
-        expect(
-          tester.widget<Material>(find.byKey(const ValueKey('entry-entry-1'))).color,
-          isNot(expectedTint),
-        );
-        expect(
-          tester.widget<Material>(find.byKey(const ValueKey('entry-entry-2'))).color,
-          expectedTint,
-        );
+        expect(_entryIsSelected(tester, 'entry-1'), isFalse);
+        expect(_entryIsSelected(tester, 'entry-2'), isTrue);
       },
     );
 
     testWidgets(
-      'adding a new Exercise Entry selects it, tinting its rows',
+      'adding a new Exercise Entry selects it, showing the accent border '
+      'on its rows',
       (tester) async {
         final repository = await pumpActiveWorkoutScreen(
           tester,
@@ -102,104 +95,76 @@ void main() {
         await tester.testTextInput.receiveAction(TextInputAction.done);
         await tester.pumpAndSettle();
 
-        final expectedTint = Theme.of(
-          tester.element(find.byType(Scaffold)),
-        ).colorScheme.secondaryContainer;
         final saved = repository.workouts.firstWhere(
           (w) => w.id == 'workout-1',
         );
         final newEntryId = saved.exerciseEntries[0].id;
 
-        expect(
-          tester
-              .widget<Material>(find.byKey(ValueKey('entry-$newEntryId')))
-              .color,
-          expectedTint,
-        );
+        expect(_entryIsSelected(tester, newEntryId), isTrue);
       },
     );
 
-    testWidgets(
-      'deleting the currently selected Exercise Entry clears the '
-      'selection instead of falling back to another entry',
-      (tester) async {
-        final entry1 = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
-        final entry2 = ExerciseEntry(id: 'entry-2', exerciseId: 'exercise-2');
-        final workout = Workout(
-          id: 'workout-1',
-          startTime: DateTime(2026, 1, 1),
-          exerciseEntries: [entry1, entry2],
-        );
+    testWidgets('deleting the currently selected Exercise Entry clears the '
+        'selection instead of falling back to another entry', (tester) async {
+      final entry1 = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
+      final entry2 = ExerciseEntry(id: 'entry-2', exerciseId: 'exercise-2');
+      final workout = Workout(
+        id: 'workout-1',
+        startTime: DateTime(2026, 1, 1),
+        exerciseEntries: [entry1, entry2],
+      );
 
-        await pumpActiveWorkoutScreen(
-          tester,
-          workout: workout,
-          exercises: [
-            Exercise(id: 'exercise-1', name: 'Bench Press'),
-            Exercise(id: 'exercise-2', name: 'Squat'),
-          ],
-        );
+      await pumpActiveWorkoutScreen(
+        tester,
+        workout: workout,
+        exercises: [
+          Exercise(id: 'exercise-1', name: 'Bench Press'),
+          Exercise(id: 'exercise-2', name: 'Squat'),
+        ],
+      );
 
-        final expectedTint = Theme.of(
-          tester.element(find.byType(Scaffold)),
-        ).colorScheme.secondaryContainer;
+      await tester.tap(find.byKey(const ValueKey('entry-header-entry-1')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('delete-entry-entry-1')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('confirm-delete-confirm')));
+      await tester.pumpAndSettle();
 
-        await tester.tap(find.byKey(const ValueKey('entry-header-entry-1')));
-        await tester.pumpAndSettle();
-        await tester.tap(find.byKey(const ValueKey('delete-entry-entry-1')));
-        await tester.pumpAndSettle();
-        await tester.tap(find.byKey(const ValueKey('confirm-delete-confirm')));
-        await tester.pumpAndSettle();
+      expect(_entryIsSelected(tester, 'entry-2'), isFalse);
+    });
 
-        expect(
-          tester.widget<Material>(find.byKey(const ValueKey('entry-entry-2'))).color,
-          isNot(expectedTint),
-        );
-      },
-    );
+    testWidgets('deleting a non-selected Exercise Entry leaves the current '
+        'selection unchanged', (tester) async {
+      final entry1 = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
+      final entry2 = ExerciseEntry(id: 'entry-2', exerciseId: 'exercise-2');
+      final workout = Workout(
+        id: 'workout-1',
+        startTime: DateTime(2026, 1, 1),
+        exerciseEntries: [entry1, entry2],
+      );
 
-    testWidgets(
-      'deleting a non-selected Exercise Entry leaves the current '
-      'selection unchanged',
-      (tester) async {
-        final entry1 = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
-        final entry2 = ExerciseEntry(id: 'entry-2', exerciseId: 'exercise-2');
-        final workout = Workout(
-          id: 'workout-1',
-          startTime: DateTime(2026, 1, 1),
-          exerciseEntries: [entry1, entry2],
-        );
+      await pumpActiveWorkoutScreen(
+        tester,
+        workout: workout,
+        exercises: [
+          Exercise(id: 'exercise-1', name: 'Bench Press'),
+          Exercise(id: 'exercise-2', name: 'Squat'),
+        ],
+      );
 
-        await pumpActiveWorkoutScreen(
-          tester,
-          workout: workout,
-          exercises: [
-            Exercise(id: 'exercise-1', name: 'Bench Press'),
-            Exercise(id: 'exercise-2', name: 'Squat'),
-          ],
-        );
+      await tester.tap(find.byKey(const ValueKey('entry-header-entry-1')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('delete-entry-entry-2')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('confirm-delete-confirm')));
+      await tester.pumpAndSettle();
 
-        final expectedTint = Theme.of(
-          tester.element(find.byType(Scaffold)),
-        ).colorScheme.secondaryContainer;
-
-        await tester.tap(find.byKey(const ValueKey('entry-header-entry-1')));
-        await tester.pumpAndSettle();
-        await tester.tap(find.byKey(const ValueKey('delete-entry-entry-2')));
-        await tester.pumpAndSettle();
-        await tester.tap(find.byKey(const ValueKey('confirm-delete-confirm')));
-        await tester.pumpAndSettle();
-
-        expect(
-          tester.widget<Material>(find.byKey(const ValueKey('entry-entry-1'))).color,
-          expectedTint,
-        );
-      },
-    );
+      expect(_entryIsSelected(tester, 'entry-1'), isTrue);
+    });
 
     testWidgets(
       'tapping an Exercise Entry on a Locked Workout does not select it or '
-      'show the selected-state tint',
+      'show the accent border',
       (tester) async {
         final loggedAt = DateTime(2026, 1, 1, 10, 0);
         final entry = ExerciseEntry(
@@ -228,18 +193,11 @@ void main() {
           exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
         );
 
-        final expectedTint = Theme.of(
-          tester.element(find.byType(Scaffold)),
-        ).colorScheme.secondaryContainer;
-
         await tester.tap(find.byKey(const ValueKey('entry-header-entry-1')));
         await tester.pumpAndSettle();
 
         expect(tester.takeException(), isNull);
-        expect(
-          tester.widget<Material>(find.byKey(const ValueKey('entry-entry-1'))).color,
-          isNot(expectedTint),
-        );
+        expect(_entryIsSelected(tester, 'entry-1'), isFalse);
       },
     );
 
@@ -394,56 +352,53 @@ void main() {
       },
     );
 
-    testWidgets(
-      'the weight stepper steps by 2.5 in kg and 5 in lbs and can go '
-      'negative; the reps stepper has a minimum of zero',
-      (tester) async {
-        final entry = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
-        final workout = Workout(
-          id: 'workout-1',
-          startTime: DateTime(2026, 1, 1),
-          exerciseEntries: [entry],
-        );
+    testWidgets('the weight stepper steps by 2.5 in kg and 5 in lbs and can go '
+        'negative; the reps stepper has a minimum of zero', (tester) async {
+      final entry = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
+      final workout = Workout(
+        id: 'workout-1',
+        startTime: DateTime(2026, 1, 1),
+        exerciseEntries: [entry],
+      );
 
-        await pumpActiveWorkoutScreen(
-          tester,
-          workout: workout,
-          exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
-        );
+      await pumpActiveWorkoutScreen(
+        tester,
+        workout: workout,
+        exercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
+      );
 
-        await tester.tap(find.byKey(const ValueKey('entry-header-entry-1')));
-        await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('entry-header-entry-1')));
+      await tester.pumpAndSettle();
 
-        expect(weightStepperValue(tester), '0');
-        expect(repsStepperValue(tester), '0');
+      expect(weightStepperValue(tester), '0');
+      expect(repsStepperValue(tester), '0');
 
-        await tapAndSettle(tester, 'weight-stepper-decrement');
-        expect(weightStepperValue(tester), '-2.5');
+      await tapAndSettle(tester, 'weight-stepper-decrement');
+      expect(weightStepperValue(tester), '-2.5');
 
-        await tapAndSettle(tester, 'weight-stepper-increment');
-        expect(weightStepperValue(tester), '0');
+      await tapAndSettle(tester, 'weight-stepper-increment');
+      expect(weightStepperValue(tester), '0');
 
-        await tapAndSettle(tester, 'weight-stepper-increment');
-        expect(weightStepperValue(tester), '2.5');
+      await tapAndSettle(tester, 'weight-stepper-increment');
+      expect(weightStepperValue(tester), '2.5');
 
-        await tapAndSettle(tester, 'unit-lbs');
-        await tapAndSettle(tester, 'weight-stepper-decrement');
-        expect(weightStepperValue(tester), '-2.5');
+      await tapAndSettle(tester, 'unit-lbs');
+      await tapAndSettle(tester, 'weight-stepper-decrement');
+      expect(weightStepperValue(tester), '-2.5');
 
-        await tapAndSettle(tester, 'weight-stepper-decrement');
-        expect(weightStepperValue(tester), '-7.5');
+      await tapAndSettle(tester, 'weight-stepper-decrement');
+      expect(weightStepperValue(tester), '-7.5');
 
-        await tapAndSettle(tester, 'weight-stepper-increment');
-        await tapAndSettle(tester, 'weight-stepper-increment');
-        expect(weightStepperValue(tester), '2.5');
+      await tapAndSettle(tester, 'weight-stepper-increment');
+      await tapAndSettle(tester, 'weight-stepper-increment');
+      expect(weightStepperValue(tester), '2.5');
 
-        await tapAndSettle(tester, 'reps-stepper-decrement');
-        expect(repsStepperValue(tester), '0');
+      await tapAndSettle(tester, 'reps-stepper-decrement');
+      expect(repsStepperValue(tester), '0');
 
-        await tapAndSettle(tester, 'reps-stepper-increment');
-        expect(repsStepperValue(tester), '1');
-      },
-    );
+      await tapAndSettle(tester, 'reps-stepper-increment');
+      expect(repsStepperValue(tester), '1');
+    });
 
     testWidgets(
       'the Add Set button is disabled while the reps stepper is at zero',
@@ -464,13 +419,14 @@ void main() {
         await tester.tap(find.byKey(const ValueKey('entry-header-entry-1')));
         await tester.pumpAndSettle();
 
-        FilledButton addSetButton() => tester.widget<FilledButton>(
-          find.byKey(const ValueKey('add-set')),
-        );
+        FilledButton addSetButton() =>
+            tester.widget<FilledButton>(find.byKey(const ValueKey('add-set')));
 
         expect(addSetButton().onPressed, isNull);
 
-        await tester.tap(find.byKey(const ValueKey('weight-stepper-increment')));
+        await tester.tap(
+          find.byKey(const ValueKey('weight-stepper-increment')),
+        );
         await tester.pumpAndSettle();
         expect(addSetButton().onPressed, isNull);
 
@@ -545,7 +501,9 @@ void main() {
         expect(weightStepperValue(tester), '0');
         expect(repsStepperValue(tester), '0');
         expect(
-          tester.widget<ChoiceChip>(find.byKey(const ValueKey('unit-kg'))).selected,
+          tester
+              .widget<ChoiceChip>(find.byKey(const ValueKey('unit-kg')))
+              .selected,
           isTrue,
         );
 
@@ -555,7 +513,9 @@ void main() {
         expect(weightStepperValue(tester), '0');
         expect(repsStepperValue(tester), '0');
         expect(
-          tester.widget<ChoiceChip>(find.byKey(const ValueKey('unit-lbs'))).selected,
+          tester
+              .widget<ChoiceChip>(find.byKey(const ValueKey('unit-lbs')))
+              .selected,
           isTrue,
         );
 
@@ -565,6 +525,5 @@ void main() {
         expect(saved.exerciseEntries[1].sets.single.unit, WeightUnit.lbs);
       },
     );
-
   });
 }
