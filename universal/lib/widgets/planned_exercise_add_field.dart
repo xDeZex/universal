@@ -43,6 +43,7 @@ class _PlannedExerciseAddFieldState extends State<PlannedExerciseAddField> {
     if (name.isEmpty) return;
     widget.onAdd(name);
     setState(_controller.clear);
+    FocusScope.of(context).unfocus();
   }
 
   void _selectSuggestion(Exercise exercise) {

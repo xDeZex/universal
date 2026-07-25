@@ -45,6 +45,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
     final entry = _controller.addExerciseEntry(_nameController.text.trim());
     if (entry != null) {
       _nameController.clear();
+      FocusScope.of(context).unfocus();
     }
   }
 
@@ -132,6 +133,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                       ),
                     ),
                     IconButton(
+                      key: const ValueKey('add-exercise-entry-button'),
                       icon: const Icon(Icons.add),
                       onPressed: _addExerciseEntry,
                     ),
