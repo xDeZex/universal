@@ -36,12 +36,13 @@ void main() {
   group('ManageRoutinesScreen', () {
     testWidgets(
       'lists active Routines sorted alphabetically by name, '
-      'case-insensitively, followed by an Archived section',
+      'case-insensitively, followed by an Archived section sorted the '
+      'same way',
       (tester) async {
         await _pumpManageRoutinesScreen(
           tester,
           // Deliberately out of alphabetical order, mixed casing, and with
-          // an archived Routine interleaved, so the test can only pass if
+          // archived Routines interleaved, so the test can only pass if
           // the screen both sorts case-insensitively and sections archived
           // Routines separately rather than preserving input order.
           routines: [
@@ -52,6 +53,11 @@ void main() {
               archivedAt: DateTime(2026, 1, 1),
             ),
             Routine(id: 'routine-pull', name: 'pull day'),
+            Routine(
+              id: 'routine-arms',
+              name: 'arms day',
+              archivedAt: DateTime(2026, 1, 1),
+            ),
           ],
         );
 
@@ -64,6 +70,7 @@ void main() {
         expect(tileKeys, [
           const ValueKey('routine-routine-pull'),
           const ValueKey('routine-routine-push'),
+          const ValueKey('routine-routine-arms'),
           const ValueKey('routine-routine-full-body'),
         ]);
         expect(find.text('Archived'), findsOneWidget);

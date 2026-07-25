@@ -2,19 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/exercise.dart';
+import '../models/sort_by_name.dart';
 import '../repositories/workout_repository.dart';
 import '../widgets/exercise_tile.dart';
 
 class ManageExercisesScreen extends StatelessWidget {
   const ManageExercisesScreen({super.key});
-
-  List<Exercise> _sortedExercises(List<Exercise> exercises) {
-    final sorted = [...exercises];
-    sorted.sort(
-      (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
-    );
-    return sorted;
-  }
 
   Future<void> _renameExercise(
     BuildContext context,
@@ -37,7 +30,7 @@ class ManageExercisesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final exercises = context.watch<WorkoutRepository>().exercises;
-    final sorted = _sortedExercises(exercises);
+    final sorted = sortByName(exercises, (exercise) => exercise.name);
     return Scaffold(
       appBar: AppBar(title: const Text('Manage Exercises')),
       body: sorted.isEmpty
