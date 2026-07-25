@@ -6,6 +6,7 @@ import '../models/workout.dart';
 import '../repositories/workout_repository.dart';
 import '../widgets/add_set_bar.dart';
 import '../widgets/exercise_entry_tile.dart';
+import '../widgets/safe_scaffold.dart';
 import 'active_workout_controller.dart';
 
 class ActiveWorkoutScreen extends StatefulWidget {
@@ -113,83 +114,79 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
         ? null
         : _controller.prefillFor(selectedEntry);
 
-    return Scaffold(
+    return SafeScaffold(
       appBar: AppBar(title: Text(_appBarTitle(context, workout))),
-      body: SafeArea(
-        child: Column(
-          children: [
-            if (canAddNew)
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _nameController,
-                        decoration: const InputDecoration(
-                          hintText: 'Exercise name',
-                        ),
-                        onSubmitted: (_) => _addExerciseEntry(),
+      body: Column(
+        children: [
+          if (canAddNew)
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _nameController,
+                      decoration: const InputDecoration(
+                        hintText: 'Exercise name',
                       ),
+                      onSubmitted: (_) => _addExerciseEntry(),
                     ),
-                    IconButton(
-                      key: const ValueKey('add-exercise-entry-button'),
-                      icon: const Icon(Icons.add),
-                      onPressed: _addExerciseEntry,
-                    ),
-                  ],
-                ),
+                  ),
+                  IconButton(
+                    key: const ValueKey('add-exercise-entry-button'),
+                    icon: const Icon(Icons.add),
+                    onPressed: _addExerciseEntry,
+                  ),
+                ],
               ),
-            Expanded(
-              child: ListView(children: _buildEntryRows(workout, exercises)),
             ),
-            if (canAddNew && selectedEntry != null) ...[
-              AddSetBar(
-                key: ValueKey(
-                  '${selectedEntry.id}-${selectedEntry.sets.length}',
-                ),
-                initialUnit:
-                    prefill?.unit ?? _controller.unitFor(selectedEntry.id),
-                initialWeight: prefill?.weight ?? 0,
-                initialReps: prefill?.reps ?? 0,
-                onAddSet: (weight, unit, reps) => _controller.addSet(
-                  entryId: selectedEntry.id,
-                  weight: weight,
-                  unit: unit,
-                  reps: reps,
-                ),
-                onUnitChanged: (unit) =>
-                    _controller.setEntryUnit(selectedEntry.id, unit),
+          Expanded(
+            child: ListView(children: _buildEntryRows(workout, exercises)),
+          ),
+          if (canAddNew && selectedEntry != null) ...[
+            AddSetBar(
+              key: ValueKey('${selectedEntry.id}-${selectedEntry.sets.length}'),
+              initialUnit:
+                  prefill?.unit ?? _controller.unitFor(selectedEntry.id),
+              initialWeight: prefill?.weight ?? 0,
+              initialReps: prefill?.reps ?? 0,
+              onAddSet: (weight, unit, reps) => _controller.addSet(
+                entryId: selectedEntry.id,
+                weight: weight,
+                unit: unit,
+                reps: reps,
               ),
-              const Divider(height: 1),
-            ],
-            if (canAddNew)
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextButton(
-                        key: const ValueKey('discard-workout'),
-                        onPressed: _discard,
-                        child: const Text('Discard'),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: ElevatedButton(
-                        key: const ValueKey('finish-workout'),
-                        onPressed: _controller.hasLoggedSets(workout)
-                            ? _finish
-                            : null,
-                        child: const Text('Finish'),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              onUnitChanged: (unit) =>
+                  _controller.setEntryUnit(selectedEntry.id, unit),
+            ),
+            const Divider(height: 1),
           ],
-        ),
+          if (canAddNew)
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      key: const ValueKey('discard-workout'),
+                      onPressed: _discard,
+                      child: const Text('Discard'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ElevatedButton(
+                      key: const ValueKey('finish-workout'),
+                      onPressed: _controller.hasLoggedSets(workout)
+                          ? _finish
+                          : null,
+                      child: const Text('Finish'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
       ),
     );
   }

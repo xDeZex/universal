@@ -6,6 +6,7 @@ import '../models/sort_by_name.dart';
 import '../repositories/workout_repository.dart';
 import '../widgets/routine_name_dialog.dart';
 import '../widgets/routine_tile.dart';
+import '../widgets/safe_scaffold.dart';
 import 'navigation_helpers.dart';
 import 'routine_screen.dart';
 
@@ -71,7 +72,7 @@ class ManageRoutinesScreen extends StatelessWidget {
       (routine) => routine.name,
     );
 
-    return Scaffold(
+    return SafeScaffold(
       appBar: AppBar(title: const Text('Manage Routines')),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _createRoutine(context, routines),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../services/update_service.dart';
+import '../widgets/safe_scaffold.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -23,7 +24,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final updateService = context.watch<UpdateService>();
 
-    return Scaffold(
+    return SafeScaffold(
       appBar: AppBar(title: const Text('Settings')),
       body: Center(child: _buildStatus(updateService)),
     );

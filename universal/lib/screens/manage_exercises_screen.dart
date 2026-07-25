@@ -5,6 +5,7 @@ import '../models/exercise.dart';
 import '../models/sort_by_name.dart';
 import '../repositories/workout_repository.dart';
 import '../widgets/exercise_tile.dart';
+import '../widgets/safe_scaffold.dart';
 
 class ManageExercisesScreen extends StatelessWidget {
   const ManageExercisesScreen({super.key});
@@ -31,7 +32,7 @@ class ManageExercisesScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final exercises = context.watch<WorkoutRepository>().exercises;
     final sorted = sortByName(exercises, (exercise) => exercise.name);
-    return Scaffold(
+    return SafeScaffold(
       appBar: AppBar(title: const Text('Manage Exercises')),
       body: sorted.isEmpty
           ? const Center(
