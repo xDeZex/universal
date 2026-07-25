@@ -167,4 +167,25 @@ void main() {
       },
     );
   });
+
+  group('PlannedExerciseAddField keyboard dismissal', () {
+    testWidgets('submitting via the add button dismisses focus', (
+      tester,
+    ) async {
+      await pumpField(tester, exercises: const []);
+
+      await tester.enterText(
+        find.byKey(const ValueKey('add-planned-exercise-field')),
+        'Bench Press',
+      );
+      await tester.pump();
+
+      await tester.tap(
+        find.byKey(const ValueKey('add-planned-exercise-button')),
+      );
+      await tester.pump();
+
+      expect(tester.testTextInput.isVisible, isFalse);
+    });
+  });
 }
