@@ -1,0 +1,14 @@
+name: Rebase open PRs
+
+on:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: write
+
+jobs:
+  rebase:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: peter-evans/rebase@e4945786f7ca41fe6e101cead4395f5489593943  # v4
