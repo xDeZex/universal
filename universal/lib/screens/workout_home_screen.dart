@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../repositories/workout_repository.dart';
+import '../widgets/safe_scaffold.dart';
 import '../widgets/workout_home_actions.dart';
 import 'active_workout_screen.dart';
 import 'manage_exercises_screen.dart';
@@ -66,7 +67,7 @@ class WorkoutHomeScreen extends StatelessWidget {
     final repo = context.watch<WorkoutRepository>();
     final hasInProgress = repo.workouts.any((w) => w.isInProgress);
 
-    return Scaffold(
+    return SafeScaffold(
       appBar: AppBar(title: const Text('Workout')),
       body: !repo.isLoaded
           ? const Center(child: CircularProgressIndicator())

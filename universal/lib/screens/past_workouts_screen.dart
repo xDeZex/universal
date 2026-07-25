@@ -5,6 +5,7 @@ import '../models/exercise.dart';
 import '../models/workout.dart';
 import '../repositories/workout_repository.dart';
 import '../widgets/coplanar_card.dart';
+import '../widgets/safe_scaffold.dart';
 import 'active_workout_screen.dart';
 import 'navigation_helpers.dart';
 
@@ -28,7 +29,7 @@ class PastWorkoutsScreen extends StatelessWidget {
     final repo = context.watch<WorkoutRepository>();
     final finished = _finishedWorkouts(repo.workouts);
 
-    return Scaffold(
+    return SafeScaffold(
       appBar: AppBar(title: const Text('Past Workouts')),
       body: finished.isEmpty
           ? const Center(child: Text('No past workouts yet'))

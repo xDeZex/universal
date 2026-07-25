@@ -7,6 +7,7 @@ import 'package:universal/models/workout.dart';
 import 'package:universal/repositories/workout_repository.dart';
 import 'package:universal/screens/active_workout_screen.dart';
 
+import '../layout_test_helpers.dart';
 import 'active_workout_screen_test_helpers.dart';
 
 void main() {
@@ -76,19 +77,16 @@ void main() {
           ),
         );
 
-        final screenHeight =
-            tester.view.physicalSize.height / tester.view.devicePixelRatio;
-        final maxAllowedY = screenHeight - bottomInset;
-
-        final discardBottom = tester.getBottomLeft(
+        expectClearOfBottomInset(
+          tester,
           find.byKey(const ValueKey('discard-workout')),
+          bottomInset,
         );
-        final finishBottom = tester.getBottomLeft(
+        expectClearOfBottomInset(
+          tester,
           find.byKey(const ValueKey('finish-workout')),
+          bottomInset,
         );
-
-        expect(discardBottom.dy, lessThanOrEqualTo(maxAllowedY));
-        expect(finishBottom.dy, lessThanOrEqualTo(maxAllowedY));
       },
     );
 

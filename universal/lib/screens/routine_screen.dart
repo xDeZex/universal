@@ -7,6 +7,7 @@ import '../repositories/workout_repository.dart';
 import '../widgets/planned_exercise_add_field.dart';
 import '../widgets/planned_exercise_card.dart';
 import '../widgets/routine_name_dialog.dart';
+import '../widgets/safe_scaffold.dart';
 import '../widgets/start_workout_bar.dart';
 import 'active_workout_screen.dart';
 import 'navigation_helpers.dart';
@@ -188,7 +189,7 @@ class _RoutineScreenState extends State<RoutineScreen> {
     final exercises = repo.exercises;
     final hasInProgress = repo.workouts.any((w) => w.isInProgress);
 
-    return Scaffold(
+    return SafeScaffold(
       appBar: AppBar(
         title: InkWell(
           onTap: () => _rename(context, routine),
