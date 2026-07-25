@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/exercise.dart';
+import '../models/sort_by_name.dart';
 
 class PlannedExerciseAddField extends StatefulWidget {
   final List<Exercise> exercises;
@@ -31,14 +32,10 @@ class _PlannedExerciseAddFieldState extends State<PlannedExerciseAddField> {
     if (_suggestionsDismissed) return const [];
     final query = _controller.text.trim().toLowerCase();
     if (query.isEmpty) return const [];
-    final matches =
-        widget.exercises
-            .where((exercise) => exercise.name.toLowerCase().contains(query))
-            .toList()
-          ..sort(
-            (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
-          );
-    return matches;
+    final matches = widget.exercises.where(
+      (exercise) => exercise.name.toLowerCase().contains(query),
+    );
+    return sortByName(matches.toList(), (exercise) => exercise.name);
   }
 
   void _submit() {

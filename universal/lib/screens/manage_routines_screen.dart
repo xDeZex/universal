@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/routine.dart';
+import '../models/sort_by_name.dart';
 import '../repositories/workout_repository.dart';
 import '../widgets/routine_name_dialog.dart';
 import '../widgets/routine_tile.dart';
@@ -10,14 +11,6 @@ import 'routine_screen.dart';
 
 class ManageRoutinesScreen extends StatelessWidget {
   const ManageRoutinesScreen({super.key});
-
-  List<Routine> _sorted(List<Routine> routines) {
-    final sorted = [...routines];
-    sorted.sort(
-      (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
-    );
-    return sorted;
-  }
 
   void _openRoutine(BuildContext context, String routineId) {
     pushWithRepository(
@@ -69,8 +62,14 @@ class ManageRoutinesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final routines = context.watch<WorkoutRepository>().routines;
-    final active = _sorted(routines.where((r) => !r.isLocked).toList());
-    final archived = _sorted(routines.where((r) => r.isLocked).toList());
+    final active = sortByName(
+      routines.where((r) => !r.isLocked).toList(),
+      (routine) => routine.name,
+    );
+    final archived = sortByName(
+      routines.where((r) => r.isLocked).toList(),
+      (routine) => routine.name,
+    );
 
     return Scaffold(
       appBar: AppBar(title: const Text('Manage Routines')),
