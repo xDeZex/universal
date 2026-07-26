@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer' as developer;
 
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -7,11 +8,34 @@ import '../models/exercise.dart';
 import '../models/routine.dart';
 import '../models/workout.dart';
 
+/// Reports that the raw data stored under [key] couldn't be parsed back
+/// into its model, so it was treated as empty.
+typedef CorruptDataReporter = void Function(
+  String key,
+  Object error,
+  StackTrace stackTrace,
+);
+
 class StorageService {
+  StorageService({CorruptDataReporter? onCorruptData})
+      : _onCorruptData = onCorruptData ?? _logCorruptData;
+
   static const String _checklistsKey = 'checklists';
   static const String _workoutsKey = 'workouts';
   static const String _exercisesKey = 'exercises';
   static const String _routinesKey = 'routines';
+
+  final CorruptDataReporter _onCorruptData;
+
+  static void _logCorruptData(String key, Object error, StackTrace stackTrace) {
+    developer.log(
+      'Discarding corrupted persisted data for key "$key"',
+      name: 'StorageService',
+      level: 1000,
+      error: error,
+      stackTrace: stackTrace,
+    );
+  }
 
   Future<List<T>> _loadList<T>(
     String key,
@@ -27,7 +51,8 @@ class StorageService {
       return jsonList
           .map((json) => fromJson(json as Map<String, dynamic>))
           .toList();
-    } catch (e) {
+    } catch (e, stackTrace) {
+      _onCorruptData(key, e, stackTrace);
       return [];
     }
   }
