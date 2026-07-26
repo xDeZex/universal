@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:universal/models/exercise.dart';
-import 'package:universal/models/workout.dart';
 import 'package:universal/screens/active_workout_screen.dart';
 import 'package:universal/screens/past_workouts_screen.dart';
 import 'package:universal/services/storage_service.dart';
 
-import 'workout_home_screen_test_helpers.dart';
+import '../support/pump.dart';
+import '../support/workout_builder.dart';
 
 void main() {
   setUp(() {
@@ -42,9 +42,7 @@ void main() {
       (tester) async {
         await pumpWorkoutHomeScreen(
           tester,
-          initialWorkouts: [
-            Workout(id: 'workout-1', startTime: DateTime(2026, 1, 1)),
-          ],
+          initialWorkouts: [WorkoutBuilder().build()],
           initialExercises: [],
         );
         await tester.pumpAndSettle();
@@ -66,25 +64,14 @@ void main() {
       'to storage, and reopening that Workout\'s detail view reflects it',
       (tester) async {
         final loggedAt = DateTime(2026, 1, 1, 10, 30);
-        final entry = ExerciseEntry(
-          id: 'entry-1',
-          exerciseId: 'exercise-1',
-          sets: [
-            ExerciseSet(
-              id: 'set-1',
-              weight: 60,
-              unit: WeightUnit.kg,
-              reps: 5,
-              loggedAt: loggedAt,
-            ),
-          ],
+        final entry = buildEntry(
+          sets: [buildSet(reps: 5, loggedAt: loggedAt)],
         );
-        final finishedWorkout = Workout(
-          id: 'workout-1',
+        final finishedWorkout = WorkoutBuilder(
           startTime: DateTime(2026, 1, 1, 10, 0),
           endTime: loggedAt,
-          exerciseEntries: [entry],
-        );
+          entries: [entry],
+        ).build();
 
         await pumpWorkoutHomeScreen(
           tester,

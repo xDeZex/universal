@@ -4,6 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:universal/models/exercise.dart';
 import 'package:universal/models/workout.dart';
 
+import '../support/pump.dart';
+import '../support/workout_builder.dart';
 import 'active_workout_screen_test_helpers.dart';
 
 void main() {
@@ -16,12 +18,7 @@ void main() {
       'adding a Set via the bottom bar adds it to the selected Exercise '
       'Entry and persists the Workout',
       (tester) async {
-        final entry = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
-        final workout = Workout(
-          id: 'workout-1',
-          startTime: DateTime(2026, 1, 1),
-          exerciseEntries: [entry],
-        );
+        final workout = WorkoutBuilder(entries: [buildEntry()]).build();
 
         final repository = await pumpActiveWorkoutScreen(
           tester,
@@ -62,12 +59,7 @@ void main() {
     testWidgets(
       'selecting lbs before submitting a Set includes lbs on the created Set',
       (tester) async {
-        final entry = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
-        final workout = Workout(
-          id: 'workout-1',
-          startTime: DateTime(2026, 1, 1),
-          exerciseEntries: [entry],
-        );
+        final workout = WorkoutBuilder(entries: [buildEntry()]).build();
 
         final repository = await pumpActiveWorkoutScreen(
           tester,
@@ -105,12 +97,7 @@ void main() {
       'the unit toggle stays on lbs for the next Set after logging one with '
       'lbs on the same Exercise Entry',
       (tester) async {
-        final entry = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
-        final workout = Workout(
-          id: 'workout-1',
-          startTime: DateTime(2026, 1, 1),
-          exerciseEntries: [entry],
-        );
+        final workout = WorkoutBuilder(entries: [buildEntry()]).build();
 
         final repository = await pumpActiveWorkoutScreen(
           tester,
@@ -163,12 +150,7 @@ void main() {
     testWidgets(
       'a logged Set is displayed with its weight (incl. unit) and reps',
       (tester) async {
-        final entry = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
-        final workout = Workout(
-          id: 'workout-1',
-          startTime: DateTime(2026, 1, 1),
-          exerciseEntries: [entry],
-        );
+        final workout = WorkoutBuilder(entries: [buildEntry()]).build();
 
         await pumpActiveWorkoutScreen(
           tester,
@@ -201,25 +183,14 @@ void main() {
     testWidgets(
       'a logged Set on a finished Workout additionally shows its logged time',
       (tester) async {
-        final entry = ExerciseEntry(
-          id: 'entry-1',
-          exerciseId: 'exercise-1',
-          sets: [
-            ExerciseSet(
-              id: 'set-1',
-              weight: 50,
-              unit: WeightUnit.kg,
-              reps: 8,
-              loggedAt: DateTime(2026, 1, 1, 18, 42),
-            ),
-          ],
-        );
-        final workout = Workout(
-          id: 'workout-1',
+        final loggedAt = DateTime(2026, 1, 1, 18, 42);
+        final workout = WorkoutBuilder(
           startTime: DateTime(2026, 1, 1, 18, 0),
-          endTime: DateTime(2026, 1, 1, 18, 42),
-          exerciseEntries: [entry],
-        );
+          endTime: loggedAt,
+          entries: [
+            buildEntry(sets: [buildSet(weight: 50, loggedAt: loggedAt)]),
+          ],
+        ).build();
 
         await pumpActiveWorkoutScreen(
           tester,

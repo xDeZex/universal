@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:universal/models/routine.dart';
 
+import '../support/pump.dart';
 import 'routine_screen_test_helpers.dart';
 
 void main() {

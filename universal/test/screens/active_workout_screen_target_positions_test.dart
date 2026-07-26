@@ -5,7 +5,8 @@ import 'package:universal/models/exercise.dart';
 import 'package:universal/models/routine.dart';
 import 'package:universal/models/workout.dart';
 
-import 'active_workout_screen_test_helpers.dart';
+import '../support/pump.dart';
+import '../support/workout_builder.dart';
 
 void main() {
   setUp(() {
@@ -17,17 +18,9 @@ void main() {
       'row i shows the logged Set at that position when one exists, else the '
       'target at that position',
       (tester) async {
-        final entry = ExerciseEntry(
-          id: 'entry-1',
-          exerciseId: 'exercise-1',
+        final entry = buildEntry(
           sets: [
-            ExerciseSet(
-              id: 'set-1',
-              weight: 60,
-              unit: WeightUnit.kg,
-              reps: 10,
-              loggedAt: DateTime(2026, 1, 1, 10, 0),
-            ),
+            buildSet(reps: 10, loggedAt: DateTime(2026, 1, 1, 10, 0)),
           ],
           targets: const [
             PlannedExerciseRow(
@@ -44,11 +37,10 @@ void main() {
             ),
           ],
         );
-        final workout = Workout(
-          id: 'workout-1',
+        final workout = WorkoutBuilder(
           startTime: DateTime(2026, 1, 1, 9, 0),
-          exerciseEntries: [entry],
-        );
+          entries: [entry],
+        ).build();
 
         await pumpActiveWorkoutScreen(
           tester,
@@ -98,9 +90,7 @@ void main() {
     testWidgets(
       'a ranged target formats its reps column as "min–max"',
       (tester) async {
-        final entry = ExerciseEntry(
-          id: 'entry-1',
-          exerciseId: 'exercise-1',
+        final entry = buildEntry(
           targets: const [
             PlannedExerciseRow(
               reps: RangeReps(min: 8, max: 12),
@@ -108,11 +98,10 @@ void main() {
             ),
           ],
         );
-        final workout = Workout(
-          id: 'workout-1',
+        final workout = WorkoutBuilder(
           startTime: DateTime(2026, 1, 1, 9, 0),
-          exerciseEntries: [entry],
-        );
+          entries: [entry],
+        ).build();
 
         await pumpActiveWorkoutScreen(
           tester,
@@ -133,24 +122,15 @@ void main() {
       'an Exercise Entry with null targets renders identically to today, '
       'with no dashed rows',
       (tester) async {
-        final entry = ExerciseEntry(
-          id: 'entry-1',
-          exerciseId: 'exercise-1',
+        final entry = buildEntry(
           sets: [
-            ExerciseSet(
-              id: 'set-1',
-              weight: 60,
-              unit: WeightUnit.kg,
-              reps: 10,
-              loggedAt: DateTime(2026, 1, 1, 10, 0),
-            ),
+            buildSet(reps: 10, loggedAt: DateTime(2026, 1, 1, 10, 0)),
           ],
         );
-        final workout = Workout(
-          id: 'workout-1',
+        final workout = WorkoutBuilder(
           startTime: DateTime(2026, 1, 1, 9, 0),
-          exerciseEntries: [entry],
-        );
+          entries: [entry],
+        ).build();
 
         await pumpActiveWorkoutScreen(
           tester,
@@ -168,28 +148,18 @@ void main() {
       'more logged Sets than targets renders the excess Sets normally after '
       'the target-derived rows are exhausted',
       (tester) async {
-        final entry = ExerciseEntry(
-          id: 'entry-1',
-          exerciseId: 'exercise-1',
+        final entry = buildEntry(
           sets: [
-            ExerciseSet(
-              id: 'set-1',
-              weight: 60,
-              unit: WeightUnit.kg,
-              reps: 10,
-              loggedAt: DateTime(2026, 1, 1, 10, 0),
-            ),
-            ExerciseSet(
+            buildSet(reps: 10, loggedAt: DateTime(2026, 1, 1, 10, 0)),
+            buildSet(
               id: 'set-2',
               weight: 65,
-              unit: WeightUnit.kg,
               reps: 8,
               loggedAt: DateTime(2026, 1, 1, 10, 5),
             ),
-            ExerciseSet(
+            buildSet(
               id: 'set-3',
               weight: 70,
-              unit: WeightUnit.kg,
               reps: 6,
               loggedAt: DateTime(2026, 1, 1, 10, 10),
             ),
@@ -201,11 +171,10 @@ void main() {
             ),
           ],
         );
-        final workout = Workout(
-          id: 'workout-1',
+        final workout = WorkoutBuilder(
           startTime: DateTime(2026, 1, 1, 9, 0),
-          exerciseEntries: [entry],
-        );
+          entries: [entry],
+        ).build();
 
         await pumpActiveWorkoutScreen(
           tester,

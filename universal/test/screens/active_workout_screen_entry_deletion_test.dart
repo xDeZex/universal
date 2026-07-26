@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:universal/models/exercise.dart';
-import 'package:universal/models/workout.dart';
 
-import 'active_workout_screen_test_helpers.dart';
+import '../support/pump.dart';
+import '../support/workout_builder.dart';
 
 void main() {
   setUp(() {
@@ -16,12 +16,10 @@ void main() {
       "each Exercise Entry's name header has a delete icon that opens a "
       'confirmation dialog',
       (tester) async {
-        final entry = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
-        final workout = Workout(
-          id: 'workout-1',
+        final workout = WorkoutBuilder(
           startTime: DateTime(2026, 1, 1, 9, 0),
-          exerciseEntries: [entry],
-        );
+          entries: [buildEntry()],
+        ).build();
 
         await pumpActiveWorkoutScreen(
           tester,
@@ -47,25 +45,13 @@ void main() {
       'confirming the delete-Exercise-Entry confirmation removes the '
       'Exercise Entry and all of its Sets, leaving other Entries untouched',
       (tester) async {
-        final entry1 = ExerciseEntry(
-          id: 'entry-1',
-          exerciseId: 'exercise-1',
-          sets: [
-            ExerciseSet(
-              id: 'set-1',
-              weight: 60,
-              unit: WeightUnit.kg,
-              reps: 8,
-              loggedAt: DateTime(2026, 1, 1, 10, 0),
-            ),
-          ],
-        );
-        final entry2 = ExerciseEntry(id: 'entry-2', exerciseId: 'exercise-2');
-        final workout = Workout(
-          id: 'workout-1',
+        final workout = WorkoutBuilder(
           startTime: DateTime(2026, 1, 1, 9, 0),
-          exerciseEntries: [entry1, entry2],
-        );
+          entries: [
+            buildEntry(sets: [buildSet()]),
+            buildEntry(id: 'entry-2', exerciseId: 'exercise-2'),
+          ],
+        ).build();
 
         final repository = await pumpActiveWorkoutScreen(
           tester,
@@ -93,24 +79,12 @@ void main() {
       'cancelling the delete-Exercise-Entry confirmation leaves the '
       'Exercise Entry and its Sets unchanged',
       (tester) async {
-        final entry = ExerciseEntry(
-          id: 'entry-1',
-          exerciseId: 'exercise-1',
-          sets: [
-            ExerciseSet(
-              id: 'set-1',
-              weight: 60,
-              unit: WeightUnit.kg,
-              reps: 8,
-              loggedAt: DateTime(2026, 1, 1, 10, 0),
-            ),
-          ],
-        );
-        final workout = Workout(
-          id: 'workout-1',
+        final workout = WorkoutBuilder(
           startTime: DateTime(2026, 1, 1, 9, 0),
-          exerciseEntries: [entry],
-        );
+          entries: [
+            buildEntry(sets: [buildSet()]),
+          ],
+        ).build();
 
         final repository = await pumpActiveWorkoutScreen(
           tester,
@@ -145,25 +119,13 @@ void main() {
       'identically to an in-progress Workout',
       (tester) async {
         final loggedAt = DateTime(2026, 1, 1, 10, 0);
-        final entry = ExerciseEntry(
-          id: 'entry-1',
-          exerciseId: 'exercise-1',
-          sets: [
-            ExerciseSet(
-              id: 'set-1',
-              weight: 60,
-              unit: WeightUnit.kg,
-              reps: 8,
-              loggedAt: loggedAt,
-            ),
-          ],
-        );
-        final workout = Workout(
-          id: 'workout-1',
+        final workout = WorkoutBuilder(
           startTime: DateTime(2026, 1, 1, 9, 0),
           endTime: loggedAt,
-          exerciseEntries: [entry],
-        );
+          entries: [
+            buildEntry(sets: [buildSet(loggedAt: loggedAt)]),
+          ],
+        ).build();
 
         final repository = await pumpActiveWorkoutScreen(
           tester,
@@ -188,25 +150,13 @@ void main() {
       'Locked with zero Exercise Entries, with no guard preventing it',
       (tester) async {
         final loggedAt = DateTime(2026, 1, 1, 10, 0);
-        final entry = ExerciseEntry(
-          id: 'entry-1',
-          exerciseId: 'exercise-1',
-          sets: [
-            ExerciseSet(
-              id: 'set-1',
-              weight: 60,
-              unit: WeightUnit.kg,
-              reps: 8,
-              loggedAt: loggedAt,
-            ),
-          ],
-        );
-        final workout = Workout(
-          id: 'workout-1',
+        final workout = WorkoutBuilder(
           startTime: DateTime(2026, 1, 1, 9, 0),
           endTime: loggedAt,
-          exerciseEntries: [entry],
-        );
+          entries: [
+            buildEntry(sets: [buildSet(loggedAt: loggedAt)]),
+          ],
+        ).build();
 
         final repository = await pumpActiveWorkoutScreen(
           tester,

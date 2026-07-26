@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:universal/models/routine.dart';
 import 'package:universal/models/weight_unit.dart';
 
-import 'routine_screen_test_helpers.dart';
+import '../support/pump.dart';
 
 void main() {
   setUp(() {

@@ -5,6 +5,8 @@ import 'package:universal/models/exercise.dart';
 import 'package:universal/models/workout.dart';
 import 'package:universal/widgets/selection_accent_border.dart';
 
+import '../support/pump.dart';
+import '../support/workout_builder.dart';
 import 'active_workout_screen_test_helpers.dart';
 
 bool _entryIsSelected(WidgetTester tester, String entryId) {
@@ -28,12 +30,7 @@ void main() {
       'tapping an in-progress Exercise Entry selects it and shows the '
       'accent border on its rows',
       (tester) async {
-        final entry = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
-        final workout = Workout(
-          id: 'workout-1',
-          startTime: DateTime(2026, 1, 1),
-          exerciseEntries: [entry],
-        );
+        final workout = WorkoutBuilder(entries: [buildEntry()]).build();
 
         await pumpActiveWorkoutScreen(
           tester,
@@ -54,13 +51,12 @@ void main() {
       'selecting a different Exercise Entry clears the accent border on '
       'the previously selected one',
       (tester) async {
-        final entry1 = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
-        final entry2 = ExerciseEntry(id: 'entry-2', exerciseId: 'exercise-2');
-        final workout = Workout(
-          id: 'workout-1',
-          startTime: DateTime(2026, 1, 1),
-          exerciseEntries: [entry1, entry2],
-        );
+        final workout = WorkoutBuilder(
+          entries: [
+            buildEntry(),
+            buildEntry(id: 'entry-2', exerciseId: 'exercise-2'),
+          ],
+        ).build();
 
         await pumpActiveWorkoutScreen(
           tester,
@@ -87,7 +83,7 @@ void main() {
       (tester) async {
         final repository = await pumpActiveWorkoutScreen(
           tester,
-          workout: Workout(id: 'workout-1', startTime: DateTime(2026, 1, 1)),
+          workout: WorkoutBuilder().build(),
           exercises: const [],
         );
 
@@ -106,13 +102,12 @@ void main() {
 
     testWidgets('deleting the currently selected Exercise Entry clears the '
         'selection instead of falling back to another entry', (tester) async {
-      final entry1 = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
-      final entry2 = ExerciseEntry(id: 'entry-2', exerciseId: 'exercise-2');
-      final workout = Workout(
-        id: 'workout-1',
-        startTime: DateTime(2026, 1, 1),
-        exerciseEntries: [entry1, entry2],
-      );
+      final workout = WorkoutBuilder(
+        entries: [
+          buildEntry(),
+          buildEntry(id: 'entry-2', exerciseId: 'exercise-2'),
+        ],
+      ).build();
 
       await pumpActiveWorkoutScreen(
         tester,
@@ -135,13 +130,12 @@ void main() {
 
     testWidgets('deleting a non-selected Exercise Entry leaves the current '
         'selection unchanged', (tester) async {
-      final entry1 = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
-      final entry2 = ExerciseEntry(id: 'entry-2', exerciseId: 'exercise-2');
-      final workout = Workout(
-        id: 'workout-1',
-        startTime: DateTime(2026, 1, 1),
-        exerciseEntries: [entry1, entry2],
-      );
+      final workout = WorkoutBuilder(
+        entries: [
+          buildEntry(),
+          buildEntry(id: 'entry-2', exerciseId: 'exercise-2'),
+        ],
+      ).build();
 
       await pumpActiveWorkoutScreen(
         tester,
@@ -167,25 +161,13 @@ void main() {
       'show the accent border',
       (tester) async {
         final loggedAt = DateTime(2026, 1, 1, 10, 0);
-        final entry = ExerciseEntry(
-          id: 'entry-1',
-          exerciseId: 'exercise-1',
-          sets: [
-            ExerciseSet(
-              id: 'set-1',
-              weight: 60,
-              unit: WeightUnit.kg,
-              reps: 8,
-              loggedAt: loggedAt,
-            ),
-          ],
-        );
-        final workout = Workout(
-          id: 'workout-1',
+        final workout = WorkoutBuilder(
           startTime: DateTime(2026, 1, 1, 9, 0),
           endTime: loggedAt,
-          exerciseEntries: [entry],
-        );
+          entries: [
+            buildEntry(sets: [buildSet(loggedAt: loggedAt)]),
+          ],
+        ).build();
 
         await pumpActiveWorkoutScreen(
           tester,
@@ -205,12 +187,7 @@ void main() {
       'the add-Set bar has a distinct surface tone and is seamed off from '
       'the Discard/Finish row',
       (tester) async {
-        final entry = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
-        final workout = Workout(
-          id: 'workout-1',
-          startTime: DateTime(2026, 1, 1),
-          exerciseEntries: [entry],
-        );
+        final workout = WorkoutBuilder(entries: [buildEntry()]).build();
 
         await pumpActiveWorkoutScreen(
           tester,
@@ -248,12 +225,7 @@ void main() {
       'the add-Set bar is hidden when no Exercise Entry is selected and on '
       'a Locked Workout',
       (tester) async {
-        final entry = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
-        final inProgress = Workout(
-          id: 'workout-1',
-          startTime: DateTime(2026, 1, 1),
-          exerciseEntries: [entry],
-        );
+        final inProgress = WorkoutBuilder(entries: [buildEntry()]).build();
 
         await pumpActiveWorkoutScreen(
           tester,
@@ -264,25 +236,14 @@ void main() {
         expect(find.byKey(const ValueKey('add-set-bar')), findsNothing);
 
         final loggedAt = DateTime(2026, 1, 1, 10, 0);
-        final lockedEntry = ExerciseEntry(
-          id: 'entry-1',
-          exerciseId: 'exercise-1',
-          sets: [
-            ExerciseSet(
-              id: 'set-1',
-              weight: 60,
-              unit: WeightUnit.kg,
-              reps: 8,
-              loggedAt: loggedAt,
-            ),
-          ],
-        );
-        final locked = Workout(
+        final locked = WorkoutBuilder(
           id: 'workout-2',
           startTime: DateTime(2026, 1, 1, 9, 0),
           endTime: loggedAt,
-          exerciseEntries: [lockedEntry],
-        );
+          entries: [
+            buildEntry(sets: [buildSet(loggedAt: loggedAt)]),
+          ],
+        ).build();
 
         await pumpActiveWorkoutScreen(
           tester,
@@ -298,12 +259,7 @@ void main() {
       'the add-Set bar arranges weight, unit toggle, and reps controls in a '
       'single row above a full-width Add Set button',
       (tester) async {
-        final entry = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
-        final workout = Workout(
-          id: 'workout-1',
-          startTime: DateTime(2026, 1, 1),
-          exerciseEntries: [entry],
-        );
+        final workout = WorkoutBuilder(entries: [buildEntry()]).build();
 
         await pumpActiveWorkoutScreen(
           tester,
@@ -354,12 +310,7 @@ void main() {
 
     testWidgets('the weight stepper steps by 2.5 in kg and 5 in lbs and can go '
         'negative; the reps stepper has a minimum of zero', (tester) async {
-      final entry = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
-      final workout = Workout(
-        id: 'workout-1',
-        startTime: DateTime(2026, 1, 1),
-        exerciseEntries: [entry],
-      );
+      final workout = WorkoutBuilder(entries: [buildEntry()]).build();
 
       await pumpActiveWorkoutScreen(
         tester,
@@ -403,12 +354,7 @@ void main() {
     testWidgets(
       'the Add Set button is disabled while the reps stepper is at zero',
       (tester) async {
-        final entry = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
-        final workout = Workout(
-          id: 'workout-1',
-          startTime: DateTime(2026, 1, 1),
-          exerciseEntries: [entry],
-        );
+        final workout = WorkoutBuilder(entries: [buildEntry()]).build();
 
         await pumpActiveWorkoutScreen(
           tester,
@@ -440,12 +386,7 @@ void main() {
       'the unit defaults to kg for a freshly selected Exercise Entry with '
       'no logged Sets yet',
       (tester) async {
-        final entry = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
-        final workout = Workout(
-          id: 'workout-1',
-          startTime: DateTime(2026, 1, 1),
-          exerciseEntries: [entry],
-        );
+        final workout = WorkoutBuilder(entries: [buildEntry()]).build();
 
         await pumpActiveWorkoutScreen(
           tester,
@@ -464,13 +405,12 @@ void main() {
       'switching the selected Exercise Entry resets the weight and reps '
       'steppers to zero while keeping each entry\'s unit sticky',
       (tester) async {
-        final entry1 = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
-        final entry2 = ExerciseEntry(id: 'entry-2', exerciseId: 'exercise-2');
-        final workout = Workout(
-          id: 'workout-1',
-          startTime: DateTime(2026, 1, 1),
-          exerciseEntries: [entry1, entry2],
-        );
+        final workout = WorkoutBuilder(
+          entries: [
+            buildEntry(),
+            buildEntry(id: 'entry-2', exerciseId: 'exercise-2'),
+          ],
+        ).build();
 
         final repository = await pumpActiveWorkoutScreen(
           tester,

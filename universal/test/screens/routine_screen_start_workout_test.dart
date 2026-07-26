@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:universal/models/routine.dart';
-import 'package:universal/models/workout.dart';
 import 'package:universal/screens/active_workout_screen.dart';
 import 'package:universal/widgets/start_workout_bar.dart';
 
-import 'routine_screen_test_helpers.dart';
+import '../support/pump.dart';
+import '../support/workout_builder.dart';
 
 void main() {
   setUp(() {
@@ -69,11 +69,7 @@ void main() {
           ],
           routineId: 'routine-1',
           workouts: [
-            Workout(
-              id: 'workout-1',
-              startTime: DateTime(2026, 1, 1),
-              routineId: 'routine-2',
-            ),
+            WorkoutBuilder(routineId: 'routine-2').build(),
           ],
         );
 
@@ -99,7 +95,7 @@ void main() {
           tester,
           routines: [Routine(id: 'routine-1', name: 'Push Day')],
           routineId: 'routine-1',
-          workouts: [Workout(id: 'workout-1', startTime: DateTime(2026, 1, 1))],
+          workouts: [WorkoutBuilder().build()],
         );
 
         expect(find.text('Continue Workout'), findsOneWidget);
@@ -140,7 +136,7 @@ void main() {
             ),
           ],
           routineId: 'routine-1',
-          workouts: [Workout(id: 'workout-1', startTime: DateTime(2026, 1, 1))],
+          workouts: [WorkoutBuilder().build()],
         );
 
         expect(find.byType(StartWorkoutBar), findsNothing);

@@ -5,7 +5,8 @@ import 'package:universal/models/exercise.dart';
 import 'package:universal/models/routine.dart';
 import 'package:universal/models/workout.dart';
 
-import 'active_workout_screen_test_helpers.dart';
+import '../support/pump.dart';
+import '../support/workout_builder.dart';
 
 void main() {
   setUp(() {
@@ -17,9 +18,7 @@ void main() {
       'an unfilled target row shows a dashed badge and no tap handler, with '
       'no dashed time cell while the Workout is in progress',
       (tester) async {
-        final entry = ExerciseEntry(
-          id: 'entry-1',
-          exerciseId: 'exercise-1',
+        final entry = buildEntry(
           targets: const [
             PlannedExerciseRow(
               reps: FixedReps(10),
@@ -27,11 +26,10 @@ void main() {
             ),
           ],
         );
-        final workout = Workout(
-          id: 'workout-1',
+        final workout = WorkoutBuilder(
           startTime: DateTime(2026, 1, 1, 9, 0),
-          exerciseEntries: [entry],
-        );
+          entries: [entry],
+        ).build();
 
         await pumpActiveWorkoutScreen(
           tester,
@@ -68,9 +66,7 @@ void main() {
       'an unfilled target row on a Locked Workout shows a dashed time cell',
       (tester) async {
         final loggedAt = DateTime(2026, 1, 1, 10, 0);
-        final entry = ExerciseEntry(
-          id: 'entry-1',
-          exerciseId: 'exercise-1',
+        final entry = buildEntry(
           targets: const [
             PlannedExerciseRow(
               reps: FixedReps(10),
@@ -78,12 +74,11 @@ void main() {
             ),
           ],
         );
-        final workout = Workout(
-          id: 'workout-1',
+        final workout = WorkoutBuilder(
           startTime: DateTime(2026, 1, 1, 9, 0),
           endTime: loggedAt,
-          exerciseEntries: [entry],
-        );
+          entries: [entry],
+        ).build();
 
         await pumpActiveWorkoutScreen(
           tester,
@@ -106,16 +101,13 @@ void main() {
           reps: FixedReps(10),
           weight: PlannedWeight(value: 60, unit: WeightUnit.kg),
         );
-        final entry = ExerciseEntry(
-          id: 'entry-1',
-          exerciseId: 'exercise-1',
+        final entry = buildEntry(
           targets: const [identicalRow, identicalRow, identicalRow],
         );
-        final workout = Workout(
-          id: 'workout-1',
+        final workout = WorkoutBuilder(
           startTime: DateTime(2026, 1, 1, 9, 0),
-          exerciseEntries: [entry],
-        );
+          entries: [entry],
+        ).build();
 
         await pumpActiveWorkoutScreen(
           tester,
@@ -138,32 +130,21 @@ void main() {
           reps: FixedReps(10),
           weight: PlannedWeight(value: 60, unit: WeightUnit.kg),
         );
-        final entry = ExerciseEntry(
-          id: 'entry-1',
-          exerciseId: 'exercise-1',
+        final entry = buildEntry(
           sets: [
-            ExerciseSet(
-              id: 'set-1',
-              weight: 60,
-              unit: WeightUnit.kg,
-              reps: 10,
-              loggedAt: DateTime(2026, 1, 1, 10, 0),
-            ),
-            ExerciseSet(
+            buildSet(reps: 10, loggedAt: DateTime(2026, 1, 1, 10, 0)),
+            buildSet(
               id: 'set-2',
-              weight: 60,
-              unit: WeightUnit.kg,
               reps: 10,
               loggedAt: DateTime(2026, 1, 1, 10, 5),
             ),
           ],
           targets: const [identicalRow, identicalRow, identicalRow],
         );
-        final workout = Workout(
-          id: 'workout-1',
+        final workout = WorkoutBuilder(
           startTime: DateTime(2026, 1, 1, 9, 0),
-          exerciseEntries: [entry],
-        );
+          entries: [entry],
+        ).build();
 
         await pumpActiveWorkoutScreen(
           tester,

@@ -5,6 +5,7 @@ import 'package:universal/models/exercise.dart';
 import 'package:universal/models/routine.dart';
 import 'package:universal/widgets/planned_exercise_card.dart';
 
+import '../support/pump.dart';
 import 'routine_screen_test_helpers.dart';
 
 void main() {

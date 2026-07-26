@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:universal/models/exercise.dart';
-import 'package:universal/models/workout.dart';
 
-import 'active_workout_screen_test_helpers.dart';
+import '../support/pump.dart';
+import '../support/workout_builder.dart';
 
 void main() {
   setUp(() {
@@ -18,7 +18,7 @@ void main() {
       (tester) async {
         final repository = await pumpActiveWorkoutScreen(
           tester,
-          workout: Workout(id: 'workout-1', startTime: DateTime(2026, 1, 1)),
+          workout: WorkoutBuilder().build(),
           exercises: const [],
         );
 
@@ -47,7 +47,7 @@ void main() {
 
         final repository = await pumpActiveWorkoutScreen(
           tester,
-          workout: Workout(id: 'workout-1', startTime: DateTime(2026, 1, 1)),
+          workout: WorkoutBuilder().build(),
           exercises: [existing],
         );
 
@@ -68,7 +68,7 @@ void main() {
         'rejected with no Entry added', (tester) async {
       final repository = await pumpActiveWorkoutScreen(
         tester,
-        workout: Workout(id: 'workout-1', startTime: DateTime(2026, 1, 1)),
+        workout: WorkoutBuilder().build(),
         exercises: const [],
       );
       var notified = false;
@@ -87,7 +87,7 @@ void main() {
       (tester) async {
         await pumpActiveWorkoutScreen(
           tester,
-          workout: Workout(id: 'workout-1', startTime: DateTime(2026, 1, 1)),
+          workout: WorkoutBuilder().build(),
           exercises: const [],
         );
 
@@ -104,12 +104,9 @@ void main() {
       'an Exercise Entry whose exerciseId has no matching Exercise renders '
       'without throwing',
       (tester) async {
-        final entry = ExerciseEntry(id: 'entry-1', exerciseId: 'missing');
-        final workout = Workout(
-          id: 'workout-1',
-          startTime: DateTime(2026, 1, 1),
-          exerciseEntries: [entry],
-        );
+        final workout = WorkoutBuilder(
+          entries: [buildEntry(exerciseId: 'missing')],
+        ).build();
 
         await pumpActiveWorkoutScreen(
           tester,
@@ -128,7 +125,7 @@ void main() {
       (tester) async {
         await pumpActiveWorkoutScreen(
           tester,
-          workout: Workout(id: 'workout-1', startTime: DateTime(2026, 1, 1)),
+          workout: WorkoutBuilder().build(),
           exercises: const [],
         );
 
@@ -150,7 +147,7 @@ void main() {
       (tester) async {
         await pumpActiveWorkoutScreen(
           tester,
-          workout: Workout(id: 'workout-1', startTime: DateTime(2026, 1, 1)),
+          workout: WorkoutBuilder().build(),
           exercises: const [],
         );
 

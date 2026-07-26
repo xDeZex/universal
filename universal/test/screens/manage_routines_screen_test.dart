@@ -1,32 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:universal/models/routine.dart';
-import 'package:universal/repositories/workout_repository.dart';
-import 'package:universal/screens/manage_routines_screen.dart';
 import 'package:universal/screens/routine_screen.dart';
 import 'package:universal/widgets/routine_tile.dart';
 
-Future<WorkoutRepository> _pumpManageRoutinesScreen(
-  WidgetTester tester, {
-  required List<Routine> routines,
-}) async {
-  final repository = WorkoutRepository(
-    initialWorkouts: const [],
-    initialExercises: const [],
-    initialRoutines: routines,
-  );
-  await tester.pumpWidget(
-    MaterialApp(
-      home: ChangeNotifierProvider<WorkoutRepository>.value(
-        value: repository,
-        child: const ManageRoutinesScreen(),
-      ),
-    ),
-  );
-  return repository;
-}
+import '../support/pump.dart';
 
 void main() {
   setUp(() {
@@ -39,7 +18,7 @@ void main() {
       'case-insensitively, followed by an Archived section sorted the '
       'same way',
       (tester) async {
-        await _pumpManageRoutinesScreen(
+        await pumpManageRoutinesScreen(
           tester,
           // Deliberately out of alphabetical order, mixed casing, and with
           // archived Routines interleaved, so the test can only pass if
@@ -84,7 +63,7 @@ void main() {
     testWidgets(
       'shows no Archived section label when no Routine is archived',
       (tester) async {
-        await _pumpManageRoutinesScreen(
+        await pumpManageRoutinesScreen(
           tester,
           routines: [Routine(id: 'routine-1', name: 'Push Day')],
         );
@@ -97,7 +76,7 @@ void main() {
       'shows an empty-state message and no list rows when there are no '
       'Routines at all',
       (tester) async {
-        await _pumpManageRoutinesScreen(tester, routines: []);
+        await pumpManageRoutinesScreen(tester, routines: []);
 
         expect(find.text('No Routines yet'), findsOneWidget);
         expect(find.byType(RoutineTile), findsNothing);
@@ -108,7 +87,7 @@ void main() {
       'tapping an active Routine row navigates to that Routine\'s '
       'RoutineScreen',
       (tester) async {
-        await _pumpManageRoutinesScreen(
+        await pumpManageRoutinesScreen(
           tester,
           routines: [Routine(id: 'routine-1', name: 'Push Day')],
         );
@@ -128,7 +107,7 @@ void main() {
       'tapping an archived Routine row navigates to that Routine\'s '
       'RoutineScreen',
       (tester) async {
-        await _pumpManageRoutinesScreen(
+        await pumpManageRoutinesScreen(
           tester,
           routines: [
             Routine(
@@ -154,7 +133,7 @@ void main() {
       'tapping the FloatingActionButton opens a Create Routine dialog with '
       'a name field and Cancel/Create actions',
       (tester) async {
-        await _pumpManageRoutinesScreen(tester, routines: []);
+        await pumpManageRoutinesScreen(tester, routines: []);
 
         await tester.tap(find.byType(FloatingActionButton));
         await tester.pumpAndSettle();
@@ -179,7 +158,7 @@ void main() {
       'cancelling the Create Routine dialog closes it and creates no '
       'Routine',
       (tester) async {
-        final repository = await _pumpManageRoutinesScreen(
+        final repository = await pumpManageRoutinesScreen(
           tester,
           routines: [],
         );
@@ -202,7 +181,7 @@ void main() {
       'submitting a valid, non-colliding name closes the dialog, creates '
       'the Routine, and navigates directly into its RoutineScreen',
       (tester) async {
-        final repository = await _pumpManageRoutinesScreen(
+        final repository = await pumpManageRoutinesScreen(
           tester,
           routines: [Routine(id: 'routine-existing', name: 'Push Day')],
         );
@@ -235,7 +214,7 @@ void main() {
       'submitting an empty or whitespace-only name shows an inline '
       'validation error, keeps the dialog open, and creates no Routine',
       (tester) async {
-        final repository = await _pumpManageRoutinesScreen(
+        final repository = await pumpManageRoutinesScreen(
           tester,
           routines: [],
         );
@@ -264,7 +243,7 @@ void main() {
       'shows an inline validation error, keeps the dialog open, and '
       'creates no second Routine',
       (tester) async {
-        final repository = await _pumpManageRoutinesScreen(
+        final repository = await pumpManageRoutinesScreen(
           tester,
           routines: [Routine(id: 'routine-1', name: 'Push Day')],
         );

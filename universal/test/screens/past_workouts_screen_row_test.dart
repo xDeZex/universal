@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:universal/models/exercise.dart';
-import 'package:universal/models/workout.dart';
 import 'package:universal/widgets/coplanar_card.dart';
 
-import 'past_workouts_screen_test_helpers.dart';
+import '../support/pump.dart';
+import '../support/workout_builder.dart';
 
 void main() {
   setUp(() {
@@ -17,26 +17,16 @@ void main() {
       'row shows the end date and a comma-joined list of Exercise Entry '
       'names in entry order, including an entry with zero logged Sets',
       (tester) async {
-        final withSets = ExerciseEntry(
-          id: 'entry-1',
-          exerciseId: 'exercise-1',
-          sets: [
-            ExerciseSet(
-              id: 'set-1',
-              weight: 60,
-              unit: WeightUnit.kg,
-              reps: 5,
-              loggedAt: DateTime(2026, 3, 5, 9, 20),
-            ),
-          ],
+        final withSets = buildEntry(
+          sets: [buildSet(reps: 5, loggedAt: DateTime(2026, 3, 5, 9, 20))],
         );
-        final zeroSets = ExerciseEntry(id: 'entry-2', exerciseId: 'exercise-2');
-        final workout = Workout(
+        final zeroSets = buildEntry(id: 'entry-2', exerciseId: 'exercise-2');
+        final workout = WorkoutBuilder(
           id: 'w1',
           startTime: DateTime(2026, 3, 5, 9, 0),
           endTime: DateTime(2026, 3, 5, 9, 30),
-          exerciseEntries: [withSets, zeroSets],
-        );
+          entries: [withSets, zeroSets],
+        ).build();
 
         await pumpPastWorkoutsScreen(
           tester,
@@ -61,14 +51,14 @@ void main() {
           (i) => Exercise(id: 'exercise-$i', name: 'Exercise Number $i'),
         );
         final entries = longNames
-            .map((e) => ExerciseEntry(id: 'entry-${e.id}', exerciseId: e.id))
+            .map((e) => buildEntry(id: 'entry-${e.id}', exerciseId: e.id))
             .toList();
-        final workout = Workout(
+        final workout = WorkoutBuilder(
           id: 'w1',
           startTime: DateTime(2026, 3, 5, 9, 0),
           endTime: DateTime(2026, 3, 5, 9, 30),
-          exerciseEntries: entries,
-        );
+          entries: entries,
+        ).build();
 
         await pumpPastWorkoutsScreen(
           tester,
@@ -91,16 +81,16 @@ void main() {
     testWidgets('each row in the list renders inside a CoplanarCard', (
       tester,
     ) async {
-      final first = Workout(
+      final first = WorkoutBuilder(
         id: 'w-first',
         startTime: DateTime(2026, 1, 1, 9, 0),
         endTime: DateTime(2026, 1, 1, 9, 30),
-      );
-      final second = Workout(
+      ).build();
+      final second = WorkoutBuilder(
         id: 'w-second',
         startTime: DateTime(2026, 1, 2, 9, 0),
         endTime: DateTime(2026, 1, 2, 9, 30),
-      );
+      ).build();
 
       await pumpPastWorkoutsScreen(
         tester,
@@ -122,13 +112,13 @@ void main() {
       'row summary shows "Unknown Exercise" for an Exercise Entry whose '
       'exerciseId has no matching Exercise',
       (tester) async {
-        final entry = ExerciseEntry(id: 'entry-1', exerciseId: 'missing');
-        final workout = Workout(
+        final entry = buildEntry(exerciseId: 'missing');
+        final workout = WorkoutBuilder(
           id: 'w1',
           startTime: DateTime(2026, 1, 1, 9, 0),
           endTime: DateTime(2026, 1, 1, 9, 30),
-          exerciseEntries: [entry],
-        );
+          entries: [entry],
+        ).build();
 
         await pumpPastWorkoutsScreen(
           tester,

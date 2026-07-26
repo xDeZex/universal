@@ -8,7 +8,8 @@ import 'package:universal/repositories/workout_repository.dart';
 import 'package:universal/screens/active_workout_screen.dart';
 import 'package:universal/services/storage_service.dart';
 
-import 'workout_home_screen_test_helpers.dart';
+import '../support/pump.dart';
+import '../support/workout_builder.dart';
 
 void main() {
   setUp(() {
@@ -35,9 +36,7 @@ void main() {
     ) async {
       await pumpWorkoutHomeScreen(
         tester,
-        initialWorkouts: [
-          Workout(id: 'workout-1', startTime: DateTime(2026, 1, 1)),
-        ],
+        initialWorkouts: [WorkoutBuilder().build()],
         initialExercises: [],
       );
       await tester.pumpAndSettle();
@@ -51,9 +50,7 @@ void main() {
       (tester) async {
         await pumpWorkoutHomeScreen(
           tester,
-          initialWorkouts: [
-            Workout(id: 'workout-1', startTime: DateTime(2026, 1, 1)),
-          ],
+          initialWorkouts: [WorkoutBuilder().build()],
           initialExercises: [],
         );
         await tester.pumpAndSettle();
@@ -124,9 +121,7 @@ void main() {
       'loads the Workout and Exercise lists from storage on initialization',
       (tester) async {
         final storage = StorageService();
-        await storage.saveWorkouts([
-          Workout(id: 'workout-1', startTime: DateTime(2026, 1, 1)),
-        ]);
+        await storage.saveWorkouts([WorkoutBuilder().build()]);
         await storage.saveExercises([
           Exercise(id: 'exercise-1', name: 'Bench Press'),
         ]);
@@ -163,9 +158,7 @@ void main() {
       (tester) async {
         await pumpWorkoutHomeScreen(
           tester,
-          initialWorkouts: [
-            Workout(id: 'workout-1', startTime: DateTime(2026, 1, 1)),
-          ],
+          initialWorkouts: [WorkoutBuilder().build()],
           initialExercises: [],
         );
         await tester.pumpAndSettle();
@@ -210,28 +203,17 @@ void main() {
       'returns to the Workout home screen showing Start Workout',
       (tester) async {
         final loggedSetTime = DateTime(2026, 1, 1, 10, 30);
-        final entry = ExerciseEntry(
-          id: 'entry-1',
-          exerciseId: 'exercise-1',
-          sets: [
-            ExerciseSet(
-              id: 'set-1',
-              weight: 60,
-              unit: WeightUnit.kg,
-              reps: 5,
-              loggedAt: loggedSetTime,
-            ),
-          ],
+        final entry = buildEntry(
+          sets: [buildSet(reps: 5, loggedAt: loggedSetTime)],
         );
 
         await pumpWorkoutHomeScreen(
           tester,
           initialWorkouts: [
-            Workout(
-              id: 'workout-1',
+            WorkoutBuilder(
               startTime: DateTime(2026, 1, 1, 10, 0),
-              exerciseEntries: [entry],
-            ),
+              entries: [entry],
+            ).build(),
           ],
           initialExercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
         );
@@ -256,28 +238,17 @@ void main() {
       'discarding a Workout on the active Workout screen deletes it from '
       'storage and returns to the Workout home screen showing Start Workout',
       (tester) async {
-        final entry = ExerciseEntry(
-          id: 'entry-1',
-          exerciseId: 'exercise-1',
-          sets: [
-            ExerciseSet(
-              id: 'set-1',
-              weight: 60,
-              unit: WeightUnit.kg,
-              reps: 5,
-              loggedAt: DateTime(2026, 1, 1, 10, 30),
-            ),
-          ],
+        final entry = buildEntry(
+          sets: [buildSet(reps: 5, loggedAt: DateTime(2026, 1, 1, 10, 30))],
         );
 
         await pumpWorkoutHomeScreen(
           tester,
           initialWorkouts: [
-            Workout(
-              id: 'workout-1',
+            WorkoutBuilder(
               startTime: DateTime(2026, 1, 1, 10, 0),
-              exerciseEntries: [entry],
-            ),
+              entries: [entry],
+            ).build(),
           ],
           initialExercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
         );

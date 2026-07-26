@@ -4,7 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:universal/models/exercise.dart';
 import 'package:universal/models/workout.dart';
 
-import 'active_workout_screen_test_helpers.dart';
+import '../support/pump.dart';
+import '../support/workout_builder.dart';
 
 void main() {
   setUp(() {
@@ -14,24 +15,12 @@ void main() {
   group('ActiveWorkoutScreen Set edit dialog actions', () {
     testWidgets('the edit dialog\'s Save action is disabled once reps has been '
         'stepped down to zero', (tester) async {
-      final entry = ExerciseEntry(
-        id: 'entry-1',
-        exerciseId: 'exercise-1',
-        sets: [
-          ExerciseSet(
-            id: 'set-1',
-            weight: 60,
-            unit: WeightUnit.kg,
-            reps: 1,
-            loggedAt: DateTime(2026, 1, 1, 10, 0),
-          ),
-        ],
-      );
-      final workout = Workout(
-        id: 'workout-1',
+      final workout = WorkoutBuilder(
         startTime: DateTime(2026, 1, 1, 9, 0),
-        exerciseEntries: [entry],
-      );
+        entries: [
+          buildEntry(sets: [buildSet(reps: 1)]),
+        ],
+      ).build();
 
       await pumpActiveWorkoutScreen(
         tester,
@@ -57,25 +46,13 @@ void main() {
       'edit dialog and behaves identically to an in-progress Workout',
       (tester) async {
         final loggedAt = DateTime(2026, 1, 1, 10, 0);
-        final entry = ExerciseEntry(
-          id: 'entry-1',
-          exerciseId: 'exercise-1',
-          sets: [
-            ExerciseSet(
-              id: 'set-1',
-              weight: 60,
-              unit: WeightUnit.kg,
-              reps: 8,
-              loggedAt: loggedAt,
-            ),
-          ],
-        );
-        final workout = Workout(
-          id: 'workout-1',
+        final workout = WorkoutBuilder(
           startTime: DateTime(2026, 1, 1, 9, 0),
           endTime: loggedAt,
-          exerciseEntries: [entry],
-        );
+          entries: [
+            buildEntry(sets: [buildSet(loggedAt: loggedAt)]),
+          ],
+        ).build();
 
         final repository = await pumpActiveWorkoutScreen(
           tester,
@@ -110,24 +87,12 @@ void main() {
       'selecting kg in the edit dialog while a Set is in lbs switches its '
       'unit back to kg',
       (tester) async {
-        final entry = ExerciseEntry(
-          id: 'entry-1',
-          exerciseId: 'exercise-1',
-          sets: [
-            ExerciseSet(
-              id: 'set-1',
-              weight: 60,
-              unit: WeightUnit.lbs,
-              reps: 8,
-              loggedAt: DateTime(2026, 1, 1, 10, 0),
-            ),
-          ],
-        );
-        final workout = Workout(
-          id: 'workout-1',
+        final workout = WorkoutBuilder(
           startTime: DateTime(2026, 1, 1, 9, 0),
-          exerciseEntries: [entry],
-        );
+          entries: [
+            buildEntry(sets: [buildSet(unit: WeightUnit.lbs)]),
+          ],
+        ).build();
 
         final repository = await pumpActiveWorkoutScreen(
           tester,
@@ -153,24 +118,12 @@ void main() {
       'cancelling the edit dialog closes it without persisting or changing '
       'the Set',
       (tester) async {
-        final entry = ExerciseEntry(
-          id: 'entry-1',
-          exerciseId: 'exercise-1',
-          sets: [
-            ExerciseSet(
-              id: 'set-1',
-              weight: 60,
-              unit: WeightUnit.kg,
-              reps: 8,
-              loggedAt: DateTime(2026, 1, 1, 10, 0),
-            ),
-          ],
-        );
-        final workout = Workout(
-          id: 'workout-1',
+        final workout = WorkoutBuilder(
           startTime: DateTime(2026, 1, 1, 9, 0),
-          exerciseEntries: [entry],
-        );
+          entries: [
+            buildEntry(sets: [buildSet()]),
+          ],
+        ).build();
 
         final repository = await pumpActiveWorkoutScreen(
           tester,

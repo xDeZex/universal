@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:universal/models/exercise.dart';
-import 'package:universal/models/workout.dart';
 import 'package:universal/screens/active_workout_screen.dart';
 import 'package:universal/widgets/coplanar_card.dart';
 
-import 'past_workouts_screen_test_helpers.dart';
+import '../support/pump.dart';
+import '../support/workout_builder.dart';
 
 void main() {
   setUp(() {
@@ -17,15 +17,15 @@ void main() {
     testWidgets(
       'lists only finished Workouts, excluding any in-progress Workout',
       (tester) async {
-        final finished = Workout(
+        final finished = WorkoutBuilder(
           id: 'w-finished',
           startTime: DateTime(2026, 1, 1, 9, 0),
           endTime: DateTime(2026, 1, 1, 9, 30),
-        );
-        final inProgress = Workout(
+        ).build();
+        final inProgress = WorkoutBuilder(
           id: 'w-progress',
           startTime: DateTime(2026, 1, 2, 9, 0),
-        );
+        ).build();
 
         await pumpPastWorkoutsScreen(
           tester,
@@ -47,21 +47,21 @@ void main() {
     testWidgets('orders finished Workouts by endTime descending', (
       tester,
     ) async {
-      final oldest = Workout(
+      final oldest = WorkoutBuilder(
         id: 'w-oldest',
         startTime: DateTime(2026, 1, 1, 9, 0),
         endTime: DateTime(2026, 1, 1, 9, 30),
-      );
-      final newest = Workout(
+      ).build();
+      final newest = WorkoutBuilder(
         id: 'w-newest',
         startTime: DateTime(2026, 1, 3, 9, 0),
         endTime: DateTime(2026, 1, 3, 9, 30),
-      );
-      final middle = Workout(
+      ).build();
+      final middle = WorkoutBuilder(
         id: 'w-middle',
         startTime: DateTime(2026, 1, 2, 9, 0),
         endTime: DateTime(2026, 1, 2, 9, 30),
-      );
+      ).build();
 
       await pumpPastWorkoutsScreen(
         tester,
@@ -88,10 +88,10 @@ void main() {
       'shows a centered "No past workouts yet" message and no list rows '
       'when there are no finished Workouts',
       (tester) async {
-        final inProgress = Workout(
+        final inProgress = WorkoutBuilder(
           id: 'w-progress',
           startTime: DateTime(2026, 1, 1, 9, 0),
-        );
+        ).build();
 
         await pumpPastWorkoutsScreen(
           tester,
@@ -117,11 +117,11 @@ void main() {
       'shows list rows instead of the empty-state message when at least '
       'one finished Workout exists',
       (tester) async {
-        final finished = Workout(
+        final finished = WorkoutBuilder(
           id: 'w-finished',
           startTime: DateTime(2026, 1, 1, 9, 0),
           endTime: DateTime(2026, 1, 1, 9, 30),
-        );
+        ).build();
 
         await pumpPastWorkoutsScreen(
           tester,
@@ -138,26 +138,16 @@ void main() {
       'tapping a row opens the Active Workout screen for that Workout in '
       'read-only mode, including its zero-Set Exercise Entry',
       (tester) async {
-        final withSets = ExerciseEntry(
-          id: 'entry-1',
-          exerciseId: 'exercise-1',
-          sets: [
-            ExerciseSet(
-              id: 'set-1',
-              weight: 60,
-              unit: WeightUnit.kg,
-              reps: 5,
-              loggedAt: DateTime(2026, 1, 1, 9, 20),
-            ),
-          ],
+        final withSets = buildEntry(
+          sets: [buildSet(reps: 5, loggedAt: DateTime(2026, 1, 1, 9, 20))],
         );
-        final zeroSets = ExerciseEntry(id: 'entry-2', exerciseId: 'exercise-2');
-        final workout = Workout(
+        final zeroSets = buildEntry(id: 'entry-2', exerciseId: 'exercise-2');
+        final workout = WorkoutBuilder(
           id: 'w-finished',
           startTime: DateTime(2026, 1, 1, 9, 0),
           endTime: DateTime(2026, 1, 1, 9, 30),
-          exerciseEntries: [withSets, zeroSets],
-        );
+          entries: [withSets, zeroSets],
+        ).build();
 
         await pumpPastWorkoutsScreen(
           tester,
@@ -189,25 +179,15 @@ void main() {
 
     testWidgets('editing a Set from a Past Workout\'s detail view persists the '
         'change through WorkoutRepository, not a no-op', (tester) async {
-      final entry = ExerciseEntry(
-        id: 'entry-1',
-        exerciseId: 'exercise-1',
-        sets: [
-          ExerciseSet(
-            id: 'set-1',
-            weight: 60,
-            unit: WeightUnit.kg,
-            reps: 5,
-            loggedAt: DateTime(2026, 1, 1, 9, 20),
-          ),
-        ],
+      final entry = buildEntry(
+        sets: [buildSet(reps: 5, loggedAt: DateTime(2026, 1, 1, 9, 20))],
       );
-      final workout = Workout(
+      final workout = WorkoutBuilder(
         id: 'w-finished',
         startTime: DateTime(2026, 1, 1, 9, 0),
         endTime: DateTime(2026, 1, 1, 9, 30),
-        exerciseEntries: [entry],
-      );
+        entries: [entry],
+      ).build();
 
       final repository = await pumpPastWorkoutsScreen(
         tester,
