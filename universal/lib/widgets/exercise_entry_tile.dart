@@ -8,6 +8,7 @@ import 'confirm_delete_dialog.dart';
 import 'coplanar_card.dart';
 import 'dashed_circle_badge.dart';
 import 'edit_set_dialog.dart';
+import 'scroll_into_view_keys.dart';
 import 'selection_accent_border.dart';
 import 'zebra_row.dart';
 
@@ -41,6 +42,17 @@ class ExerciseEntryTile extends StatefulWidget {
 class _ExerciseEntryTileState extends State<ExerciseEntryTile> {
   static const _setColumnWidth = 34.0;
   static const _timeColumnWidth = 64.0;
+  final _setKeys = ScrollIntoViewKeys<String>();
+
+  @override
+  void didUpdateWidget(covariant ExerciseEntryTile oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final oldSets = oldWidget.entry.sets;
+    final newSets = widget.entry.sets;
+    if (newSets.length > oldSets.length) {
+      _setKeys.scrollIntoView(newSets.last.id);
+    }
+  }
 
   Future<void> _openEditDialog(ExerciseSet set) async {
     final result = await showDialog<EditSetDialogResult>(
@@ -76,6 +88,7 @@ class _ExerciseEntryTileState extends State<ExerciseEntryTile> {
     final sets = widget.entry.sets;
     final targets = widget.entry.targets;
     final rowCount = max(sets.length, targets?.length ?? 0);
+    _setKeys.pruneExcept(sets.map((set) => set.id));
     return CoplanarCard(
       key: ValueKey('entry-${widget.entry.id}'),
       child: SelectionAccentBorder(
@@ -116,7 +129,10 @@ class _ExerciseEntryTileState extends State<ExerciseEntryTile> {
               ZebraRow(
                 index: i,
                 child: i < sets.length
-                    ? _setRow(theme, i, sets[i])
+                    ? KeyedSubtree(
+                        key: _setKeys.keyFor(sets[i].id),
+                        child: _setRow(theme, i, sets[i]),
+                      )
                     : _targetRow(theme, i, targets![i]),
               ),
             ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
 
 import '../models/exercise.dart';
@@ -8,9 +9,12 @@ import '../widgets/planned_exercise_add_field.dart';
 import '../widgets/planned_exercise_card.dart';
 import '../widgets/routine_name_dialog.dart';
 import '../widgets/safe_scaffold.dart';
+import '../widgets/scroll_into_view_keys.dart';
 import '../widgets/start_workout_bar.dart';
 import 'active_workout_screen.dart';
 import 'navigation_helpers.dart';
+
+typedef _RowRef = ({String plannedExerciseId, int rowIndex});
 
 class RoutineScreen extends StatefulWidget {
   final String routineId;
@@ -22,7 +26,9 @@ class RoutineScreen extends StatefulWidget {
 }
 
 class _RoutineScreenState extends State<RoutineScreen> {
-  ({String plannedExerciseId, int rowIndex})? _openRow;
+  _RowRef? _openRow;
+  final _plannedExerciseKeys = ScrollIntoViewKeys<String>();
+  final _rowKeys = ScrollIntoViewKeys<_RowRef>();
 
   Future<void> _rename(BuildContext context, Routine routine) async {
     final repo = context.read<WorkoutRepository>();
@@ -54,6 +60,17 @@ class _RoutineScreenState extends State<RoutineScreen> {
     }
   }
 
+  void _addPlannedExercise(
+    WorkoutRepository repo,
+    Routine routine,
+    String name,
+  ) {
+    final plannedExercise = repo.addPlannedExercise(routine.id, name);
+    if (plannedExercise != null) {
+      _plannedExerciseKeys.scrollIntoView(plannedExercise.id);
+    }
+  }
+
   void _addRow(
     WorkoutRepository repo,
     Routine routine,
@@ -61,12 +78,9 @@ class _RoutineScreenState extends State<RoutineScreen> {
   ) {
     final newIndex = plannedExercise.rows.length;
     repo.addPlannedExerciseRow(routine.id, plannedExercise.id);
-    setState(
-      () => _openRow = (
-        plannedExerciseId: plannedExercise.id,
-        rowIndex: newIndex,
-      ),
-    );
+    final newRow = (plannedExerciseId: plannedExercise.id, rowIndex: newIndex);
+    setState(() => _openRow = newRow);
+    _rowKeys.scrollIntoView(newRow);
   }
 
   void _toggleRow(String plannedExerciseId, int rowIndex) {
@@ -122,7 +136,7 @@ class _RoutineScreenState extends State<RoutineScreen> {
     );
   }
 
-  PlannedExerciseCard _buildCard(
+  Widget _buildCard(
     WorkoutRepository repo,
     Routine routine,
     List<Exercise> exercises,
@@ -131,33 +145,42 @@ class _RoutineScreenState extends State<RoutineScreen> {
     final plannedExercise = routine.plannedExercises[index];
     final openRow = _openRow;
     final isLocked = routine.isLocked;
-    return PlannedExerciseCard(
-      key: ValueKey(plannedExercise.id),
-      plannedExercise: plannedExercise,
-      exerciseName: Exercise.nameFor(plannedExercise.exerciseId, exercises),
-      onDelete: isLocked
-          ? null
-          : () => repo.removePlannedExercise(routine.id, plannedExercise.id),
-      onAddRow: isLocked ? null : () => _addRow(repo, routine, plannedExercise),
-      openRowIndex:
-          !isLocked && openRow?.plannedExerciseId == plannedExercise.id
-          ? openRow!.rowIndex
-          : null,
-      onRowTap: isLocked
-          ? null
-          : (rowIndex) => _toggleRow(plannedExercise.id, rowIndex),
-      onDeleteRow: isLocked
-          ? null
-          : (rowIndex) =>
-                _deleteRow(repo, routine, plannedExercise.id, rowIndex),
-      onRowChanged: isLocked
-          ? null
-          : (rowIndex, updated) => repo.updatePlannedExerciseRow(
-              routine.id,
-              plannedExercise.id,
-              rowIndex,
-              updated,
-            ),
+    return KeyedSubtree(
+      key: _plannedExerciseKeys.keyFor(plannedExercise.id),
+      child: PlannedExerciseCard(
+        key: ValueKey(plannedExercise.id),
+        plannedExercise: plannedExercise,
+        exerciseName: Exercise.nameFor(plannedExercise.exerciseId, exercises),
+        onDelete: isLocked
+            ? null
+            : () => repo.removePlannedExercise(routine.id, plannedExercise.id),
+        onAddRow: isLocked
+            ? null
+            : () => _addRow(repo, routine, plannedExercise),
+        openRowIndex:
+            !isLocked && openRow?.plannedExerciseId == plannedExercise.id
+            ? openRow!.rowIndex
+            : null,
+        onRowTap: isLocked
+            ? null
+            : (rowIndex) => _toggleRow(plannedExercise.id, rowIndex),
+        onDeleteRow: isLocked
+            ? null
+            : (rowIndex) =>
+                  _deleteRow(repo, routine, plannedExercise.id, rowIndex),
+        onRowChanged: isLocked
+            ? null
+            : (rowIndex, updated) => repo.updatePlannedExerciseRow(
+                routine.id,
+                plannedExercise.id,
+                rowIndex,
+                updated,
+              ),
+        rowKeyBuilder: (rowIndex) => _rowKeys.keyFor((
+          plannedExerciseId: plannedExercise.id,
+          rowIndex: rowIndex,
+        )),
+      ),
     );
   }
 
@@ -166,6 +189,14 @@ class _RoutineScreenState extends State<RoutineScreen> {
     Routine routine,
     List<Exercise> exercises,
   ) {
+    _plannedExerciseKeys.pruneExcept(
+      routine.plannedExercises.map((pe) => pe.id),
+    );
+    _rowKeys.pruneExcept([
+      for (final pe in routine.plannedExercises)
+        for (var i = 0; i < pe.rows.length; i++)
+          (plannedExerciseId: pe.id, rowIndex: i),
+    ]);
     if (routine.isLocked) {
       return ListView.builder(
         itemCount: routine.plannedExercises.length,
@@ -175,6 +206,7 @@ class _RoutineScreenState extends State<RoutineScreen> {
     }
     return ReorderableListView.builder(
       itemCount: routine.plannedExercises.length,
+      scrollCacheExtent: const ScrollCacheExtent.pixels(100000),
       onReorderItem: (oldIndex, newIndex) =>
           repo.reorderPlannedExercises(routine.id, oldIndex, newIndex),
       itemBuilder: (context, index) =>
@@ -218,7 +250,7 @@ class _RoutineScreenState extends State<RoutineScreen> {
           if (!routine.isLocked)
             PlannedExerciseAddField(
               exercises: exercises,
-              onAdd: (name) => repo.addPlannedExercise(routine.id, name),
+              onAdd: (name) => _addPlannedExercise(repo, routine, name),
             ),
           Expanded(
             child: routine.plannedExercises.isEmpty
