@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
 
 import '../models/exercise.dart';
@@ -7,6 +8,7 @@ import '../repositories/workout_repository.dart';
 import '../widgets/add_set_bar.dart';
 import '../widgets/exercise_entry_tile.dart';
 import '../widgets/safe_scaffold.dart';
+import '../widgets/scroll_into_view_keys.dart';
 import 'active_workout_controller.dart';
 
 class ActiveWorkoutScreen extends StatefulWidget {
@@ -22,6 +24,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
   final TextEditingController _nameController = TextEditingController();
   late final ActiveWorkoutController _controller;
   bool _isLeaving = false;
+  final _entryKeys = ScrollIntoViewKeys<String>();
 
   @override
   void initState() {
@@ -47,34 +50,39 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
     if (entry != null) {
       _nameController.clear();
       FocusScope.of(context).unfocus();
+      _entryKeys.scrollIntoView(entry.id);
     }
   }
 
   List<Widget> _buildEntryRows(Workout workout, List<Exercise> exercises) {
     final entries = workout.exerciseEntries;
+    _entryKeys.pruneExcept(entries.map((entry) => entry.id));
     final rows = <Widget>[];
     for (var i = 0; i < entries.length; i++) {
       final entry = entries[i];
       rows.add(
-        ExerciseEntryTile(
-          key: ValueKey(entry.id),
-          entry: entry,
-          exerciseName: Exercise.nameFor(entry.exerciseId, exercises),
-          locked: !_controller.canAddNew(workout),
-          selected:
-              _controller.canAddNew(workout) &&
-              entry.id == _controller.selectedEntryId,
-          onSelect: () => _controller.selectEntry(entry.id),
-          onEditSet: (setId, weight, unit, reps) => _controller.editSet(
-            entryId: entry.id,
-            setId: setId,
-            weight: weight,
-            unit: unit,
-            reps: reps,
+        KeyedSubtree(
+          key: _entryKeys.keyFor(entry.id),
+          child: ExerciseEntryTile(
+            key: ValueKey(entry.id),
+            entry: entry,
+            exerciseName: Exercise.nameFor(entry.exerciseId, exercises),
+            locked: !_controller.canAddNew(workout),
+            selected:
+                _controller.canAddNew(workout) &&
+                entry.id == _controller.selectedEntryId,
+            onSelect: () => _controller.selectEntry(entry.id),
+            onEditSet: (setId, weight, unit, reps) => _controller.editSet(
+              entryId: entry.id,
+              setId: setId,
+              weight: weight,
+              unit: unit,
+              reps: reps,
+            ),
+            onDeleteSet: (setId) =>
+                _controller.deleteSet(entryId: entry.id, setId: setId),
+            onDeleteEntry: () => _controller.deleteExerciseEntry(entry.id),
           ),
-          onDeleteSet: (setId) =>
-              _controller.deleteSet(entryId: entry.id, setId: setId),
-          onDeleteEntry: () => _controller.deleteExerciseEntry(entry.id),
         ),
       );
       if (i != entries.length - 1) {
@@ -141,7 +149,10 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
               ),
             ),
           Expanded(
-            child: ListView(children: _buildEntryRows(workout, exercises)),
+            child: ListView(
+              scrollCacheExtent: const ScrollCacheExtent.pixels(100000),
+              children: _buildEntryRows(workout, exercises),
+            ),
           ),
           if (canAddNew && selectedEntry != null) ...[
             AddSetBar(

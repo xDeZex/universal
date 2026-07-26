@@ -15,6 +15,7 @@ class PlannedExerciseCard extends StatelessWidget {
   final void Function(int rowIndex)? onRowTap;
   final void Function(int rowIndex)? onDeleteRow;
   final void Function(int rowIndex, PlannedExerciseRow updated)? onRowChanged;
+  final GlobalKey Function(int rowIndex)? rowKeyBuilder;
 
   const PlannedExerciseCard({
     super.key,
@@ -26,6 +27,7 @@ class PlannedExerciseCard extends StatelessWidget {
     this.onRowTap,
     this.onDeleteRow,
     this.onRowChanged,
+    this.rowKeyBuilder,
   });
 
   String _formatReps(RepsTarget reps) {
@@ -128,7 +130,12 @@ class PlannedExerciseCard extends StatelessWidget {
             ),
           ),
           for (final entry in plannedExercise.rows.asMap().entries)
-            _buildRow(entry.key, entry.value),
+            rowKeyBuilder != null
+                ? KeyedSubtree(
+                    key: rowKeyBuilder!(entry.key),
+                    child: _buildRow(entry.key, entry.value),
+                  )
+                : _buildRow(entry.key, entry.value),
           if (onAddRow != null)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
