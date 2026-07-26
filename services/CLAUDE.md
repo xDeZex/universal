@@ -9,7 +9,6 @@ go test ./...    # run all tests
 go vet ./...     # check for issues
 ```
 
-## Conventions
+## Standards
 
-- Keep `main.go` thin; business logic in handlers/packages
-- HTTP handlers are tested via `httptest`
+See `docs/agents/services/CODING_STANDARDS.md`.
