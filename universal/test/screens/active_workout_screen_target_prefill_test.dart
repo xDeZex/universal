@@ -5,6 +5,8 @@ import 'package:universal/models/exercise.dart';
 import 'package:universal/models/routine.dart';
 import 'package:universal/models/workout.dart';
 
+import '../support/pump.dart';
+import '../support/workout_builder.dart';
 import 'active_workout_screen_test_helpers.dart';
 
 void main() {
@@ -17,9 +19,7 @@ void main() {
       'selecting an Exercise Entry with an unfilled target auto-prefills '
       'the weight and reps steppers from that target',
       (tester) async {
-        final entry = ExerciseEntry(
-          id: 'entry-1',
-          exerciseId: 'exercise-1',
+        final entry = buildEntry(
           targets: const [
             PlannedExerciseRow(
               reps: FixedReps(8),
@@ -27,11 +27,7 @@ void main() {
             ),
           ],
         );
-        final workout = Workout(
-          id: 'workout-1',
-          startTime: DateTime(2026, 1, 1),
-          exerciseEntries: [entry],
-        );
+        final workout = WorkoutBuilder(entries: [entry]).build();
 
         await pumpActiveWorkoutScreen(
           tester,
@@ -50,17 +46,9 @@ void main() {
       'selecting an Exercise Entry whose targets are all already fulfilled '
       'resets the weight and reps steppers to zero',
       (tester) async {
-        final entry = ExerciseEntry(
-          id: 'entry-1',
-          exerciseId: 'exercise-1',
+        final entry = buildEntry(
           sets: [
-            ExerciseSet(
-              id: 'set-1',
-              weight: 60,
-              unit: WeightUnit.kg,
-              reps: 8,
-              loggedAt: DateTime(2026, 1, 1, 9, 0),
-            ),
+            buildSet(reps: 8, loggedAt: DateTime(2026, 1, 1, 9, 0)),
           ],
           targets: const [
             PlannedExerciseRow(
@@ -69,11 +57,7 @@ void main() {
             ),
           ],
         );
-        final workout = Workout(
-          id: 'workout-1',
-          startTime: DateTime(2026, 1, 1),
-          exerciseEntries: [entry],
-        );
+        final workout = WorkoutBuilder(entries: [entry]).build();
 
         await pumpActiveWorkoutScreen(
           tester,
@@ -93,9 +77,7 @@ void main() {
       'a ranged target prefills the reps stepper with its minimum, not its '
       'maximum',
       (tester) async {
-        final entry = ExerciseEntry(
-          id: 'entry-1',
-          exerciseId: 'exercise-1',
+        final entry = buildEntry(
           targets: const [
             PlannedExerciseRow(
               reps: RangeReps(min: 5, max: 10),
@@ -103,11 +85,7 @@ void main() {
             ),
           ],
         );
-        final workout = Workout(
-          id: 'workout-1',
-          startTime: DateTime(2026, 1, 1),
-          exerciseEntries: [entry],
-        );
+        final workout = WorkoutBuilder(entries: [entry]).build();
 
         await pumpActiveWorkoutScreen(
           tester,
@@ -126,9 +104,7 @@ void main() {
       'logging a Set from a prefilled target appends via the normal addSet '
       'path, using the submitted values rather than the target\'s',
       (tester) async {
-        final entry = ExerciseEntry(
-          id: 'entry-1',
-          exerciseId: 'exercise-1',
+        final entry = buildEntry(
           targets: const [
             PlannedExerciseRow(
               reps: FixedReps(8),
@@ -136,11 +112,7 @@ void main() {
             ),
           ],
         );
-        final workout = Workout(
-          id: 'workout-1',
-          startTime: DateTime(2026, 1, 1),
-          exerciseEntries: [entry],
-        );
+        final workout = WorkoutBuilder(entries: [entry]).build();
 
         final repository = await pumpActiveWorkoutScreen(
           tester,
@@ -176,9 +148,7 @@ void main() {
       'a target row has no tap affordance: tapping it neither opens the '
       'edit-Set dialog nor is wrapped in an InkWell/GestureDetector',
       (tester) async {
-        final entry = ExerciseEntry(
-          id: 'entry-1',
-          exerciseId: 'exercise-1',
+        final entry = buildEntry(
           targets: const [
             PlannedExerciseRow(
               reps: FixedReps(8),
@@ -186,11 +156,7 @@ void main() {
             ),
           ],
         );
-        final workout = Workout(
-          id: 'workout-1',
-          startTime: DateTime(2026, 1, 1),
-          exerciseEntries: [entry],
-        );
+        final workout = WorkoutBuilder(entries: [entry]).build();
 
         await pumpActiveWorkoutScreen(
           tester,
@@ -223,17 +189,9 @@ void main() {
       'deleting the Set that fulfilled a target makes that target row '
       'dashed again and re-prefills the add-Set bar from it',
       (tester) async {
-        final entry = ExerciseEntry(
-          id: 'entry-1',
-          exerciseId: 'exercise-1',
+        final entry = buildEntry(
           sets: [
-            ExerciseSet(
-              id: 'set-1',
-              weight: 60,
-              unit: WeightUnit.kg,
-              reps: 8,
-              loggedAt: DateTime(2026, 1, 1, 9, 0),
-            ),
+            buildSet(reps: 8, loggedAt: DateTime(2026, 1, 1, 9, 0)),
           ],
           targets: const [
             PlannedExerciseRow(
@@ -242,11 +200,7 @@ void main() {
             ),
           ],
         );
-        final workout = Workout(
-          id: 'workout-1',
-          startTime: DateTime(2026, 1, 1),
-          exerciseEntries: [entry],
-        );
+        final workout = WorkoutBuilder(entries: [entry]).build();
 
         final repository = await pumpActiveWorkoutScreen(
           tester,

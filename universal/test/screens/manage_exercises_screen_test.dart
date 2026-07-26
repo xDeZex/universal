@@ -1,30 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:universal/models/exercise.dart';
-import 'package:universal/repositories/workout_repository.dart';
-import 'package:universal/screens/manage_exercises_screen.dart';
 import 'package:universal/widgets/exercise_tile.dart';
 
-Future<WorkoutRepository> _pumpManageExercisesScreen(
-  WidgetTester tester, {
-  required List<Exercise> exercises,
-}) async {
-  final repository = WorkoutRepository(
-    initialWorkouts: const [],
-    initialExercises: exercises,
-  );
-  await tester.pumpWidget(
-    MaterialApp(
-      home: ChangeNotifierProvider<WorkoutRepository>.value(
-        value: repository,
-        child: const ManageExercisesScreen(),
-      ),
-    ),
-  );
-  return repository;
-}
+import '../support/pump.dart';
 
 void main() {
   setUp(() {
@@ -35,7 +15,7 @@ void main() {
     testWidgets(
       'lists Exercises sorted alphabetically by name, case-insensitively',
       (tester) async {
-        await _pumpManageExercisesScreen(
+        await pumpManageExercisesScreen(
           tester,
           // Deliberately out of alphabetical order, and mixed casing, so the
           // test can only pass if the screen sorts case-insensitively rather
@@ -65,7 +45,7 @@ void main() {
       'shows a "No Exercises yet" empty state with a hint to log a Workout, '
       'and no list rows, when there are no Exercises',
       (tester) async {
-        await _pumpManageExercisesScreen(tester, exercises: []);
+        await pumpManageExercisesScreen(tester, exercises: []);
 
         expect(find.text('No Exercises yet'), findsOneWidget);
         expect(find.textContaining('Workout'), findsOneWidget);
@@ -76,7 +56,7 @@ void main() {
     testWidgets(
       'shows no add/create control when the Exercise list is empty',
       (tester) async {
-        await _pumpManageExercisesScreen(tester, exercises: []);
+        await pumpManageExercisesScreen(tester, exercises: []);
 
         expect(find.byType(FloatingActionButton), findsNothing);
         expect(find.byIcon(Icons.add), findsNothing);
@@ -86,7 +66,7 @@ void main() {
     testWidgets(
       'shows no add/create control when Exercises are present',
       (tester) async {
-        await _pumpManageExercisesScreen(
+        await pumpManageExercisesScreen(
           tester,
           exercises: [Exercise(id: 'ex-1', name: 'Bench Press')],
         );
@@ -100,7 +80,7 @@ void main() {
       'tapping an Exercise row opens a rename dialog pre-filled with its '
       'current name',
       (tester) async {
-        await _pumpManageExercisesScreen(
+        await pumpManageExercisesScreen(
           tester,
           exercises: [Exercise(id: 'ex-1', name: 'Bench Press')],
         );
@@ -118,7 +98,7 @@ void main() {
       'cancelling the rename dialog leaves the Exercise unchanged and '
       'closes the dialog',
       (tester) async {
-        final repository = await _pumpManageExercisesScreen(
+        final repository = await pumpManageExercisesScreen(
           tester,
           exercises: [Exercise(id: 'ex-1', name: 'Bench Press')],
         );
@@ -143,7 +123,7 @@ void main() {
       'submitting a valid new name renames the Exercise, persists the '
       'updated list, and closes the dialog',
       (tester) async {
-        final repository = await _pumpManageExercisesScreen(
+        final repository = await pumpManageExercisesScreen(
           tester,
           exercises: [Exercise(id: 'ex-1', name: 'Bench Press')],
         );
@@ -171,7 +151,7 @@ void main() {
       'submitting the Exercise\'s own current name with different casing '
       'succeeds, since it does not collide with any other Exercise',
       (tester) async {
-        final repository = await _pumpManageExercisesScreen(
+        final repository = await pumpManageExercisesScreen(
           tester,
           exercises: [
             Exercise(id: 'ex-1', name: 'Bench Press'),
@@ -200,7 +180,7 @@ void main() {
       'submitting the Exercise\'s own current name unchanged succeeds, '
       'since it does not collide with any other Exercise',
       (tester) async {
-        final repository = await _pumpManageExercisesScreen(
+        final repository = await pumpManageExercisesScreen(
           tester,
           exercises: [
             Exercise(id: 'ex-1', name: 'Bench Press'),
@@ -226,7 +206,7 @@ void main() {
       'validation error, keeps the dialog open, and leaves the Exercise '
       'unchanged',
       (tester) async {
-        final repository = await _pumpManageExercisesScreen(
+        final repository = await pumpManageExercisesScreen(
           tester,
           exercises: [Exercise(id: 'ex-1', name: 'Bench Press')],
         );
@@ -256,7 +236,7 @@ void main() {
       'case-insensitively shows an inline validation error, keeps the '
       'dialog open, and leaves the Exercise unchanged',
       (tester) async {
-        final repository = await _pumpManageExercisesScreen(
+        final repository = await pumpManageExercisesScreen(
           tester,
           exercises: [
             Exercise(id: 'ex-1', name: 'Bench Press'),

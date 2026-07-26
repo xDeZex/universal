@@ -4,6 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:universal/models/exercise.dart';
 import 'package:universal/models/workout.dart';
 
+import '../support/pump.dart';
+import '../support/workout_builder.dart';
 import 'active_workout_screen_test_helpers.dart';
 
 void main() {
@@ -14,24 +16,12 @@ void main() {
   group('ActiveWorkoutScreen Set editing', () {
     testWidgets('tapping a logged Set opens an edit dialog pre-filled with its '
         'current weight, unit, and reps', (tester) async {
-      final entry = ExerciseEntry(
-        id: 'entry-1',
-        exerciseId: 'exercise-1',
-        sets: [
-          ExerciseSet(
-            id: 'set-1',
-            weight: 60,
-            unit: WeightUnit.kg,
-            reps: 8,
-            loggedAt: DateTime(2026, 1, 1, 10, 0),
-          ),
-        ],
-      );
-      final workout = Workout(
-        id: 'workout-1',
+      final workout = WorkoutBuilder(
         startTime: DateTime(2026, 1, 1, 9, 0),
-        exerciseEntries: [entry],
-      );
+        entries: [
+          buildEntry(sets: [buildSet()]),
+        ],
+      ).build();
 
       await pumpActiveWorkoutScreen(
         tester,
@@ -69,24 +59,12 @@ void main() {
       'leaves loggedAt unchanged',
       (tester) async {
         final loggedAt = DateTime(2026, 1, 1, 10, 0);
-        final entry = ExerciseEntry(
-          id: 'entry-1',
-          exerciseId: 'exercise-1',
-          sets: [
-            ExerciseSet(
-              id: 'set-1',
-              weight: 60,
-              unit: WeightUnit.kg,
-              reps: 8,
-              loggedAt: loggedAt,
-            ),
-          ],
-        );
-        final workout = Workout(
-          id: 'workout-1',
+        final workout = WorkoutBuilder(
           startTime: DateTime(2026, 1, 1, 9, 0),
-          exerciseEntries: [entry],
-        );
+          entries: [
+            buildEntry(sets: [buildSet(loggedAt: loggedAt)]),
+          ],
+        ).build();
 
         final repository = await pumpActiveWorkoutScreen(
           tester,
@@ -127,24 +105,12 @@ void main() {
       'changing the unit while editing a Set also updates the remembered '
       'unit for that Exercise Entry',
       (tester) async {
-        final entry = ExerciseEntry(
-          id: 'entry-1',
-          exerciseId: 'exercise-1',
-          sets: [
-            ExerciseSet(
-              id: 'set-1',
-              weight: 60,
-              unit: WeightUnit.kg,
-              reps: 8,
-              loggedAt: DateTime(2026, 1, 1, 10, 0),
-            ),
-          ],
-        );
-        final workout = Workout(
-          id: 'workout-1',
+        final workout = WorkoutBuilder(
           startTime: DateTime(2026, 1, 1, 9, 0),
-          exerciseEntries: [entry],
-        );
+          entries: [
+            buildEntry(sets: [buildSet()]),
+          ],
+        ).build();
 
         await pumpActiveWorkoutScreen(
           tester,

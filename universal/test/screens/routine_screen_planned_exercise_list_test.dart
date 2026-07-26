@@ -1,34 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:universal/models/exercise.dart';
 import 'package:universal/models/routine.dart';
 import 'package:universal/models/workout.dart';
-import 'package:universal/repositories/workout_repository.dart';
-import 'package:universal/screens/routine_screen.dart';
 
-Future<WorkoutRepository> _pumpRoutineScreen(
-  WidgetTester tester, {
-  required List<Routine> routines,
-  required List<Exercise> exercises,
-  required String routineId,
-}) async {
-  final repository = WorkoutRepository(
-    initialWorkouts: const [],
-    initialExercises: exercises,
-    initialRoutines: routines,
-  );
-  await tester.pumpWidget(
-    MaterialApp(
-      home: ChangeNotifierProvider<WorkoutRepository>.value(
-        value: repository,
-        child: RoutineScreen(routineId: routineId),
-      ),
-    ),
-  );
-  return repository;
-}
+import '../support/pump.dart';
 
 void main() {
   setUp(() {
@@ -42,7 +19,7 @@ void main() {
       (tester) async {
         final first = PlannedExercise(id: 'pe-1', exerciseId: 'exercise-1');
         final second = PlannedExercise(id: 'pe-2', exerciseId: 'exercise-2');
-        await _pumpRoutineScreen(
+        await pumpRoutineScreen(
           tester,
           routines: [
             Routine(
@@ -71,7 +48,7 @@ void main() {
     testWidgets("card header shows the referenced Exercise's current name, "
         'reflecting a rename rather than a stale copy', (tester) async {
       final planned = PlannedExercise(id: 'pe-1', exerciseId: 'exercise-1');
-      final repository = await _pumpRoutineScreen(
+      final repository = await pumpRoutineScreen(
         tester,
         routines: [
           Routine(
@@ -110,7 +87,7 @@ void main() {
             ),
           ],
         );
-        await _pumpRoutineScreen(
+        await pumpRoutineScreen(
           tester,
           routines: [
             Routine(

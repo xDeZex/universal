@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:universal/widgets/workout_home_actions.dart';
 
-import 'workout_home_screen_test_helpers.dart';
+import '../support/pump.dart';
 
 void main() {
   setUp(() {

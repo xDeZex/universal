@@ -4,7 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:universal/models/exercise.dart';
 import 'package:universal/models/workout.dart';
 
-import 'active_workout_screen_test_helpers.dart';
+import '../support/pump.dart';
+import '../support/workout_builder.dart';
 
 void main() {
   setUp(() {
@@ -16,12 +17,7 @@ void main() {
       'tapping Add Set adds a Set to the selected Exercise Entry stamped '
       'with the current time',
       (tester) async {
-        final entry = ExerciseEntry(id: 'entry-1', exerciseId: 'exercise-1');
-        final workout = Workout(
-          id: 'workout-1',
-          startTime: DateTime(2026, 1, 1),
-          exerciseEntries: [entry],
-        );
+        final workout = WorkoutBuilder(entries: [buildEntry()]).build();
 
         final repository = await pumpActiveWorkoutScreen(
           tester,

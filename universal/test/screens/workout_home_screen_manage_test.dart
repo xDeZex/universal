@@ -3,11 +3,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:universal/models/exercise.dart';
 import 'package:universal/models/routine.dart';
-import 'package:universal/models/workout.dart';
 import 'package:universal/screens/manage_exercises_screen.dart';
 import 'package:universal/screens/manage_routines_screen.dart';
 
-import 'workout_home_screen_test_helpers.dart';
+import '../support/pump.dart';
+import '../support/workout_builder.dart';
 
 void main() {
   setUp(() {
@@ -68,9 +68,7 @@ void main() {
       (tester) async {
         await pumpWorkoutHomeScreen(
           tester,
-          initialWorkouts: [
-            Workout(id: 'workout-1', startTime: DateTime(2026, 1, 1)),
-          ],
+          initialWorkouts: [WorkoutBuilder().build()],
           initialExercises: [Exercise(id: 'exercise-1', name: 'Bench Press')],
         );
         await tester.pumpAndSettle();
@@ -150,9 +148,7 @@ void main() {
       (tester) async {
         await pumpWorkoutHomeScreen(
           tester,
-          initialWorkouts: [
-            Workout(id: 'workout-1', startTime: DateTime(2026, 1, 1)),
-          ],
+          initialWorkouts: [WorkoutBuilder().build()],
           initialExercises: [],
           initialRoutines: [Routine(id: 'routine-1', name: 'Push Day')],
         );
