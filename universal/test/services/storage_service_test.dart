@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:universal/models/checklist.dart';
 import 'package:universal/models/exercise.dart';
 import 'package:universal/models/routine.dart';
 import 'package:universal/models/workout.dart';
@@ -13,70 +12,6 @@ void main() {
     setUp(() {
       SharedPreferences.setMockInitialValues({});
       storageService = StorageService();
-    });
-
-    test('loadChecklists returns empty list when no data', () async {
-      final checklists = await storageService.loadChecklists();
-
-      expect(checklists, isEmpty);
-    });
-
-    test('saveChecklists and loadChecklists round-trip works', () async {
-      final checklists = [
-        Checklist(
-          name: 'Groceries',
-          items: [
-            ChecklistItem(name: 'Milk'),
-            ChecklistItem(name: 'Bread', isChecked: true),
-          ],
-        ),
-        Checklist(name: 'Todo'),
-      ];
-
-      await storageService.saveChecklists(checklists);
-      final loaded = await storageService.loadChecklists();
-
-      expect(loaded.length, 2);
-      expect(loaded[0].name, 'Groceries');
-      expect(loaded[0].items.length, 2);
-      expect(loaded[0].items[0].name, 'Milk');
-      expect(loaded[0].items[0].isChecked, false);
-      expect(loaded[0].items[1].name, 'Bread');
-      expect(loaded[0].items[1].isChecked, true);
-      expect(loaded[1].name, 'Todo');
-      expect(loaded[1].items, isEmpty);
-    });
-
-    test('saveChecklists overwrites existing data', () async {
-      final initial = [Checklist(name: 'First')];
-      await storageService.saveChecklists(initial);
-
-      final replacement = [Checklist(name: 'Second')];
-      await storageService.saveChecklists(replacement);
-
-      final loaded = await storageService.loadChecklists();
-
-      expect(loaded.length, 1);
-      expect(loaded[0].name, 'Second');
-    });
-
-    test('saveChecklists with empty list clears data', () async {
-      final checklists = [Checklist(name: 'Test')];
-      await storageService.saveChecklists(checklists);
-
-      await storageService.saveChecklists([]);
-
-      final loaded = await storageService.loadChecklists();
-      expect(loaded, isEmpty);
-    });
-
-    test('loadChecklists handles corrupted JSON gracefully', () async {
-      SharedPreferences.setMockInitialValues({'checklists': 'not valid json'});
-      storageService = StorageService();
-
-      final checklists = await storageService.loadChecklists();
-
-      expect(checklists, isEmpty);
     });
 
     test('loadWorkouts returns empty list when no data', () async {
@@ -133,22 +68,6 @@ void main() {
       expect(workouts, isEmpty);
     });
 
-    test('saveWorkouts writes under a key separate from checklists', () async {
-      final workouts = [
-        Workout(id: 'workout-1', startTime: DateTime(2026, 1, 1)),
-      ];
-      final checklists = [Checklist(name: 'Groceries')];
-
-      await storageService.saveWorkouts(workouts);
-      await storageService.saveChecklists(checklists);
-
-      final loadedWorkouts = await storageService.loadWorkouts();
-      final loadedChecklists = await storageService.loadChecklists();
-
-      expect(loadedWorkouts.length, 1);
-      expect(loadedChecklists.length, 1);
-    });
-
     test('loadExercises returns empty list when no data', () async {
       final exercises = await storageService.loadExercises();
 
@@ -181,25 +100,21 @@ void main() {
     });
 
     test(
-      'saveExercises writes under a key separate from workouts and checklists',
+      'saveExercises writes under a key separate from workouts',
       () async {
         final exercises = [Exercise(id: 'exercise-1', name: 'Bench Press')];
         final workouts = [
           Workout(id: 'workout-1', startTime: DateTime(2026, 1, 1)),
         ];
-        final checklists = [Checklist(name: 'Groceries')];
 
         await storageService.saveExercises(exercises);
         await storageService.saveWorkouts(workouts);
-        await storageService.saveChecklists(checklists);
 
         final loadedExercises = await storageService.loadExercises();
         final loadedWorkouts = await storageService.loadWorkouts();
-        final loadedChecklists = await storageService.loadChecklists();
 
         expect(loadedExercises.length, 1);
         expect(loadedWorkouts.length, 1);
-        expect(loadedChecklists.length, 1);
       },
     );
 
@@ -235,30 +150,25 @@ void main() {
     });
 
     test(
-      'saveRoutines writes under a key separate from checklists, workouts, '
-      'and exercises',
+      'saveRoutines writes under a key separate from workouts and exercises',
       () async {
         final routines = [Routine(id: 'routine-1', name: 'Push Day')];
         final exercises = [Exercise(id: 'exercise-1', name: 'Bench Press')];
         final workouts = [
           Workout(id: 'workout-1', startTime: DateTime(2026, 1, 1)),
         ];
-        final checklists = [Checklist(name: 'Groceries')];
 
         await storageService.saveRoutines(routines);
         await storageService.saveExercises(exercises);
         await storageService.saveWorkouts(workouts);
-        await storageService.saveChecklists(checklists);
 
         final loadedRoutines = await storageService.loadRoutines();
         final loadedExercises = await storageService.loadExercises();
         final loadedWorkouts = await storageService.loadWorkouts();
-        final loadedChecklists = await storageService.loadChecklists();
 
         expect(loadedRoutines.length, 1);
         expect(loadedExercises.length, 1);
         expect(loadedWorkouts.length, 1);
-        expect(loadedChecklists.length, 1);
       },
     );
   });
