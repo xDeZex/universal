@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../repositories/workout_repository.dart';
+import '../services/update_service.dart';
 import '../widgets/safe_scaffold.dart';
 import '../widgets/workout_home_actions.dart';
 import 'active_workout_screen.dart';
@@ -9,6 +10,7 @@ import 'manage_exercises_screen.dart';
 import 'manage_routines_screen.dart';
 import 'navigation_helpers.dart';
 import 'past_workouts_screen.dart';
+import 'settings_screen.dart';
 
 class WorkoutHomeScreen extends StatelessWidget {
   const WorkoutHomeScreen({super.key});
@@ -62,13 +64,33 @@ class WorkoutHomeScreen extends StatelessWidget {
     );
   }
 
+  void _openSettings(BuildContext context) {
+    Navigator.push<void>(
+      context,
+      MaterialPageRoute(builder: (context) => const SettingsScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final repo = context.watch<WorkoutRepository>();
     final hasInProgress = repo.workouts.any((w) => w.isInProgress);
+    final showUpdateBadge =
+        context.watch<UpdateService>().status == UpdateStatus.updateAvailable;
 
     return SafeScaffold(
-      appBar: AppBar(title: const Text('Workout')),
+      appBar: AppBar(
+        title: const Text('Workout'),
+        actions: [
+          IconButton(
+            icon: Badge(
+              isLabelVisible: showUpdateBadge,
+              child: const Icon(Icons.settings),
+            ),
+            onPressed: () => _openSettings(context),
+          ),
+        ],
+      ),
       body: !repo.isLoaded
           ? const Center(child: CircularProgressIndicator())
           : Padding(

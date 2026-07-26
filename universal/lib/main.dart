@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'screens/app_shell.dart';
+import 'repositories/workout_repository.dart';
+import 'screens/workout_home_screen.dart';
 import 'services/update_service.dart';
 import 'theme/app_theme.dart';
 
@@ -25,7 +26,10 @@ class UniversalApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Universal',
         theme: AppTheme.dark,
-        home: const AppShell(),
+        home: ChangeNotifierProvider<WorkoutRepository>(
+          create: (_) => WorkoutRepository()..load(),
+          child: const WorkoutHomeScreen(),
+        ),
       ),
     );
   }

@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:universal/screens/workout_home_screen.dart';
 import 'package:universal/services/update_service.dart';
 
 import 'package:universal/main.dart';
@@ -12,7 +13,9 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  testWidgets('App launches and shows home screen', (tester) async {
+  testWidgets('App launches and shows the Workout home screen', (
+    tester,
+  ) async {
     final updateService = UpdateService(
       httpClient: MockClient(
         (request) async =>
@@ -24,13 +27,10 @@ void main() {
     await tester.pumpWidget(UniversalApp(updateService: updateService));
     await tester.pumpAndSettle();
 
+    expect(find.byType(WorkoutHomeScreen), findsOneWidget);
     expect(
-      find.descendant(
-        of: find.byType(AppBar),
-        matching: find.text('Checklists'),
-      ),
+      find.descendant(of: find.byType(AppBar), matching: find.text('Workout')),
       findsOneWidget,
     );
-    expect(find.text('No checklists yet'), findsOneWidget);
   });
 }

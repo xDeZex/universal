@@ -23,29 +23,13 @@ void main() {
     });
 
     test(
-      'loadChecklists does not report corrupt data when there is none',
+      'loadWorkouts does not report corrupt data when there is none',
       () async {
         final (:storageService, :reports) = _recordingStorageService();
 
-        await storageService.loadChecklists();
+        await storageService.loadWorkouts();
 
         expect(reports, isEmpty);
-      },
-    );
-
-    test(
-      'loadChecklists reports the corrupt key and error exactly once',
-      () async {
-        SharedPreferences.setMockInitialValues({
-          'checklists': 'not valid json',
-        });
-        final (:storageService, :reports) = _recordingStorageService();
-
-        await storageService.loadChecklists();
-
-        expect(reports, hasLength(1));
-        expect(reports.single.key, 'checklists');
-        expect(reports.single.error, isA<FormatException>());
       },
     );
 
@@ -56,20 +40,21 @@ void main() {
       await storageService.loadWorkouts();
 
       expect(reports.single.key, 'workouts');
+      expect(reports.single.error, isA<FormatException>());
     });
 
     test(
-      'loadChecklists falls back to the default logger without crashing '
+      'loadWorkouts falls back to the default logger without crashing '
       'when onCorruptData is not injected',
       () async {
         SharedPreferences.setMockInitialValues({
-          'checklists': 'not valid json',
+          'workouts': 'not valid json',
         });
         final storageService = StorageService();
 
-        final checklists = await storageService.loadChecklists();
+        final workouts = await storageService.loadWorkouts();
 
-        expect(checklists, isEmpty);
+        expect(workouts, isEmpty);
       },
     );
   });

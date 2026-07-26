@@ -3,7 +3,6 @@ import 'dart:developer' as developer;
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../models/checklist.dart';
 import '../models/exercise.dart';
 import '../models/routine.dart';
 import '../models/workout.dart';
@@ -20,7 +19,6 @@ class StorageService {
   StorageService({CorruptDataReporter? onCorruptData})
       : _onCorruptData = onCorruptData ?? _logCorruptData;
 
-  static const String _checklistsKey = 'checklists';
   static const String _workoutsKey = 'workouts';
   static const String _exercisesKey = 'exercises';
   static const String _routinesKey = 'routines';
@@ -66,12 +64,6 @@ class StorageService {
     final jsonList = items.map(toJson).toList();
     await prefs.setString(key, jsonEncode(jsonList));
   }
-
-  Future<List<Checklist>> loadChecklists() =>
-      _loadList(_checklistsKey, Checklist.fromJson);
-
-  Future<void> saveChecklists(List<Checklist> checklists) =>
-      _saveList(_checklistsKey, checklists, (c) => c.toJson());
 
   Future<List<Workout>> loadWorkouts() =>
       _loadList(_workoutsKey, Workout.fromJson);

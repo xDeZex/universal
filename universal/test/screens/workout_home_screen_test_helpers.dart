@@ -6,6 +6,7 @@ import 'package:universal/models/routine.dart';
 import 'package:universal/models/workout.dart';
 import 'package:universal/repositories/workout_repository.dart';
 import 'package:universal/screens/workout_home_screen.dart';
+import 'package:universal/services/update_service.dart';
 
 Future<WorkoutRepository> pumpWorkoutHomeScreen(
   WidgetTester tester, {
@@ -20,9 +21,12 @@ Future<WorkoutRepository> pumpWorkoutHomeScreen(
   );
   await tester.pumpWidget(
     MaterialApp(
-      home: ChangeNotifierProvider<WorkoutRepository>.value(
-        value: repository,
-        child: const WorkoutHomeScreen(),
+      home: ChangeNotifierProvider<UpdateService>.value(
+        value: UpdateService(),
+        child: ChangeNotifierProvider<WorkoutRepository>.value(
+          value: repository,
+          child: const WorkoutHomeScreen(),
+        ),
       ),
     ),
   );
@@ -35,9 +39,12 @@ Future<WorkoutRepository> pumpWorkoutHomeScreenFromStorage(
   final repository = WorkoutRepository()..load();
   await tester.pumpWidget(
     MaterialApp(
-      home: ChangeNotifierProvider<WorkoutRepository>.value(
-        value: repository,
-        child: const WorkoutHomeScreen(),
+      home: ChangeNotifierProvider<UpdateService>.value(
+        value: UpdateService(),
+        child: ChangeNotifierProvider<WorkoutRepository>.value(
+          value: repository,
+          child: const WorkoutHomeScreen(),
+        ),
       ),
     ),
   );
