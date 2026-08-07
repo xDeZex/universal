@@ -7,6 +7,7 @@ import '../models/workout.dart';
 import '../repositories/workout_repository.dart';
 import '../widgets/add_set_bar.dart';
 import '../widgets/exercise_entry_tile.dart';
+import '../widgets/exercise_name_add_field.dart';
 import '../widgets/safe_scaffold.dart';
 import '../widgets/scroll_into_view_keys.dart';
 import 'active_workout_controller.dart';
@@ -21,7 +22,6 @@ class ActiveWorkoutScreen extends StatefulWidget {
 }
 
 class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
-  final TextEditingController _nameController = TextEditingController();
   late final ActiveWorkoutController _controller;
   bool _isLeaving = false;
   final _entryKeys = ScrollIntoViewKeys<String>();
@@ -41,15 +41,12 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
   void dispose() {
     _controller.removeListener(_onControllerChanged);
     _controller.dispose();
-    _nameController.dispose();
     super.dispose();
   }
 
-  void _addExerciseEntry() {
-    final entry = _controller.addExerciseEntry(_nameController.text.trim());
+  void _addExerciseEntry(String name) {
+    final entry = _controller.addExerciseEntry(name);
     if (entry != null) {
-      _nameController.clear();
-      FocusScope.of(context).unfocus();
       _entryKeys.scrollIntoView(entry.id);
     }
   }
@@ -127,26 +124,10 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
       body: Column(
         children: [
           if (canAddNew)
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _nameController,
-                      decoration: const InputDecoration(
-                        hintText: 'Exercise name',
-                      ),
-                      onSubmitted: (_) => _addExerciseEntry(),
-                    ),
-                  ),
-                  IconButton(
-                    key: const ValueKey('add-exercise-entry-button'),
-                    icon: const Icon(Icons.add),
-                    onPressed: _addExerciseEntry,
-                  ),
-                ],
-              ),
+            ExerciseNameAddField(
+              exercises: exercises,
+              onAdd: _addExerciseEntry,
+              keyPrefix: 'add-exercise-entry',
             ),
           Expanded(
             child: ListView(
