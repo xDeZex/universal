@@ -26,10 +26,10 @@
       "computedHash": "363cb0f53b0b431e7c00086ad1f823500b7e1b70b5616ee969c979f0934e9e6e"
     },
     "grill-with-docs": {
-      "source": "xDeZex/skills",
+      "source": "mattpocock/skills",
       "sourceType": "github",
-      "skillPath": "skills/grill-with-docs/SKILL.md",
-      "computedHash": "f364afc035a1a5850ad463b77dc2d77a08535ec31608da811fb001046c59c6cb"
+      "skillPath": "skills/engineering/grill-with-docs/SKILL.md",
+      "computedHash": "9c460cbd94fd3c63cdef967dbdb6e66ca687103cdc380cd37834e4d10b738f78"
     },
     "grilling": {
       "source": "mattpocock/skills",
@@ -37,11 +37,17 @@
       "skillPath": "skills/productivity/grilling/SKILL.md",
       "computedHash": "368d3dd7251247c69f3656d93dc83c8f1577792eacac2111f1e7981db2ece49b"
     },
-    "improve-codebase-architecture": {
-      "source": "xDeZex/skills",
+    "implement-ticket": {
+      "source": "xdezex/skills",
       "sourceType": "github",
-      "skillPath": "skills/improve-codebase-architecture/SKILL.md",
-      "computedHash": "ef32aea0a8fab9b365ff9e08a95f8d353e20ca21ea46ec2e73587c86dd341351"
+      "skillPath": "skills/implement-ticket/SKILL.md",
+      "computedHash": "57abcff3c862b4c369d8497481a66658f7b31b170b1c38c3a875224c7a1ff686"
+    },
+    "improve-codebase-architecture": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "skillPath": "skills/engineering/improve-codebase-architecture/SKILL.md",
+      "computedHash": "66e8a50c83c3c724fcfe0769701b665c56cec220cc4f49cc1aee8bdfc07de94a"
     },
     "openspec-schema-spec-driven-tdd": {
       "source": "xdezex/skills",
@@ -66,6 +72,12 @@
       "sourceType": "github",
       "skillPath": "skills/engineering/setup-matt-pocock-skills/SKILL.md",
       "computedHash": "74e894a3509e2676d4cdb771c8eace087092430635e845e02a9cc2f757c552a4"
+    },
+    "tdd": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "skillPath": "skills/engineering/tdd/SKILL.md",
+      "computedHash": "81eca2a5b53a63f481c0849be7a663a8cd43d5cf53f32b644ec0a2f50cf91aa2"
     },
     "to-tickets": {
       "source": "mattpocock/skills",

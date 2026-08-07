@@ -33,6 +33,16 @@ When asked to "automerge": fetch origin, check `git log origin/main..HEAD` and o
 
 To poll a PR's CI status, use `gh pr checks <number> --watch` rather than sleeping in a loop — it polls automatically (default every 10s, `-i` to change) and exits once all checks finish, or immediately on the first failure with `--fail-fast`.
 
+## Agent skills
+
+### Issue tracker
+
+Issues are tracked in this repo's GitHub Issues (via the `gh` CLI). See `docs/agents/issue-tracker.md`.
+
+### Domain docs
+
+Single-context: `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
+
 ## Architecture
 
 ```
