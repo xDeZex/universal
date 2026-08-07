@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import '../models/exercise.dart';
 import '../models/routine.dart';
 import '../repositories/workout_repository.dart';
-import '../widgets/planned_exercise_add_field.dart';
+import '../widgets/exercise_name_add_field.dart';
 import '../widgets/planned_exercise_card.dart';
 import '../widgets/routine_name_dialog.dart';
 import '../widgets/safe_scaffold.dart';
@@ -248,9 +248,10 @@ class _RoutineScreenState extends State<RoutineScreen> {
               ),
             ),
           if (!routine.isLocked)
-            PlannedExerciseAddField(
+            ExerciseNameAddField(
               exercises: exercises,
               onAdd: (name) => _addPlannedExercise(repo, routine, name),
+              keyPrefix: 'add-planned-exercise',
             ),
           Expanded(
             child: routine.plannedExercises.isEmpty

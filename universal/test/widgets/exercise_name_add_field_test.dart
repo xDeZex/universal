@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:universal/models/exercise.dart';
-import 'package:universal/widgets/planned_exercise_add_field.dart';
+import 'package:universal/widgets/exercise_name_add_field.dart';
 
 void main() {
   Future<void> pumpField(
@@ -12,16 +12,17 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
-          body: PlannedExerciseAddField(
+          body: ExerciseNameAddField(
             exercises: exercises,
             onAdd: onAdd ?? (_) {},
+            keyPrefix: 'add-planned-exercise',
           ),
         ),
       ),
     );
   }
 
-  group('PlannedExerciseAddField autocomplete dropdown', () {
+  group('ExerciseNameAddField autocomplete dropdown', () {
     testWidgets(
       'typing text with a case-insensitive substring match shows a dropdown '
       'of matches, alphabetically ordered',
@@ -168,7 +169,7 @@ void main() {
     );
   });
 
-  group('PlannedExerciseAddField keyboard dismissal', () {
+  group('ExerciseNameAddField keyboard dismissal', () {
     testWidgets('submitting via the add button dismisses focus', (
       tester,
     ) async {
@@ -186,6 +187,48 @@ void main() {
       await tester.pump();
 
       expect(tester.testTextInput.isVisible, isFalse);
+    });
+  });
+
+  group('ExerciseNameAddField keyPrefix', () {
+    testWidgets('derives all four internal keys from keyPrefix', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ExerciseNameAddField(
+              exercises: [Exercise(id: 'ex-1', name: 'Bench Press')],
+              onAdd: (_) {},
+              keyPrefix: 'add-exercise-entry',
+            ),
+          ),
+        ),
+      );
+
+      expect(
+        find.byKey(const ValueKey('add-exercise-entry-field')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('add-exercise-entry-button')),
+        findsOneWidget,
+      );
+
+      await tester.enterText(
+        find.byKey(const ValueKey('add-exercise-entry-field')),
+        'bench',
+      );
+      await tester.pump();
+
+      expect(
+        find.byKey(const ValueKey('add-exercise-entry-suggestions')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('add-exercise-entry-suggestion-ex-1')),
+        findsOneWidget,
+      );
     });
   });
 }
